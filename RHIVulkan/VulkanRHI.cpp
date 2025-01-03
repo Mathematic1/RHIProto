@@ -360,7 +360,7 @@ namespace RHI::Vulkan
 
         auto swapchainSupport = querySwapchainSupport(m_VulkanPhysicalDevice, m_VulkanInstance.surface);
         auto surfaceFormat = chooseSwapSurfaceFormat(swapchainSupport.formats);
-        auto presentMode = chooseSwapPresentMode(swapchainSupport.presentModes);
+        auto presentMode = m_DeviceParams.vSyncEnabled ? VK_PRESENT_MODE_FIFO_KHR : chooseSwapPresentMode(swapchainSupport.presentModes);
 
         const VkSwapchainCreateInfoKHR ci = {
                 VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
@@ -725,7 +725,8 @@ namespace RHI::Vulkan
 
         //VK_CHECK(vkQueuePresentKHR(m_PresentQueue, &pi));
         VK_CHECK(vkQueuePresentKHR(m_PresentQueue, &pi));
-        VK_CHECK(vkDeviceWaitIdle(m_VulkanDevice));
+        //VK_CHECK(vkDeviceWaitIdle(m_VulkanDevice));
+        VK_CHECK(vkQueueWaitIdle(m_PresentQueue));
 
         return true;
     }

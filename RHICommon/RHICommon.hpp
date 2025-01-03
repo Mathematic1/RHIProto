@@ -422,6 +422,7 @@ namespace RHI
         uint32_t backBufferHeight = 0;
         uint32_t maxFramesInFlight = 2;
 
+        bool vSyncEnabled = false;
         bool supportScreenshots = false;
 
         std::vector<const char*> requiredVulkanInstanceExtensions;
