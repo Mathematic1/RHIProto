@@ -131,6 +131,17 @@ namespace RHI
         return 0;
     }
 
+    struct Viewport
+    {
+        float minX, maxX;
+        float minY, maxY;
+        float minZ, MaxZ;
+
+        Viewport(float _minX, float _maxX, float _minY, float _maxY, float _minZ, float _maxZ)
+	        : minX(_minX), maxX(_maxX), minY(_minY), maxY(_maxY), minZ(_minZ), MaxZ(_maxZ)
+        {}
+    };
+
     enum class MemoryPropertiesBits : uint32_t
     {
         DEVICE_LOCAL_BIT = 0x00000001,
@@ -651,6 +662,7 @@ namespace RHI
         uint32_t width = 0;
         uint32_t height = 0;
         uint32_t topology = 3; /* defaults to triangles*/
+        uint32_t msaaSamples = 1;
 
         bool useDepth = true;
         bool useBlending = false;
