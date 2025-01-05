@@ -200,7 +200,7 @@ namespace RHI::Vulkan
 		virtual ~VulkanRHIModule() override;
 
 		virtual IDynamicRHI* createRHI(const DeviceParams& deviceParams) override;
-		virtual void* getWindowInterface() override { return nullptr; };
+		virtual void* getWindowInterface() override { return nullptr; }
 
 	private:
 	};
@@ -284,7 +284,7 @@ namespace RHI::Vulkan
 		std::vector<VkImage> m_SwapchainImages;
 		std::vector<VkImageView> m_SwapchainImageViews;
 		std::vector<ITexture*> m_SwapchainTextures;
-		uint32_t m_SwapChainIndex = uint32_t(-1);
+		uint32_t m_SwapChainIndex = -1;
 		ITexture* m_DepthSwapChainTexture = nullptr;
 
 		std::vector<VkSemaphore> m_AcquireSemaphores;

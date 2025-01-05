@@ -460,6 +460,11 @@ namespace RHI
         virtual IDevice* getDevice() const = 0;
         virtual GraphicsAPI getGraphicsAPI() const = 0;
 
+        virtual DeviceParams& getDeviceParams()
+        {
+            return m_DeviceParams;
+        }
+
     protected:
         DeviceParams m_DeviceParams;
         std::vector<IFramebuffer*> m_SwapChainFramebuffers;
