@@ -232,4 +232,46 @@ namespace RHI::Vulkan
 
         return ret;
     }
+
+    VkBlendFactor convertBlendFactor(const BlendState& blendState)
+    {
+	    switch (blendState)
+	    {
+        case ZERO: return VK_BLEND_FACTOR_ZERO;
+        case ONE: return VK_BLEND_FACTOR_ONE;
+        case SRC_COLOR: return VK_BLEND_FACTOR_SRC_COLOR;
+        case ONE_MINUS_SRC_COLOR: return VK_BLEND_FACTOR_ONE_MINUS_SRC_COLOR;
+        case DST_COLOR: return VK_BLEND_FACTOR_DST_COLOR;
+        case ONE_MINUS_DST_COLOR: return VK_BLEND_FACTOR_ONE_MINUS_DST_COLOR;
+        case SRC_ALPHA: return VK_BLEND_FACTOR_SRC_ALPHA;
+        case ONE_MINUS_SRC_ALPHA: return VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+        case DST_ALPHA: return VK_BLEND_FACTOR_DST_ALPHA;
+        case ONE_MINUS_DST_ALPHA: return VK_BLEND_FACTOR_ONE_MINUS_DST_ALPHA;
+        case CONSTANT_COLOR: return VK_BLEND_FACTOR_CONSTANT_COLOR;
+        case ONE_MINUS_CONSTANT_COLOR: return VK_BLEND_FACTOR_ONE_MINUS_CONSTANT_COLOR;
+        case CONSTANT_ALPHA: return VK_BLEND_FACTOR_CONSTANT_ALPHA;
+        case ONE_MINUS_CONSTANT_ALPHA: return VK_BLEND_FACTOR_ONE_MINUS_CONSTANT_ALPHA;
+        case SRC_ALPHA_SATURATE: return VK_BLEND_FACTOR_SRC_ALPHA_SATURATE;
+        case SRC1_COLOR: return VK_BLEND_FACTOR_SRC1_COLOR;
+        case ONE_MINUS_SRC1_COLOR: return VK_BLEND_FACTOR_ONE_MINUS_SRC1_COLOR;
+        case SRC1_ALPHA: return VK_BLEND_FACTOR_SRC1_ALPHA;
+        case ONE_MINUS_SRC1_ALPHA: return VK_BLEND_FACTOR_ONE_MINUS_SRC1_ALPHA;
+	    default:
+	    	return VK_BLEND_FACTOR_ZERO;
+	    }
+    }
+
+    VkBlendOp convertBlendOp(const BlendOp& blendOp)
+    {
+	    switch (blendOp)
+	    {
+        case ADD: return VK_BLEND_OP_ADD;
+        case SUBTRACT: return VK_BLEND_OP_SUBTRACT;
+        case REVERSE_SUBTRACT: return VK_BLEND_OP_REVERSE_SUBTRACT;
+        case MIN: return VK_BLEND_OP_MIN;
+        case MAX: return VK_BLEND_OP_MAX;
+	    default:
+            return VK_BLEND_OP_ADD;
+	    }
+    }
 }

@@ -694,10 +694,55 @@ namespace RHI
         uint32_t msaaSamples = 1;
 
         bool useDepth = true;
-        bool useBlending = false;
         bool dynamicScissorState = false;
 
         uint32_t patchControlPoints = 0;
+    };
+
+    enum BlendState
+    {
+        ZERO = 0,
+        ONE = 1,
+        SRC_COLOR = 2,
+        ONE_MINUS_SRC_COLOR = 3,
+        DST_COLOR = 4,
+        ONE_MINUS_DST_COLOR = 5,
+        SRC_ALPHA = 6,
+        ONE_MINUS_SRC_ALPHA = 7,
+        DST_ALPHA = 8,
+        ONE_MINUS_DST_ALPHA = 9,
+        CONSTANT_COLOR = 10,
+        ONE_MINUS_CONSTANT_COLOR = 11,
+        CONSTANT_ALPHA = 12,
+        ONE_MINUS_CONSTANT_ALPHA = 13,
+        SRC_ALPHA_SATURATE = 14,
+        SRC1_COLOR = 15,
+        ONE_MINUS_SRC1_COLOR = 16,
+        SRC1_ALPHA = 17,
+        ONE_MINUS_SRC1_ALPHA = 18,
+    };
+
+    enum BlendOp
+    {
+        ADD = 0,
+        SUBTRACT = 1,
+        REVERSE_SUBTRACT = 2,
+        MIN = 3,
+        MAX = 4,
+    };
+
+    struct RenderState
+    {
+        bool CCWCullMode = false;
+        bool alphaBlend = false;
+        bool blendEnable = false;
+        BlendState srcColorBlendFactor = BlendState::SRC_ALPHA;
+        BlendState dstColorBlendFactor = BlendState::ONE_MINUS_SRC_ALPHA;
+        BlendOp colorBlendOp = BlendOp::ADD;
+        BlendState srcAlphaBlendFactor = BlendState::ONE; //VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA
+        BlendState dstAlphaBlendFactor = BlendState::ZERO;
+        BlendOp alphaBlendOp = BlendOp::ADD;
+        bool multisampleAA = false;
     };
 
     struct GraphicsPipelineDesc
@@ -713,7 +758,8 @@ namespace RHI
         std::shared_ptr<IShader> GS = nullptr;
         std::shared_ptr<IShader> PS = nullptr;
 
-        //VkPipelineLayout pipelineLayout,
+        RenderState renderState;
+
         GraphicsPipelineInfo pipelineInfo;
 
         GraphicsPipelineDesc& setPrimType(PrimitiveType value) { primType = value; return *this; }

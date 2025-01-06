@@ -146,13 +146,13 @@ namespace RHI::Vulkan
         multisampling.alphaToOneEnable = VK_FALSE; // optional
 
         VkPipelineColorBlendAttachmentState colorBlendAttachment{};
-        colorBlendAttachment.blendEnable = VK_TRUE;
-        colorBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
-        colorBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
-        colorBlendAttachment.colorBlendOp = VK_BLEND_OP_ADD;
-        colorBlendAttachment.srcAlphaBlendFactor = pipeInfo.useBlending ? VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA : VK_BLEND_FACTOR_ONE;
-        colorBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
-        colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD;
+        colorBlendAttachment.blendEnable = desc.renderState.blendEnable ? VK_TRUE : VK_FALSE;
+        colorBlendAttachment.srcColorBlendFactor = convertBlendFactor(desc.renderState.srcColorBlendFactor);
+        colorBlendAttachment.dstColorBlendFactor = convertBlendFactor(desc.renderState.dstColorBlendFactor);
+        colorBlendAttachment.colorBlendOp = convertBlendOp(desc.renderState.colorBlendOp);
+        colorBlendAttachment.srcAlphaBlendFactor = convertBlendFactor(desc.renderState.srcAlphaBlendFactor);
+        colorBlendAttachment.dstAlphaBlendFactor = convertBlendFactor(desc.renderState.dstAlphaBlendFactor);
+        colorBlendAttachment.alphaBlendOp = convertBlendOp(desc.renderState.alphaBlendOp);
         colorBlendAttachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
 
         VkPipelineColorBlendStateCreateInfo colorBlending{};

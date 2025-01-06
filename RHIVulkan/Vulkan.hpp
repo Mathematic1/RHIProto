@@ -29,4 +29,8 @@ namespace RHI::Vulkan
 	VkDescriptorType convertDescriptorType(DescriptorType type);
 
 	VkShaderStageFlags pickShaderStage(ShaderStageFlagBits stages);
+
+	VkBlendFactor convertBlendFactor(const BlendState& blendState);
+
+	VkBlendOp convertBlendOp(const BlendOp& blendOp);
 }
