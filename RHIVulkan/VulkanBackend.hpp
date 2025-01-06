@@ -614,8 +614,11 @@ namespace RHI::Vulkan
 			: m_Context(context)
 		{}
 
-		virtual ~Framebuffer() override {};
+		virtual ~Framebuffer() override {}
 
+		const FramebufferDesc& getDesc() const override { return desc; }
+
+		FramebufferDesc desc;
 		VkRenderPass renderPass = VkRenderPass();
 		VkFramebuffer framebuffer = VkFramebuffer();
 	private:

@@ -135,11 +135,32 @@ namespace RHI
     {
         float minX, maxX;
         float minY, maxY;
-        float minZ, MaxZ;
+        float minZ, maxZ;
+
+        Viewport()
+            : minX(0), maxX(0), minY(0), maxY(0), minZ(0), maxZ(0)
+        {
+        }
 
         Viewport(float _minX, float _maxX, float _minY, float _maxY, float _minZ, float _maxZ)
-	        : minX(_minX), maxX(_maxX), minY(_minY), maxY(_maxY), minZ(_minZ), MaxZ(_maxZ)
-        {}
+            : minX(_minX), maxX(_maxX), minY(_minY), maxY(_maxY), minZ(_minZ), maxZ(_maxZ)
+        {
+        }
+
+        float getWidth() const
+        {
+            return std::abs(maxX - minX);
+        }
+
+        float getHeight() const
+        {
+            return std::abs(maxY - minY);
+        }
+
+        float getDepth() const
+        {
+            return std::abs(maxZ - minZ);
+        }
     };
 
     enum class MemoryPropertiesBits : uint32_t
@@ -613,7 +634,8 @@ namespace RHI
 
     struct FramebufferDesc
     {
-	    
+        std::vector<RHI::ITexture*> colorAttachments;
+        RHI::ITexture* depthAttachment = nullptr;
     };
 
     enum eRenderPassBit : uint8_t
@@ -644,6 +666,8 @@ namespace RHI
     public:
         uint32_t framebufferWidth = -1;
         uint32_t framebufferHeight = -1;
+
+        virtual const FramebufferDesc& getDesc() const = 0;
 
     private:
         IRenderPass* m_RenderPass;

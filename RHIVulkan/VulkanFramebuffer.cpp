@@ -41,6 +41,15 @@ namespace RHI::Vulkan
         {
             Texture* texture = dynamic_cast<Texture*>(image);
             attachments.push_back(texture->imageView);
+
+            if(texture->desiredLayout == VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL)
+            {
+                fb->desc.colorAttachments.push_back(texture);
+            }
+            else if(texture->desiredLayout == VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL)
+            {
+                fb->desc.depthAttachment = texture;
+            }
         }
 
         VkFramebufferCreateInfo fbInfo{};

@@ -85,6 +85,7 @@ namespace RHI::Vulkan
             convertImageLayout(newLayout),
             tex->getDesc().layerCount,
             tex->getDesc().mipLevels);
+        tex->desiredLayout = convertImageLayout(newLayout);
     }
 
     void CommandList::transitionImageLayoutCmd(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout, uint32_t layerCount, uint32_t mipLevels)
