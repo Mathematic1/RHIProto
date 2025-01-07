@@ -526,6 +526,9 @@ namespace RHI
         SamplerAddressMode addressW = SamplerAddressMode::REPEAT;
         SamplerFilter minFilter = SamplerFilter::LINEAR;
         SamplerFilter magFilter = SamplerFilter::LINEAR;
+        SamplerFilter mipFilter = SamplerFilter::LINEAR;
+        bool anisotropyEnable = false;
+        float maxAnisotropy = 1.0f;
 
         constexpr SamplerDesc& setAddressU(SamplerAddressMode value) { addressU = value; return *this; }
         constexpr SamplerDesc& setAddressV(SamplerAddressMode value) { addressV = value; return *this; }
@@ -533,6 +536,8 @@ namespace RHI
         constexpr SamplerDesc& setAddressAll(SamplerAddressMode value) { addressU = addressV = addressW = value; return *this; }
         constexpr SamplerDesc& setMinFilter(SamplerFilter value) { minFilter = value; return *this; }
         constexpr SamplerDesc& setMagFilter(SamplerFilter value) { magFilter = value; return *this; }
+        constexpr SamplerDesc& setAnisotropyEnable(bool value) { anisotropyEnable = value; return *this; }
+        constexpr SamplerDesc& setMaxAnisotropy(float value) { maxAnisotropy = value; return *this; }
     };
 
     class ISampler : public IResource
@@ -731,8 +736,16 @@ namespace RHI
         MAX = 4,
     };
 
+    enum FillMode
+    {
+        FILL = 0,
+        LINE = 1,
+        POINT = 2,
+    };
+
     struct RenderState
     {
+        FillMode polygonFillMode = FillMode::FILL;
         bool CCWCullMode = false;
         bool alphaBlend = false;
         bool blendEnable = false;

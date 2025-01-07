@@ -33,4 +33,6 @@ namespace RHI::Vulkan
 	VkBlendFactor convertBlendFactor(const BlendState& blendState);
 
 	VkBlendOp convertBlendOp(const BlendOp& blendOp);
+
+	VkPolygonMode convertFillMode(const FillMode& mode);
 }
