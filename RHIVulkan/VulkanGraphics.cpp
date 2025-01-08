@@ -166,11 +166,12 @@ namespace RHI::Vulkan
         colorBlending.blendConstants[2] = 0.0f;
         colorBlending.blendConstants[3] = 0.0f;
 
+        const DepthStencilState& depthStencilState = desc.renderState.depthStencilState;
         VkPipelineDepthStencilStateCreateInfo depthStencil{};
         depthStencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
-        depthStencil.depthTestEnable = static_cast<VkBool32>(pipeInfo.useDepth ? VK_TRUE : VK_FALSE);
-        depthStencil.depthWriteEnable = static_cast<VkBool32>(pipeInfo.useDepth ? VK_TRUE : VK_FALSE);
-        depthStencil.depthCompareOp = VK_COMPARE_OP_LESS;
+        depthStencil.depthTestEnable = static_cast<VkBool32>(depthStencilState.depthTestEnable ? VK_TRUE : VK_FALSE);
+        depthStencil.depthWriteEnable = static_cast<VkBool32>(depthStencilState.depthWriteEnable ? VK_TRUE : VK_FALSE);
+        depthStencil.depthCompareOp = convertCompareOp(depthStencilState.depthCompareOp);
         depthStencil.depthBoundsTestEnable = VK_FALSE;
         depthStencil.minDepthBounds = 0.0f;
         depthStencil.maxDepthBounds = 1.0f;
@@ -204,7 +205,7 @@ namespace RHI::Vulkan
         pipelineInfo.pViewportState = &viewportState;
         pipelineInfo.pRasterizationState = &rasterizer;
         pipelineInfo.pMultisampleState = &multisampling;
-        pipelineInfo.pDepthStencilState = pipeInfo.useDepth ? &depthStencil : nullptr;
+        pipelineInfo.pDepthStencilState = &depthStencil;
         pipelineInfo.pColorBlendState = &colorBlending;
         pipelineInfo.pDynamicState = pipeInfo.dynamicScissorState ? &dynamicState : nullptr;
         pipelineInfo.layout = pso->pipelineLayout;

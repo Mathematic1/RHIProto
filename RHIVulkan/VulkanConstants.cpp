@@ -286,4 +286,21 @@ namespace RHI::Vulkan
             return VK_POLYGON_MODE_FILL;
 	    }
     }
+
+    VkCompareOp convertCompareOp(const CompareOp& op)
+    {
+	    switch (op)
+	    {
+        case NEVER: return VK_COMPARE_OP_NEVER;
+        case LESS: return VK_COMPARE_OP_LESS;
+        case EQUAL: return VK_COMPARE_OP_EQUAL;
+        case LESS_OR_EQUAL: return VK_COMPARE_OP_LESS_OR_EQUAL;
+        case GREATER: return VK_COMPARE_OP_GREATER;
+        case NOT_EQUAL: return VK_COMPARE_OP_NOT_EQUAL;
+        case GREATER_OR_EQUAL: return VK_COMPARE_OP_GREATER_OR_EQUAL;
+        case ALWAYS: return VK_COMPARE_OP_ALWAYS;
+	    default:
+	    	return VK_COMPARE_OP_ALWAYS;
+	    }
+    }
 }

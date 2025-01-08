@@ -698,7 +698,6 @@ namespace RHI
         uint32_t topology = 3; /* defaults to triangles*/
         uint32_t msaaSamples = 1;
 
-        bool useDepth = true;
         bool dynamicScissorState = false;
 
         uint32_t patchControlPoints = 0;
@@ -743,10 +742,35 @@ namespace RHI
         POINT = 2,
     };
 
+    enum CompareOp {
+        NEVER = 0,
+        LESS = 1,
+        EQUAL = 2,
+        LESS_OR_EQUAL = 3,
+        GREATER = 4,
+        NOT_EQUAL = 5,
+        GREATER_OR_EQUAL = 6,
+        ALWAYS = 7,
+        MAX_ENUM = 0x7FFFFFFF
+    };
+
+    struct DepthStencilState
+    {
+        bool depthTestEnable = true;
+        bool depthWriteEnable = true;
+        CompareOp depthCompareOp = CompareOp::LESS_OR_EQUAL;
+    };
+
     struct RenderState
     {
+        // rasterization
         FillMode polygonFillMode = FillMode::FILL;
         bool CCWCullMode = false;
+
+        // depth stencil state
+        DepthStencilState depthStencilState;
+
+        // blend state
         bool alphaBlend = false;
         bool blendEnable = false;
         BlendState srcColorBlendFactor = BlendState::SRC_ALPHA;
@@ -755,6 +779,8 @@ namespace RHI
         BlendState srcAlphaBlendFactor = BlendState::ONE; //VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA
         BlendState dstAlphaBlendFactor = BlendState::ZERO;
         BlendOp alphaBlendOp = BlendOp::ADD;
+
+        // multisampling
         bool multisampleAA = false;
     };
 
