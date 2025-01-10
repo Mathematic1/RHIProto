@@ -240,9 +240,9 @@ namespace RHI::Vulkan
             1, &barrier);
     }
 
-    void CommandList::transitionBufferLayout(IBuffer* texture, ImageLayout oldLayout, ImageLayout newLayout)
+    void CommandList::transitionBufferLayout(IBuffer* buffer, ImageLayout oldLayout, ImageLayout newLayout)
     {
-        Buffer* buf = new Buffer(m_Context);
+        Buffer* buf = dynamic_cast<Buffer*>(buffer);
         transitionBufferLayoutCmd(buf->buffer, convertFormat(buf->desc.format), VkImageLayout{}, VkImageLayout{}, 0, 0);
     }
 

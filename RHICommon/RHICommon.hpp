@@ -20,6 +20,9 @@ namespace RHI
 	class IDevice;
     class IFramebuffer;
 
+    typedef std::shared_ptr<IBuffer> BufferHandle;
+    typedef std::shared_ptr<ITexture> TextureHandle;
+
 	enum class GraphicsAPI : uint8_t
     {
         OGL,
@@ -473,8 +476,8 @@ namespace RHI
         virtual bool BeginFrame() = 0;
         virtual bool Present() = 0;
         virtual void BackBufferResized();
-        virtual ITexture* GetBackBuffer(uint32_t index) = 0;
-        virtual ITexture* GetDepthBuffer() = 0;
+        virtual TextureHandle GetBackBuffer(uint32_t index) = 0;
+        virtual TextureHandle GetDepthBuffer() = 0;
         virtual uint32_t GetCurrentBackBufferIndex() = 0;
         virtual uint32_t GetBackBufferCount() = 0;
         virtual IFramebuffer* GetFramebuffer(uint32_t index) = 0;
@@ -828,13 +831,13 @@ namespace RHI
         virtual IBindingLayout* createDescriptorSetLayout(const DescriptorSetInfo& dsInfo) = 0;
         virtual IBindingSet* createDescriptorSet(const DescriptorSetInfo& dsInfo, uint32_t dSetCount, IBindingLayout* bindingLayout) = 0;
         virtual IInputLayout* createInputLayout(const VertexInputAttributeDesc* attributes, const VertexInputBindingDesc* bindings) = 0;
-        virtual ITexture* createImage(const TextureDesc& desc) = 0;
+        virtual TextureHandle createImage(const TextureDesc& desc) = 0;
         virtual bool createImageView(ITexture* texture, ImageAspectFlagBits aspectFlags) = 0;
         virtual ISampler* createTextureSampler(const SamplerDesc& desc = SamplerDesc()) = 0;
         virtual ISampler* createDepthSampler() = 0;
-        virtual IBuffer* createBuffer(const BufferDesc& desc) = 0;
-        virtual IBuffer* createSharedBuffer(const BufferDesc& desc) = 0;
-        virtual IBuffer* addBuffer(const BufferDesc& desc, bool createMapping = false) = 0;
+        virtual BufferHandle createBuffer(const BufferDesc& desc) = 0;
+        virtual BufferHandle createSharedBuffer(const BufferDesc& desc) = 0;
+        virtual BufferHandle addBuffer(const BufferDesc& desc, bool createMapping = false) = 0;
         virtual void uploadBufferData(IBuffer* buffer, size_t deviceOffset, const void* data, const size_t dataSize) = 0;
         virtual void uploadVertexIndexBufferData(IBuffer* buffer, size_t deviceOffset, size_t vertexDataSize, const void* vertexData,
             size_t indexDataSize, const void* indexData, const size_t dataSize) = 0;

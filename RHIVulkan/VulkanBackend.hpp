@@ -136,7 +136,7 @@ namespace RHI::Vulkan
 		VkCommandPool commandPool = VkCommandPool();
 
 		std::vector<IResource*> referencedResources; // to keep them alive
-		std::vector<Buffer*> referencedStagingBuffers; // to allow synchronous mapBuffer
+		std::vector<BufferHandle> referencedStagingBuffers; // to allow synchronous mapBuffer
 
 		uint64_t recordingID = 0;
 		uint64_t submissionID = 0;
@@ -248,8 +248,8 @@ namespace RHI::Vulkan
 
 		virtual uint32_t GetBackBufferCount() override;
 		virtual uint32_t GetCurrentBackBufferIndex() override;
-		virtual ITexture* GetBackBuffer(uint32_t index) override;
-		virtual ITexture* GetDepthBuffer() override;
+		virtual TextureHandle GetBackBuffer(uint32_t index) override;
+		virtual TextureHandle GetDepthBuffer() override;
 		virtual IFramebuffer* GetFramebuffer(uint32_t index) override;
 
 		static VulkanContextFeatures& initializeContextFeatures();
@@ -283,9 +283,9 @@ namespace RHI::Vulkan
 
 		std::vector<VkImage> m_SwapchainImages;
 		std::vector<VkImageView> m_SwapchainImageViews;
-		std::vector<ITexture*> m_SwapchainTextures;
+		std::vector<TextureHandle> m_SwapchainTextures;
 		uint32_t m_SwapChainIndex = -1;
-		ITexture* m_DepthSwapChainTexture = nullptr;
+		TextureHandle m_DepthSwapChainTexture = nullptr;
 
 		std::vector<VkSemaphore> m_AcquireSemaphores;
 		std::vector<VkSemaphore> m_PresentSemaphores;
@@ -690,7 +690,7 @@ namespace RHI::Vulkan
 
 		virtual GraphicsAPI getGraphicsAPI() const override;
 
-		virtual ITexture* createImage(const TextureDesc& desc) override;
+		virtual TextureHandle createImage(const TextureDesc& desc) override;
 
 		virtual bool createImageView(ITexture* texture, ImageAspectFlagBits aspectFlags) override;
 
@@ -698,7 +698,7 @@ namespace RHI::Vulkan
 
 		virtual ISampler* createDepthSampler() override;
 
-		virtual ITexture* createTextureForNative(VkImage image, VkImageView imageView, ImageAspectFlagBits aspectFlags, const TextureDesc& desc) override;
+		virtual TextureHandle createTextureForNative(VkImage image, VkImageView imageView, ImageAspectFlagBits aspectFlags, const TextureDesc& desc) override;
 
 		VkFormat findSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features);
 
@@ -706,15 +706,15 @@ namespace RHI::Vulkan
 
 		virtual Format findDepthFormat() override;
 
-		IBuffer* createUniformBuffer(VkDeviceSize bufferSize);
+		BufferHandle createUniformBuffer(VkDeviceSize bufferSize);
 
-		virtual IBuffer* createSharedBuffer(const BufferDesc& desc) override;
+		virtual BufferHandle createBuffer(const BufferDesc& desc) override;
 
-		virtual IBuffer* createBuffer(const BufferDesc& desc) override;
+		virtual BufferHandle createSharedBuffer(const BufferDesc& desc) override;
 
-		virtual IBuffer* addBuffer(const BufferDesc& desc, bool createMapping = false) override;
+		virtual BufferHandle addBuffer(const BufferDesc& desc, bool createMapping = false) override;
 
-		inline IBuffer* addUniformBuffer(uint64_t bufferSize, bool createMapping = false)
+		inline BufferHandle addUniformBuffer(uint64_t bufferSize, bool createMapping = false)
 		{
 			BufferDesc desc = BufferDesc{}
 				.setSize(bufferSize)
@@ -723,7 +723,7 @@ namespace RHI::Vulkan
 			return addBuffer(desc, createMapping);
 		}
 
-		inline IBuffer* addIndirectBuffer(VkDeviceSize bufferSize, bool createMapping = false) {
+		inline BufferHandle addIndirectBuffer(VkDeviceSize bufferSize, bool createMapping = false) {
 			BufferDesc desc = BufferDesc{}
 				.setSize(bufferSize)
 				.setIsDrawIndirectBuffer(true) // | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT
@@ -731,7 +731,7 @@ namespace RHI::Vulkan
 			return addBuffer(desc, createMapping);
 		}
 
-		inline IBuffer* addStorageBuffer(VkDeviceSize bufferSize, bool createMapping = false)
+		inline BufferHandle addStorageBuffer(VkDeviceSize bufferSize, bool createMapping = false)
 		{
 			BufferDesc desc = BufferDesc{}
 				.setSize(bufferSize)
@@ -740,7 +740,7 @@ namespace RHI::Vulkan
 			return addBuffer(desc, createMapping); /* for debugging we make it host-visible */
 		}
 
-		inline IBuffer* addLocalDeviceStorageBuffer(VkDeviceSize bufferSize, bool createMapping = false)
+		inline BufferHandle addLocalDeviceStorageBuffer(VkDeviceSize bufferSize, bool createMapping = false)
 		{
 			BufferDesc desc = BufferDesc{}
 				.setSize(bufferSize)

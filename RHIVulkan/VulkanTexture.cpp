@@ -187,7 +187,7 @@ namespace RHI::Vulkan
         }
     }
 
-    ITexture* Device::createImage(const TextureDesc& desc)
+    TextureHandle Device::createImage(const TextureDesc& desc)
     {
         Texture* tex = new Texture(m_Context);
         tex->desc = desc;
@@ -223,7 +223,7 @@ namespace RHI::Vulkan
         VK_CHECK(vkAllocateMemory(m_Context.device, &allocInfo, nullptr, &tex->imageMemory));
 
         vkBindImageMemory(m_Context.device, tex->image, tex->imageMemory, 0);
-        return tex;
+        return TextureHandle(tex);
     }
 
     bool Device::createImageView(ITexture* texture, ImageAspectFlagBits aspectFlags)
@@ -309,7 +309,7 @@ namespace RHI::Vulkan
 
     bool CommandList::updateTextureImage(ITexture* texture, const void* imageData, ImageLayout sourceImageLayout)
     {
-        Texture* tex = dynamic_cast<Texture*>(texture);
+    	Texture* tex = dynamic_cast<Texture*>(texture);
 
         uint32_t bytesPerPixel = bytesPerTexFormat(tex->desc.format);
 
@@ -320,26 +320,28 @@ namespace RHI::Vulkan
             .setSize(imageSize)
             .setIsTransferSrc(true)
             .setMemoryProperties(MemoryPropertiesBits::HOST_VISIBLE_BIT | MemoryPropertiesBits::HOST_COHERENT_BIT);
-        Buffer* stagingBuffer = dynamic_cast<Buffer*>(m_Device->createBuffer(stagingDesc));
+        BufferHandle stagingBuffer = m_Device->createBuffer(stagingDesc);
+        m_CurrentCommandBuffer->referencedStagingBuffers.push_back(stagingBuffer);
 
-        m_Device->uploadBufferData(stagingBuffer, 0, imageData, imageSize);
+        m_Device->uploadBufferData(stagingBuffer.get(), 0, imageData, imageSize);
 
         transitionImageLayout(tex, sourceImageLayout, ImageLayout::TRANSFER_DST_OPTIMAL);
-        copyBufferToImage(stagingBuffer, tex);
+        copyBufferToImage(stagingBuffer.get(), tex);
         transitionImageLayout(tex, ImageLayout::TRANSFER_DST_OPTIMAL, ImageLayout::SHADER_READ_ONLY_OPTIMAL);
 
+        // TODO: fixup memory cleanup
         //delete stagingBuffer;
 
         return true;
     }
 
-    ITexture* Device::createTextureForNative(VkImage image, VkImageView imageView, ImageAspectFlagBits aspectFlags, const TextureDesc& desc)
+    TextureHandle Device::createTextureForNative(VkImage image, VkImageView imageView, ImageAspectFlagBits aspectFlags, const TextureDesc& desc)
     {
         Texture* tex = new Texture(m_Context);
         tex->desc = desc;
         tex->image = image;
         createImageView(tex, aspectFlags);
 
-        return tex;
+        return TextureHandle(tex);
     }
 }

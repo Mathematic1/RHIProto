@@ -32,7 +32,7 @@ namespace RHI::Vulkan
         return ret;
     }
 
-	IBuffer* Device::createBuffer(const BufferDesc& desc)
+	BufferHandle Device::createBuffer(const BufferDesc& desc)
     {
         Buffer* buffer = new Buffer(m_Context);
 
@@ -61,10 +61,10 @@ namespace RHI::Vulkan
 
         vkBindBufferMemory(m_Context.device, buffer->buffer, buffer->memory, 0);
 
-        return buffer;
+        return BufferHandle(buffer);
     }
 
-    IBuffer* Device::createSharedBuffer(const BufferDesc& desc)
+    BufferHandle Device::createSharedBuffer(const BufferDesc& desc)
     {
         uint32_t familyCount = static_cast<uint32_t>(m_DeviceQueueIndices.size());
 
@@ -98,10 +98,10 @@ namespace RHI::Vulkan
 
         vkBindBufferMemory(m_Context.device, buffer->buffer, buffer->memory, 0);
 
-        return buffer;
+        return BufferHandle(buffer);
     }
 
-    IBuffer* Device::createUniformBuffer(VkDeviceSize bufferSize)
+    BufferHandle Device::createUniformBuffer(VkDeviceSize bufferSize)
     {
         BufferDesc desc = BufferDesc{}
     		.setSize(bufferSize)
@@ -146,9 +146,9 @@ namespace RHI::Vulkan
         vkUnmapMemory(m_Context.device, bufferMemory);
     }
 
-    IBuffer* Device::addBuffer(const BufferDesc& desc, bool createMapping)
+    BufferHandle Device::addBuffer(const BufferDesc& desc, bool createMapping)
     {
-		Buffer* buffer = dynamic_cast<Buffer*>(createSharedBuffer(desc));
+		Buffer* buffer = dynamic_cast<Buffer*>(createSharedBuffer(desc).get());
         if (!buffer)
         {
             printf("Cannot allocate buffer\n");
@@ -163,7 +163,7 @@ namespace RHI::Vulkan
         if (createMapping)
             vkMapMemory(m_Context.device, buffer->memory, 0, VK_WHOLE_SIZE, 0, &buffer->ptr);
 
-        return buffer;
+        return BufferHandle(buffer);
     }
 
     void CommandList::writeBuffer(IBuffer* srcBuffer, size_t size, const void* data)
@@ -172,13 +172,13 @@ namespace RHI::Vulkan
             .setSize(size)
             .setIsTransferSrc(true)
             .setMemoryProperties(MemoryPropertiesBits::HOST_VISIBLE_BIT | MemoryPropertiesBits::HOST_COHERENT_BIT);
-        Buffer* stagingBuffer = dynamic_cast<Buffer*>(m_Device->createBuffer(stagingDesc));
+        BufferHandle stagingBuffer = m_Device->createBuffer(stagingDesc);
 
-        m_Device->uploadBufferData(stagingBuffer, 0, data, size);
+        m_Device->uploadBufferData(stagingBuffer.get(), 0, data, size);
 
         m_CurrentCommandBuffer->referencedStagingBuffers.push_back(stagingBuffer);
 
-        copyBuffer(stagingBuffer, srcBuffer, size);
+        copyBuffer(stagingBuffer.get(), srcBuffer, size);
     }
 
     Buffer::~Buffer()

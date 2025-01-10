@@ -339,12 +339,12 @@ namespace RHI::Vulkan
         return m_SwapChainIndex;
     }
 
-    ITexture* VulkanDynamicRHI::GetBackBuffer(uint32_t index)
+    TextureHandle VulkanDynamicRHI::GetBackBuffer(uint32_t index)
     {
         return m_SwapchainTextures[index];
     }
 
-    ITexture* VulkanDynamicRHI::GetDepthBuffer()
+    TextureHandle VulkanDynamicRHI::GetDepthBuffer()
     {
         return m_DepthSwapChainTexture;
     }
@@ -404,9 +404,8 @@ namespace RHI::Vulkan
             desc.setWidth(m_DeviceParams.backBufferWidth)
                 .setHeight(m_DeviceParams.backBufferHeight)
                 .setFormat(Format::BGRA8_UNORM);
-            ITexture* texture = device->createTextureForNative(m_SwapchainImages[i], m_SwapchainImageViews[i], ImageAspectFlagBits::COLOR_BIT, desc);
 
-            m_SwapchainTextures.push_back(texture);
+        	m_SwapchainTextures.push_back(device->createTextureForNative(m_SwapchainImages[i], m_SwapchainImageViews[i], ImageAspectFlagBits::COLOR_BIT, desc));
         }
 
         createDepthSwapchainImage();
@@ -435,8 +434,8 @@ namespace RHI::Vulkan
                 exit(EXIT_FAILURE);
             }
 
-            m_Device->createImageView(m_DepthSwapChainTexture, ImageAspectFlagBits::DEPTH_BIT);
-            commandList->transitionImageLayout(m_DepthSwapChainTexture, ImageLayout::UNDEFINED, ImageLayout::DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
+            m_Device->createImageView(m_DepthSwapChainTexture.get(), ImageAspectFlagBits::DEPTH_BIT);
+            commandList->transitionImageLayout(m_DepthSwapChainTexture.get(), ImageLayout::UNDEFINED, ImageLayout::DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
         }
 
         commandList->endSingleTimeCommands();

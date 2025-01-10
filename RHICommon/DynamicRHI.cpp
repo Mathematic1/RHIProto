@@ -23,7 +23,7 @@ namespace RHI
 			ci.format = Format::BGRA8_UNORM;
 			ci.numOutputs = 2;
 			IRenderPass* renderPass = getDevice()->createRenderPass(ci);
-			m_SwapChainFramebuffers[index] = getDevice()->createFramebuffer(renderPass, { GetBackBuffer(index), GetDepthBuffer() });
+			m_SwapChainFramebuffers[index] = getDevice()->createFramebuffer(renderPass, { GetBackBuffer(index).get(), GetDepthBuffer().get() });
 		}
 	}
 
