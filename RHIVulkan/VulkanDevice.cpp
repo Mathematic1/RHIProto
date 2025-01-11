@@ -76,14 +76,14 @@ namespace RHI::Vulkan
         
     }
 
-    IRHICommandList* Device::createCommandList(const CommandListParameters& params)
+    CommandListHandle Device::createCommandList(const CommandListParameters& params)
     {
         if (!m_Queues[uint32_t(params.queueType)])
             return nullptr;
 
         CommandList* cmdList = new CommandList(this, m_Context, params);
 
-        return cmdList;
+        return CommandListHandle(cmdList);
     }
 
     uint64_t Device::executeCommandLists(std::vector<IRHICommandList*>& commandLists, size_t numCommandLists, CommandQueue executionQueue)

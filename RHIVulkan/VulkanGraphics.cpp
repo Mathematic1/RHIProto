@@ -39,7 +39,7 @@ namespace RHI::Vulkan
         return attributeDescriptions;
     }
 
-    IGraphicsPipeline* Device::createGraphicsPipeline(const GraphicsPipelineDesc& desc, IFramebuffer* framebuffer)
+    GraphicsPipelineHandle Device::createGraphicsPipeline(const GraphicsPipelineDesc& desc, IFramebuffer* framebuffer)
     {
         GraphicsPipeline* pso = new GraphicsPipeline(m_Context);
         const GraphicsPipelineInfo& pipeInfo = desc.pipelineInfo;
@@ -216,7 +216,7 @@ namespace RHI::Vulkan
 
         VK_CHECK(vkCreateGraphicsPipelines(m_Context.device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &pso->pipeline));
 
-        return pso;
+        return GraphicsPipelineHandle(pso);
     }
 
     VkPipeline Device::addPipeline(const GraphicsPipelineDesc& desc, IFramebuffer* framebuffer)

@@ -18,6 +18,8 @@ namespace RHI::Vulkan
 		virtual TextureHandle createTextureForNative(VkImage image, VkImageView imageView, ImageAspectFlagBits aspectFlags, const TextureDesc& desc) = 0;
 	};
 
+	typedef std::shared_ptr<IDevice> DeviceHandle;
+
 	VkFormat convertFormat(RHI::Format format);
 
 	VkSamplerAddressMode convertSamplerAddressMode(SamplerAddressMode mode);

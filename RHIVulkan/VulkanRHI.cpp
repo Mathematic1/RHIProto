@@ -45,9 +45,9 @@ namespace RHI::Vulkan
         }
 	}
 
-    RHI::IDevice* VulkanDynamicRHI::getDevice() const
+    IDevice* VulkanDynamicRHI::getDevice() const
     {
-        return m_Device;
+        return m_Device.get();
     }
 
     void VulkanDynamicRHI::setWindowSurface(VkSurfaceKHR surface)
@@ -221,7 +221,7 @@ namespace RHI::Vulkan
             .transferQueue = m_TransferQueue,
             .useTransferQueue = m_DeviceParams.useTransferQueue };
 
-        m_Device = new RHI::Vulkan::Device(DeviceDesc);
+        m_Device = Vulkan::DeviceHandle(new RHI::Vulkan::Device(DeviceDesc));
 
         createSwapchain();
         const size_t imageCount = createSwapchainImages();
@@ -349,7 +349,7 @@ namespace RHI::Vulkan
         return m_DepthSwapChainTexture;
     }
 
-    IFramebuffer* VulkanDynamicRHI::GetFramebuffer(uint32_t index)
+    FramebufferHandle VulkanDynamicRHI::GetFramebuffer(uint32_t index)
     {
         return m_SwapChainFramebuffers[index];
     }
@@ -397,7 +397,7 @@ namespace RHI::Vulkan
 
         VK_CHECK(vkGetSwapchainImagesKHR(m_VulkanDevice, m_SwapChain, &imageCount, m_SwapchainImages.data()));
 
-        Vulkan::Device* device = dynamic_cast<Vulkan::Device*>(m_Device);
+        Vulkan::IDevice* device = dynamic_cast<Vulkan::IDevice*>(m_Device.get());
         for (unsigned i = 0; i < imageCount; i++)
         {
             TextureDesc desc = {};
@@ -415,7 +415,7 @@ namespace RHI::Vulkan
 
     void VulkanDynamicRHI::createDepthSwapchainImage()
     {
-        IRHICommandList* commandList = m_Device->createCommandList();
+        CommandListHandle commandList = m_Device->createCommandList();
         commandList->beginSingleTimeCommands();
 
         {
@@ -440,7 +440,7 @@ namespace RHI::Vulkan
 
         commandList->endSingleTimeCommands();
         std::vector<IRHICommandList*> commandLists;
-        commandLists.push_back(commandList);
+        commandLists.push_back(commandList.get());
         m_Device->executeCommandLists(commandLists, 1);
     }
 

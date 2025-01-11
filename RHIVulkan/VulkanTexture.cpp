@@ -246,7 +246,7 @@ namespace RHI::Vulkan
         return (vkCreateImageView(m_Context.device, &viewInfo, nullptr, &tex->imageView) == VK_SUCCESS);
     }
 
-    ISampler* Device::createTextureSampler(const SamplerDesc& desc)
+    SamplerHandle Device::createTextureSampler(const SamplerDesc& desc)
     {
         VkSamplerCreateInfo samplerInfo{};
         samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
@@ -276,10 +276,10 @@ namespace RHI::Vulkan
             exit(EXIT_FAILURE);
         }
 
-        return sampler;
+        return SamplerHandle(sampler);
     }
 
-    ISampler* Device::createDepthSampler()
+    SamplerHandle Device::createDepthSampler()
     {
         VkSamplerCreateInfo si{};
         si.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
@@ -304,7 +304,7 @@ namespace RHI::Vulkan
             exit(EXIT_FAILURE);
         }
 
-        return sampler;
+        return SamplerHandle(sampler);
     }
 
     bool CommandList::updateTextureImage(ITexture* texture, const void* imageData, ImageLayout sourceImageLayout)

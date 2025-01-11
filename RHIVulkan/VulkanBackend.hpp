@@ -240,7 +240,7 @@ namespace RHI::Vulkan
 		virtual GraphicsAPI getGraphicsAPI() const override;
 		virtual void createDeviceInternal() override;
 		VkResult createDevice(std::unordered_set<uint32_t>& uniqueQueueFamilies, VkPhysicalDeviceFeatures deviceFeatures, VkPhysicalDeviceFeatures2 deviceFeatures2);
-		virtual RHI::IDevice* getDevice() const override;
+		virtual IDevice* getDevice() const override;
 		const VulkanInstance& getVulkanInstance() const;
 		bool CreateSwapchain();
 		virtual bool BeginFrame() override;
@@ -250,7 +250,7 @@ namespace RHI::Vulkan
 		virtual uint32_t GetCurrentBackBufferIndex() override;
 		virtual TextureHandle GetBackBuffer(uint32_t index) override;
 		virtual TextureHandle GetDepthBuffer() override;
-		virtual IFramebuffer* GetFramebuffer(uint32_t index) override;
+		virtual FramebufferHandle GetFramebuffer(uint32_t index) override;
 
 		static VulkanContextFeatures& initializeContextFeatures();
 		static VulkanContextExtensions& initializeContextExtensions();
@@ -300,7 +300,7 @@ namespace RHI::Vulkan
 		VulkanContextExtensions m_VulkanExtensions;
 		VulkanContextFeatures m_VulkanFeatures;
 
-		Vulkan::IDevice* m_Device;
+		Vulkan::DeviceHandle m_Device;
 	};
 
 	struct SwapchainSupportDetails final
@@ -694,9 +694,9 @@ namespace RHI::Vulkan
 
 		virtual bool createImageView(ITexture* texture, ImageAspectFlagBits aspectFlags) override;
 
-		virtual ISampler* createTextureSampler(const SamplerDesc& desc = SamplerDesc()) override;
+		virtual SamplerHandle createTextureSampler(const SamplerDesc& desc = SamplerDesc()) override;
 
-		virtual ISampler* createDepthSampler() override;
+		virtual SamplerHandle createDepthSampler() override;
 
 		virtual TextureHandle createTextureForNative(VkImage image, VkImageView imageView, ImageAspectFlagBits aspectFlags, const TextureDesc& desc) override;
 
@@ -799,13 +799,13 @@ namespace RHI::Vulkan
 
 		bool createColorAndDepthFramebuffers(VkRenderPass renderPass, VkImageView depthImageView, std::vector<VkFramebuffer>& swapchainFramebuffers);
 
-		virtual IFramebuffer* createFramebuffer(IRenderPass* renderPass, const std::vector<ITexture*>& images) override;
+		virtual FramebufferHandle createFramebuffer(IRenderPass* renderPass, const std::vector<ITexture*>& images) override;
 
 		std::vector<VkFramebuffer> addFramebuffers(VkRenderPass renderPass, VkImageView depthView = VK_NULL_HANDLE);
 
-		virtual std::shared_ptr<IShader> createShaderModule(const char* fileName) override;
+		virtual ShaderHandle createShaderModule(const char* fileName) override;
 
-		virtual IRHICommandList* createCommandList(const CommandListParameters& params) override;
+		virtual CommandListHandle createCommandList(const CommandListParameters& params) override;
 		virtual uint64_t executeCommandLists(std::vector<IRHICommandList*>& commandLists, size_t numCommandLists, CommandQueue executionQueue) override;
 
 		// vulkan::IDevice implementation
@@ -824,7 +824,7 @@ namespace RHI::Vulkan
 		// a list of all queues indices (for shared buffer allocations)
 		std::vector<uint32_t> m_DeviceQueueIndices;
 
-		virtual IGraphicsPipeline* createGraphicsPipeline(const GraphicsPipelineDesc& desc, IFramebuffer* framebuffer) override;
+		virtual GraphicsPipelineHandle createGraphicsPipeline(const GraphicsPipelineDesc& desc, IFramebuffer* framebuffer) override;
 	};
 
 	class CommandList : public IRHICommandList

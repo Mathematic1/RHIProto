@@ -16,12 +16,20 @@ namespace RHI
     class IBuffer;
 	class ITexture;
     class ISampler;
+    class IShader;
     class IGraphicsPipeline;
-	class IDevice;
     class IFramebuffer;
+    class IRHICommandList;
+	class IDevice;
 
     typedef std::shared_ptr<IBuffer> BufferHandle;
     typedef std::shared_ptr<ITexture> TextureHandle;
+    typedef std::shared_ptr<ISampler> SamplerHandle;
+    typedef std::shared_ptr<IShader> ShaderHandle;
+    typedef std::shared_ptr<IGraphicsPipeline> GraphicsPipelineHandle;
+    typedef std::shared_ptr<IFramebuffer> FramebufferHandle;
+    typedef std::shared_ptr<IRHICommandList> CommandListHandle;
+    typedef std::shared_ptr<IDevice> DeviceHandle;
 
 	enum class GraphicsAPI : uint8_t
     {
@@ -480,7 +488,7 @@ namespace RHI
         virtual TextureHandle GetDepthBuffer() = 0;
         virtual uint32_t GetCurrentBackBufferIndex() = 0;
         virtual uint32_t GetBackBufferCount() = 0;
-        virtual IFramebuffer* GetFramebuffer(uint32_t index) = 0;
+        virtual FramebufferHandle GetFramebuffer(uint32_t index) = 0;
         virtual IDevice* getDevice() const = 0;
         virtual GraphicsAPI getGraphicsAPI() const = 0;
 
@@ -491,7 +499,7 @@ namespace RHI
 
     protected:
         DeviceParams m_DeviceParams;
-        std::vector<IFramebuffer*> m_SwapChainFramebuffers;
+        std::vector<FramebufferHandle> m_SwapChainFramebuffers;
     };
 
     class IRHIModule
@@ -821,20 +829,20 @@ namespace RHI
     class IDevice : public IResource
     {
     public:
-        virtual IRHICommandList* createCommandList(const CommandListParameters& params = CommandListParameters()) = 0;
+        virtual CommandListHandle createCommandList(const CommandListParameters& params = CommandListParameters()) = 0;
         virtual uint64_t executeCommandLists(std::vector<IRHICommandList*>& commandLists, size_t numCommandLists, CommandQueue executionQueue = CommandQueue::Graphics) = 0;
         virtual GraphicsAPI getGraphicsAPI() const = 0;
         virtual IRenderPass* createRenderPass(const RenderPassCreateInfo& ci = RenderPassCreateInfo()) = 0;
-        virtual IFramebuffer* createFramebuffer(IRenderPass* renderPass, const std::vector<ITexture*>& images) = 0;
-        virtual IGraphicsPipeline* createGraphicsPipeline(const GraphicsPipelineDesc& desc, IFramebuffer* framebuffer) = 0;
-        virtual std::shared_ptr<IShader> createShaderModule(const char* fileName) = 0;
+        virtual FramebufferHandle createFramebuffer(IRenderPass* renderPass, const std::vector<ITexture*>& images) = 0;
+        virtual GraphicsPipelineHandle createGraphicsPipeline(const GraphicsPipelineDesc& desc, IFramebuffer* framebuffer) = 0;
+        virtual ShaderHandle createShaderModule(const char* fileName) = 0;
         virtual IBindingLayout* createDescriptorSetLayout(const DescriptorSetInfo& dsInfo) = 0;
         virtual IBindingSet* createDescriptorSet(const DescriptorSetInfo& dsInfo, uint32_t dSetCount, IBindingLayout* bindingLayout) = 0;
         virtual IInputLayout* createInputLayout(const VertexInputAttributeDesc* attributes, const VertexInputBindingDesc* bindings) = 0;
         virtual TextureHandle createImage(const TextureDesc& desc) = 0;
         virtual bool createImageView(ITexture* texture, ImageAspectFlagBits aspectFlags) = 0;
-        virtual ISampler* createTextureSampler(const SamplerDesc& desc = SamplerDesc()) = 0;
-        virtual ISampler* createDepthSampler() = 0;
+        virtual SamplerHandle createTextureSampler(const SamplerDesc& desc = SamplerDesc()) = 0;
+        virtual SamplerHandle createDepthSampler() = 0;
         virtual BufferHandle createBuffer(const BufferDesc& desc) = 0;
         virtual BufferHandle createSharedBuffer(const BufferDesc& desc) = 0;
         virtual BufferHandle addBuffer(const BufferDesc& desc, bool createMapping = false) = 0;

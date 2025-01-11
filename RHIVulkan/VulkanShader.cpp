@@ -122,9 +122,9 @@ namespace RHI::Vulkan
         return 0;
     }
 
-    std::shared_ptr<IShader> Device::createShaderModule(const char* fileName)
+    ShaderHandle Device::createShaderModule(const char* fileName)
     {
-        std::shared_ptr<Shader> shader = std::make_shared<Shader>();
+        Shader* shader = new Shader();
 
         if (compileShaderFile(fileName, *shader) < 1)
         {
@@ -139,7 +139,7 @@ namespace RHI::Vulkan
 
         vkCreateShaderModule(m_Context.device, &createInfo, nullptr, &shader->shaderModule);
 
-        return shader;
+        return ShaderHandle(shader);
     }
 
     uint32_t InputLayout::getNumAttributes() const

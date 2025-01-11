@@ -31,7 +31,7 @@ namespace RHI::Vulkan
         return true;
     }
 
-    IFramebuffer* Device::createFramebuffer(IRenderPass* renderPass, const std::vector<ITexture*>& images)
+    FramebufferHandle Device::createFramebuffer(IRenderPass* renderPass, const std::vector<ITexture*>& images)
     {
         Framebuffer* fb = new Framebuffer(m_Context);
         RenderPass* rp = dynamic_cast<RenderPass*>(renderPass);
@@ -74,7 +74,7 @@ namespace RHI::Vulkan
         fb->renderPass = rp->handle;
         fb->framebufferWidth = images[0]->getDesc().width;
         fb->framebufferHeight = images[0]->getDesc().height;
-        return fb;
+        return FramebufferHandle(fb);
     }
 
     std::vector<VkFramebuffer> Device::addFramebuffers(VkRenderPass renderPass, VkImageView depthView)
