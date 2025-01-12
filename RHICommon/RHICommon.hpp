@@ -802,11 +802,11 @@ namespace RHI
         std::vector<IBindingLayout*> bindingLayouts;
 
 
-        std::shared_ptr<IShader> VS = nullptr;
-        std::shared_ptr<IShader> HS = nullptr;
-        std::shared_ptr<IShader> DS = nullptr;
-        std::shared_ptr<IShader> GS = nullptr;
-        std::shared_ptr<IShader> PS = nullptr;
+        ShaderHandle VS = nullptr;
+        ShaderHandle HS = nullptr;
+        ShaderHandle DS = nullptr;
+        ShaderHandle GS = nullptr;
+        ShaderHandle PS = nullptr;
 
         RenderState renderState;
 
