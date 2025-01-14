@@ -15,14 +15,14 @@ namespace RHI
 		m_SwapChainFramebuffers.resize(backBufferCount);
 		for(uint32_t index = 0; index < backBufferCount; index++)
 		{
+			FramebufferDesc framebufferDesc = {};
+			framebufferDesc.addColorAttachment(GetBackBuffer(index).get())
+				.setDepthAttachment(GetDepthBuffer().get());
 			RenderPassCreateInfo ci{};
 			ci.clearColor = true;
 			ci.clearDepth = true;
-			ci.useDepth = true;
 			ci.flags = eRenderPassBit_First | eRenderPassBit_Last;
-			ci.format = Format::BGRA8_UNORM;
-			ci.numOutputs = 2;
-			IRenderPass* renderPass = getDevice()->createRenderPass(ci);
+			IRenderPass* renderPass = getDevice()->createRenderPass(framebufferDesc, ci);
 			m_SwapChainFramebuffers[index] = getDevice()->createFramebuffer(renderPass, { GetBackBuffer(index).get(), GetDepthBuffer().get() });
 		}
 	}

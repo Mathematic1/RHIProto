@@ -764,17 +764,16 @@ namespace RHI::Vulkan
 			return static_cast<uint32_t>(devProps.limits.minStorageBufferOffsetAlignment);
 		}
 
-		bool createColorOnlyRenderPass(VkRenderPass* renderPass, const RenderPassCreateInfo& ci, VkFormat colorFormat = VK_FORMAT_R8G8B8A8_UNORM);
-		bool createColorAndDepthRenderPass(bool useDepth, VkRenderPass* renderPass, const RenderPassCreateInfo& ci, VkFormat colorFormat = VK_FORMAT_B8G8R8A8_UNORM);
+		bool createColorAndDepthRenderPass(VkRenderPass* renderPass, const RenderPassCreateInfo& ci, const FramebufferDesc& framebufferDesc);
 		bool createDepthOnlyRenderPass(VkRenderPass* renderPass, const RenderPassCreateInfo& ci);
 
 		IRenderPass* addFullScreenPass(const RenderPassCreateInfo ci = RenderPassCreateInfo());
 
-		IRenderPass* createRenderPass(const RenderPassCreateInfo& ci = {
-			true, true, true, 1, Format::BGRA8_UNORM, eRenderPassBit_Offscreen | eRenderPassBit_First }) override;
+		IRenderPass* createRenderPass(const FramebufferDesc& framebufferDesc, const RenderPassCreateInfo& ci = {
+			true, true, eRenderPassBit_Offscreen | eRenderPassBit_First }) override;
 
 		IRenderPass* addDepthRenderPass(const RenderPassCreateInfo ci = {
-			false, true, true, 1, Format::BGRA8_UNORM, eRenderPassBit_Offscreen | eRenderPassBit_First });
+			false, true, eRenderPassBit_Offscreen | eRenderPassBit_First });
 
 		bool createPipelineLayout(std::vector<VkDescriptorSetLayout>& dsLayouts, VkPipelineLayout* pipelineLayout);
 

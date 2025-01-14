@@ -573,6 +573,7 @@ namespace RHI
         uint32_t depth = 1;
         uint32_t mipLevels = 1;
         uint32_t layerCount = 1;
+        uint32_t sampleCount = 1;
         Format format = Format::UNKNOWN;
         MemoryPropertiesBits memoryProperties = MemoryPropertiesBits::DEVICE_LOCAL_BIT;
         bool isLinearTiling = false;
@@ -650,8 +651,11 @@ namespace RHI
 
     struct FramebufferDesc
     {
-        std::vector<RHI::ITexture*> colorAttachments;
+        std::vector<ITexture*> colorAttachments;
         RHI::ITexture* depthAttachment = nullptr;
+
+        FramebufferDesc& addColorAttachment(ITexture* value) { colorAttachments.push_back(value); return *this; }
+        FramebufferDesc& setDepthAttachment(ITexture* value) { depthAttachment = value; return *this; }
     };
 
     enum eRenderPassBit : uint8_t
@@ -666,9 +670,6 @@ namespace RHI
     {
         bool clearColor = false;
         bool clearDepth = false;
-        bool useDepth = false;
-        uint32_t numOutputs = 0;
-        Format format = Format::UNKNOWN;
         uint8_t flags = 0;
     };
 
@@ -682,6 +683,7 @@ namespace RHI
     public:
         uint32_t framebufferWidth = -1;
         uint32_t framebufferHeight = -1;
+        uint32_t sampleCount = 1;
 
         virtual const FramebufferDesc& getDesc() const = 0;
 
@@ -707,7 +709,6 @@ namespace RHI
         uint32_t width = 0;
         uint32_t height = 0;
         uint32_t topology = 3; /* defaults to triangles*/
-        uint32_t msaaSamples = 1;
 
         bool dynamicScissorState = false;
 
@@ -832,7 +833,7 @@ namespace RHI
         virtual CommandListHandle createCommandList(const CommandListParameters& params = CommandListParameters()) = 0;
         virtual uint64_t executeCommandLists(std::vector<IRHICommandList*>& commandLists, size_t numCommandLists, CommandQueue executionQueue = CommandQueue::Graphics) = 0;
         virtual GraphicsAPI getGraphicsAPI() const = 0;
-        virtual IRenderPass* createRenderPass(const RenderPassCreateInfo& ci = RenderPassCreateInfo()) = 0;
+        virtual IRenderPass* createRenderPass(const FramebufferDesc& framebufferDesc, const RenderPassCreateInfo& ci = RenderPassCreateInfo()) = 0;
         virtual FramebufferHandle createFramebuffer(IRenderPass* renderPass, const std::vector<ITexture*>& images) = 0;
         virtual GraphicsPipelineHandle createGraphicsPipeline(const GraphicsPipelineDesc& desc, IFramebuffer* framebuffer) = 0;
         virtual ShaderHandle createShaderModule(const char* fileName) = 0;

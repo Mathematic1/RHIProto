@@ -138,7 +138,7 @@ namespace RHI::Vulkan
 
         VkPipelineMultisampleStateCreateInfo multisampling{};
         multisampling.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
-        multisampling.rasterizationSamples = (VkSampleCountFlagBits) pipeInfo.msaaSamples;
+        multisampling.rasterizationSamples = (VkSampleCountFlagBits) fb->sampleCount;
         multisampling.sampleShadingEnable = VK_FALSE; // enable sample shading in the pipeline
         multisampling.minSampleShading = 1.0f; // min fraction for sample shading; closer to one is smooth
         multisampling.pSampleMask = nullptr; // optional

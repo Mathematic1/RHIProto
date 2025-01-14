@@ -201,7 +201,7 @@ namespace RHI::Vulkan
         imageInfo.extent = VkExtent3D{ desc.width, desc.height, desc.depth };
         imageInfo.mipLevels = desc.mipLevels;
         imageInfo.arrayLayers = (uint32_t)((pickImageFlag(desc) == VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT) ? 6 : 1);
-        imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+        imageInfo.samples = (VkSampleCountFlagBits)desc.sampleCount;
         imageInfo.tiling = desc.isLinearTiling ? VK_IMAGE_TILING_LINEAR : VK_IMAGE_TILING_OPTIMAL;
         imageInfo.usage = pickImageUsage(desc);
         imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;

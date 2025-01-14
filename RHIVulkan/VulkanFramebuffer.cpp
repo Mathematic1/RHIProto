@@ -74,6 +74,16 @@ namespace RHI::Vulkan
         fb->renderPass = rp->handle;
         fb->framebufferWidth = images[0]->getDesc().width;
         fb->framebufferHeight = images[0]->getDesc().height;
+
+        if(fb->desc.depthAttachment)
+        {
+            fb->sampleCount = fb->desc.depthAttachment->getDesc().sampleCount;
+        }
+        else if(!fb->desc.colorAttachments.empty() && fb->desc.colorAttachments[0])
+        {
+            fb->sampleCount = fb->desc.colorAttachments[0]->getDesc().sampleCount;
+        }
+
         return FramebufferHandle(fb);
     }
 
