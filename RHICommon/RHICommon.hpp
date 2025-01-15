@@ -221,7 +221,8 @@ namespace RHI
         STENCIL_READ_ONLY_OPTIMAL = 14,
         READ_ONLY_OPTIMAL = 15,
         ATTACHMENT_OPTIMAL = 16,
-        COUNT = 17
+        PRESENT_SRC_KHR = 17,
+        COUNT = 18
     };
 
     enum class ImageAspectFlagBits {
@@ -590,6 +591,7 @@ namespace RHI
         TextureDesc& setDepth(uint32_t value) { depth = value; return *this; }
         TextureDesc& setMipLevels(uint32_t value) { mipLevels = value; return *this; }
         TextureDesc& setLayerCount(uint32_t value) { layerCount = value; return *this; }
+        TextureDesc& setSampleCount(uint32_t value) { sampleCount = value; return *this; }
         TextureDesc& setFormat(Format value) { format = value; return *this; }
         TextureDesc& setDimension(TextureDimension value) { dimension = value; return *this; }
         TextureDesc& setMemoryProperties(MemoryPropertiesBits value) { memoryProperties = value; return *this; }
