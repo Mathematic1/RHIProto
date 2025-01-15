@@ -344,4 +344,91 @@ namespace RHI::Vulkan
 
         return TextureHandle(tex);
     }
+
+    void CommandList::copyTexture(ITexture* srcTexture, ITexture* dstTexture)
+    {
+        Texture* srcTex = dynamic_cast<Texture*>(srcTexture);
+        Texture* dstTex = dynamic_cast<Texture*>(dstTexture);
+
+        m_CurrentCommandBuffer->referencedResources.push_back(srcTex);
+        m_CurrentCommandBuffer->referencedResources.push_back(dstTex);
+
+        VkImageCopy imageCopyRegion{};
+        imageCopyRegion.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        imageCopyRegion.srcSubresource.layerCount = 1;
+        imageCopyRegion.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        imageCopyRegion.dstSubresource.layerCount = 1;
+        imageCopyRegion.extent.width = srcTex->getDesc().width;
+        imageCopyRegion.extent.height = srcTex->getDesc().height;
+        imageCopyRegion.extent.depth = srcTex->getDesc().depth;
+
+        vkCmdCopyImage(
+            m_CurrentCommandBuffer->commandBuffer,
+            srcTex->image,
+            VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+            dstTex->image,
+            VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+            1,
+            &imageCopyRegion);
+    }
+
+    void CommandList::blitTexture(ITexture* srcTexture, ITexture* dstTexture)
+    {
+        Texture* srcTex = dynamic_cast<Texture*>(srcTexture);
+        Texture* dstTex = dynamic_cast<Texture*>(dstTexture);
+
+        m_CurrentCommandBuffer->referencedResources.push_back(srcTex);
+        m_CurrentCommandBuffer->referencedResources.push_back(dstTex);
+
+        // Define the region to blit (we will blit the whole source image)
+        VkOffset3D blitSize;
+        blitSize.x = static_cast<int32_t>(srcTex->getDesc().width);
+        blitSize.y = static_cast<int32_t>(srcTex->getDesc().height);
+        blitSize.z = 1;
+        VkImageBlit imageBlitRegion{};
+        imageBlitRegion.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        imageBlitRegion.srcSubresource.layerCount = 1;
+        imageBlitRegion.srcOffsets[1] = blitSize;
+        imageBlitRegion.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        imageBlitRegion.dstSubresource.layerCount = 1;
+        imageBlitRegion.dstOffsets[1] = blitSize;
+
+        vkCmdBlitImage(
+            m_CurrentCommandBuffer->commandBuffer,
+            srcTex->image,
+            VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+            dstTex->image,
+            VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+            1,
+            &imageBlitRegion, 
+            VK_FILTER_NEAREST);
+    }
+
+    void CommandList::resolveTexture(ITexture* srcTexture, ITexture* dstTexture)
+    {
+        Texture* srcTex = dynamic_cast<Texture*>(srcTexture);
+        Texture* dstTex = dynamic_cast<Texture*>(dstTexture);
+
+        m_CurrentCommandBuffer->referencedResources.push_back(srcTex);
+        m_CurrentCommandBuffer->referencedResources.push_back(dstTex);
+
+        VkImageResolve imageResolveRegion{};
+        imageResolveRegion.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        imageResolveRegion.srcSubresource.layerCount = 1;
+        imageResolveRegion.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        imageResolveRegion.dstSubresource.layerCount = 1;
+        imageResolveRegion.extent.width = srcTex->getDesc().width;
+        imageResolveRegion.extent.height = srcTex->getDesc().height;
+        imageResolveRegion.extent.depth = srcTex->getDesc().depth;
+
+        vkCmdResolveImage(
+            m_CurrentCommandBuffer->commandBuffer,
+            srcTex->image,
+            VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+            dstTex->image,
+            VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+            1,
+            &imageResolveRegion);
+    }
+
 }

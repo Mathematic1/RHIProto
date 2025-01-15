@@ -436,6 +436,9 @@ namespace RHI
         virtual void transitionBufferLayout(IBuffer* texture, ImageLayout oldLayout, ImageLayout newLayout) = 0;
         virtual bool updateTextureImage(ITexture* texture, const void* imageData, ImageLayout sourceImageLayout = ImageLayout::UNDEFINED) = 0;
         virtual void copyBufferToImage(IBuffer* buffer, ITexture* texture) = 0;
+        virtual void copyTexture(ITexture* srcTexture, ITexture* dstTexture) = 0;
+        virtual void blitTexture(ITexture* srcTexture, ITexture* dstTexture) = 0;
+        virtual void resolveTexture(ITexture* srcTexture, ITexture* dstTexture) = 0;
         virtual void copyMIPBufferToImage(IBuffer* buffer, ITexture* texture, uint32_t bytesPP) = 0;
         virtual void copyBuffer(IBuffer* srcBuffer, IBuffer* dstBuffer, size_t size) = 0;
         virtual void writeBuffer(IBuffer* srcBuffer, size_t size, const void* data) = 0;

@@ -849,6 +849,9 @@ namespace RHI::Vulkan
 		virtual void copyBufferToImage(IBuffer* buffer, ITexture* texture) override;
 		virtual void copyMIPBufferToImage(IBuffer* buffer, ITexture* texture, uint32_t bytesPP) override;
 		void copyImageToBuffer(VkImage image, VkBuffer buffer, uint32_t width, uint32_t height, uint32_t layerCount = 1);
+		virtual void copyTexture(ITexture* srcTexture, ITexture* dstTexture) override;
+		virtual void blitTexture(ITexture* srcTexture, ITexture* dstTexture) override;
+		virtual void resolveTexture(ITexture* srcTexture, ITexture* dstTexture) override;
 
 		void beginRenderPass(Framebuffer* framebuffer);
 		void endRenderPass();
