@@ -146,6 +146,23 @@ namespace RHI::Vulkan
         vkUnmapMemory(m_Context.device, bufferMemory);
     }
 
+    void* Device::mapBufferMemory(IBuffer* buffer, size_t offset, size_t size)
+    {
+        Buffer* buf = dynamic_cast<Buffer*>(buffer);
+
+        void* mappedData = nullptr;
+        vkMapMemory(m_Context.device, buf->memory, offset, size, 0, &mappedData);
+
+        return mappedData;
+    }
+
+    void Device::unmapBufferMemory(IBuffer* buffer)
+    {
+        Buffer* buf = dynamic_cast<Buffer*>(buffer);
+
+        vkUnmapMemory(m_Context.device, buf->memory);
+    }
+
     BufferHandle Device::addBuffer(const BufferDesc& desc, bool createMapping)
     {
 		Buffer* buffer = dynamic_cast<Buffer*>(createSharedBuffer(desc).get());

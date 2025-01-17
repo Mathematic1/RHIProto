@@ -335,6 +335,23 @@ namespace RHI::Vulkan
         return true;
     }
 
+    void* Device::mapTextureMemory(ITexture* texture, size_t offset, size_t size)
+    {
+        Texture* tex = dynamic_cast<Texture*>(texture);
+
+        void* mappedData = nullptr;
+        vkMapMemory(m_Context.device, tex->imageMemory, offset, size, 0, &mappedData);
+
+        return mappedData;
+    }
+
+    void Device::unmapTextureMemory(ITexture* texture)
+    {
+        Texture* tex = dynamic_cast<Texture*>(texture);
+
+        vkUnmapMemory(m_Context.device, tex->imageMemory);
+    }
+
     TextureHandle Device::createTextureForNative(VkImage image, VkImageView imageView, ImageAspectFlagBits aspectFlags, const TextureDesc& desc)
     {
         Texture* tex = new Texture(m_Context);
@@ -345,7 +362,7 @@ namespace RHI::Vulkan
         return TextureHandle(tex);
     }
 
-    void CommandList::copyTexture(ITexture* srcTexture, ITexture* dstTexture)
+    void CommandList::copyTexture(ITexture* srcTexture, const std::vector<SubresourseSet>& srcSubresources, ITexture* dstTexture, const std::vector<SubresourseSet>& dstSubresources)
     {
         Texture* srcTex = dynamic_cast<Texture*>(srcTexture);
         Texture* dstTex = dynamic_cast<Texture*>(dstTexture);
@@ -372,7 +389,7 @@ namespace RHI::Vulkan
             &imageCopyRegion);
     }
 
-    void CommandList::blitTexture(ITexture* srcTexture, ITexture* dstTexture)
+    void CommandList::blitTexture(ITexture* srcTexture, const std::vector<SubresourseSet>& srcSubresources, ITexture* dstTexture, const std::vector<SubresourseSet>& dstSubresources)
     {
         Texture* srcTex = dynamic_cast<Texture*>(srcTexture);
         Texture* dstTex = dynamic_cast<Texture*>(dstTexture);
@@ -404,7 +421,7 @@ namespace RHI::Vulkan
             VK_FILTER_NEAREST);
     }
 
-    void CommandList::resolveTexture(ITexture* srcTexture, ITexture* dstTexture)
+    void CommandList::resolveTexture(ITexture* srcTexture, const std::vector<SubresourseSet>& srcSubresources, ITexture* dstTexture, const std::vector<SubresourseSet>& dstSubresources)
     {
         Texture* srcTex = dynamic_cast<Texture*>(srcTexture);
         Texture* dstTex = dynamic_cast<Texture*>(dstTexture);

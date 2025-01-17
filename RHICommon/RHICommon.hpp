@@ -380,6 +380,14 @@ namespace RHI
 	    
     };
 
+    struct SubresourseSet
+    {
+        ImageAspectFlagBits aspectMask = ImageAspectFlagBits::COLOR_BIT;
+        uint32_t mipLevel = 0;
+        uint32_t baseArrayLayer = 0;
+        uint32_t layerCount = 1;
+    };
+
     enum class CommandQueue : uint8_t
     {
         Graphics = 0,
@@ -437,9 +445,9 @@ namespace RHI
         virtual void transitionBufferLayout(IBuffer* texture, ImageLayout oldLayout, ImageLayout newLayout) = 0;
         virtual bool updateTextureImage(ITexture* texture, const void* imageData, ImageLayout sourceImageLayout = ImageLayout::UNDEFINED) = 0;
         virtual void copyBufferToImage(IBuffer* buffer, ITexture* texture) = 0;
-        virtual void copyTexture(ITexture* srcTexture, ITexture* dstTexture) = 0;
-        virtual void blitTexture(ITexture* srcTexture, ITexture* dstTexture) = 0;
-        virtual void resolveTexture(ITexture* srcTexture, ITexture* dstTexture) = 0;
+        virtual void copyTexture(ITexture* srcTexture, const std::vector<SubresourseSet>& srcSubresources, ITexture* dstTexture, const std::vector<SubresourseSet>& dstSubresources) = 0;
+        virtual void blitTexture(ITexture* srcTexture, const std::vector<SubresourseSet>& srcSubresources, ITexture* dstTexture, const std::vector<SubresourseSet>& dstSubresources) = 0;
+        virtual void resolveTexture(ITexture* srcTexture, const std::vector<SubresourseSet>& srcSubresources, ITexture* dstTexture, const std::vector<SubresourseSet>& dstSubresources) = 0;
         virtual void copyMIPBufferToImage(IBuffer* buffer, ITexture* texture, uint32_t bytesPP) = 0;
         virtual void copyBuffer(IBuffer* srcBuffer, IBuffer* dstBuffer, size_t size) = 0;
         virtual void writeBuffer(IBuffer* srcBuffer, size_t size, const void* data) = 0;
@@ -856,5 +864,10 @@ namespace RHI
         virtual void uploadVertexIndexBufferData(IBuffer* buffer, size_t deviceOffset, size_t vertexDataSize, const void* vertexData,
             size_t indexDataSize, const void* indexData, const size_t dataSize) = 0;
         virtual Format findDepthFormat() = 0;
+        // mapping
+        virtual void* mapBufferMemory(IBuffer* buffer, size_t offset, size_t size) = 0;
+        virtual void* mapTextureMemory(ITexture* texture, size_t offset, size_t size) = 0;
+        virtual void unmapBufferMemory(IBuffer* buffer) = 0;
+        virtual void unmapTextureMemory(ITexture* texture) = 0;
     };
 }

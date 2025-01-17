@@ -757,6 +757,11 @@ namespace RHI::Vulkan
 		/** Copy GPU device buffer data to [outData] */
 		void downloadBufferData(const VkDeviceMemory& bufferMemory, VkDeviceSize deviceOffset, void* outData, size_t dataSize);
 
+		virtual void* mapBufferMemory(IBuffer* buffer, size_t offset, size_t size) override;
+		virtual void* mapTextureMemory(ITexture* texture, size_t offset, size_t size) override;
+		virtual void unmapBufferMemory(IBuffer* buffer) override;
+		virtual void unmapTextureMemory(ITexture* texture) override;
+
 		inline uint32_t getVulkanBufferAlignment()
 		{
 			VkPhysicalDeviceProperties devProps;
@@ -849,9 +854,9 @@ namespace RHI::Vulkan
 		virtual void copyBufferToImage(IBuffer* buffer, ITexture* texture) override;
 		virtual void copyMIPBufferToImage(IBuffer* buffer, ITexture* texture, uint32_t bytesPP) override;
 		void copyImageToBuffer(VkImage image, VkBuffer buffer, uint32_t width, uint32_t height, uint32_t layerCount = 1);
-		virtual void copyTexture(ITexture* srcTexture, ITexture* dstTexture) override;
-		virtual void blitTexture(ITexture* srcTexture, ITexture* dstTexture) override;
-		virtual void resolveTexture(ITexture* srcTexture, ITexture* dstTexture) override;
+		virtual void copyTexture(ITexture* srcTexture, const std::vector<SubresourseSet>& srcSubresources, ITexture* dstTexture, const std::vector<SubresourseSet>& dstSubresources) override;
+		virtual void blitTexture(ITexture* srcTexture, const std::vector<SubresourseSet>& srcSubresources, ITexture* dstTexture, const std::vector<SubresourseSet>& dstSubresources) override;
+		virtual void resolveTexture(ITexture* srcTexture, const std::vector<SubresourseSet>& srcSubresources, ITexture* dstTexture, const std::vector<SubresourseSet>& dstSubresources) override;
 
 		void beginRenderPass(Framebuffer* framebuffer);
 		void endRenderPass();
