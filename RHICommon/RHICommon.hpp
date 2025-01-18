@@ -142,6 +142,14 @@ namespace RHI
         return 0;
     }
 
+    struct Color
+    {
+        float r, g, b, a;
+
+        Color() : r(0.0f), g(0.0f), b(0.0f), a(0.0f){}
+        Color(float red, float green, float blue, float alpha) : r(red), g(green), b(blue), a(alpha) {}
+    };
+
     struct Viewport
     {
         float minX, maxX;
@@ -384,6 +392,7 @@ namespace RHI
     {
         ImageAspectFlagBits aspectMask = ImageAspectFlagBits::COLOR_BIT;
         uint32_t mipLevel = 0;
+        uint32_t mipLevelCount = 1;
         uint32_t baseArrayLayer = 0;
         uint32_t layerCount = 1;
     };
@@ -448,6 +457,8 @@ namespace RHI
         virtual void copyTexture(ITexture* srcTexture, const TextureSubresourse& srcSubresource, ITexture* dstTexture, const TextureSubresourse dstSubresource) = 0;
         virtual void blitTexture(ITexture* srcTexture, const TextureSubresourse& srcSubresource, ITexture* dstTexture, const TextureSubresourse dstSubresource) = 0;
         virtual void resolveTexture(ITexture* srcTexture, const TextureSubresourse& srcSubresource, ITexture* dstTexture, const TextureSubresourse dstSubresource) = 0;
+        virtual void clearColorTexture(ITexture* texture, const TextureSubresourse& subresource, const Color& color) = 0;
+        virtual void clearDepthTexture(ITexture* texture, const TextureSubresourse& subresource, float depthValue, uint32_t stencilValue) = 0;
         virtual void copyMIPBufferToImage(IBuffer* buffer, ITexture* texture, uint32_t bytesPP) = 0;
         virtual void copyBuffer(IBuffer* srcBuffer, IBuffer* dstBuffer, size_t size) = 0;
         virtual void writeBuffer(IBuffer* srcBuffer, size_t size, const void* data) = 0;

@@ -460,4 +460,55 @@ namespace RHI::Vulkan
             &imageResolveRegion);
     }
 
+    void CommandList::clearColorTexture(ITexture* texture, const TextureSubresourse& subresource, const Color& color)
+    {
+        Texture* tex = dynamic_cast<Texture*>(texture);
+
+        m_CurrentCommandBuffer->referencedResources.push_back(tex);
+
+        VkClearColorValue clearColorValue{};
+        clearColorValue.float32[0] = color.r;
+        clearColorValue.float32[1] = color.g;
+        clearColorValue.float32[2] = color.b;
+        clearColorValue.float32[3] = color.a;
+
+        VkImageSubresourceRange imageSubresourceRange{};
+        imageSubresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        imageSubresourceRange.baseMipLevel = subresource.mipLevel;
+        imageSubresourceRange.levelCount = subresource.mipLevelCount;
+        imageSubresourceRange.baseArrayLayer = subresource.baseArrayLayer;
+        imageSubresourceRange.layerCount = subresource.layerCount;
+
+        vkCmdClearColorImage(m_CurrentCommandBuffer->commandBuffer,
+            tex->image,
+            VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+            &clearColorValue,
+            1,
+            &imageSubresourceRange);
+    }
+
+    void CommandList::clearDepthTexture(ITexture* texture, const TextureSubresourse& subresource, float depthValue, uint32_t stencilValue)
+    {
+        Texture* tex = dynamic_cast<Texture*>(texture);
+
+        m_CurrentCommandBuffer->referencedResources.push_back(tex);
+
+        VkClearDepthStencilValue clearDepthStencilValue{};
+        clearDepthStencilValue.depth = depthValue;
+        clearDepthStencilValue.stencil = stencilValue;
+
+        VkImageSubresourceRange imageSubresourceRange{};
+        imageSubresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        imageSubresourceRange.baseMipLevel = subresource.mipLevel;
+        imageSubresourceRange.levelCount = subresource.mipLevelCount;
+        imageSubresourceRange.baseArrayLayer = subresource.baseArrayLayer;
+        imageSubresourceRange.layerCount = subresource.layerCount;
+
+        vkCmdClearDepthStencilImage(m_CurrentCommandBuffer->commandBuffer,
+            tex->image,
+            VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+            &clearDepthStencilValue,
+            1,
+            &imageSubresourceRange);
+    }
 }
