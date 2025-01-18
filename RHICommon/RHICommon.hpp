@@ -380,7 +380,7 @@ namespace RHI
 	    
     };
 
-    struct SubresourseSet
+    struct TextureSubresourse
     {
         ImageAspectFlagBits aspectMask = ImageAspectFlagBits::COLOR_BIT;
         uint32_t mipLevel = 0;
@@ -445,9 +445,9 @@ namespace RHI
         virtual void transitionBufferLayout(IBuffer* texture, ImageLayout oldLayout, ImageLayout newLayout) = 0;
         virtual bool updateTextureImage(ITexture* texture, const void* imageData, ImageLayout sourceImageLayout = ImageLayout::UNDEFINED) = 0;
         virtual void copyBufferToImage(IBuffer* buffer, ITexture* texture) = 0;
-        virtual void copyTexture(ITexture* srcTexture, const std::vector<SubresourseSet>& srcSubresources, ITexture* dstTexture, const std::vector<SubresourseSet>& dstSubresources) = 0;
-        virtual void blitTexture(ITexture* srcTexture, const std::vector<SubresourseSet>& srcSubresources, ITexture* dstTexture, const std::vector<SubresourseSet>& dstSubresources) = 0;
-        virtual void resolveTexture(ITexture* srcTexture, const std::vector<SubresourseSet>& srcSubresources, ITexture* dstTexture, const std::vector<SubresourseSet>& dstSubresources) = 0;
+        virtual void copyTexture(ITexture* srcTexture, const TextureSubresourse& srcSubresource, ITexture* dstTexture, const TextureSubresourse dstSubresource) = 0;
+        virtual void blitTexture(ITexture* srcTexture, const TextureSubresourse& srcSubresource, ITexture* dstTexture, const TextureSubresourse dstSubresource) = 0;
+        virtual void resolveTexture(ITexture* srcTexture, const TextureSubresourse& srcSubresource, ITexture* dstTexture, const TextureSubresourse dstSubresource) = 0;
         virtual void copyMIPBufferToImage(IBuffer* buffer, ITexture* texture, uint32_t bytesPP) = 0;
         virtual void copyBuffer(IBuffer* srcBuffer, IBuffer* dstBuffer, size_t size) = 0;
         virtual void writeBuffer(IBuffer* srcBuffer, size_t size, const void* data) = 0;

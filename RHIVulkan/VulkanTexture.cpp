@@ -362,7 +362,7 @@ namespace RHI::Vulkan
         return TextureHandle(tex);
     }
 
-    void CommandList::copyTexture(ITexture* srcTexture, const std::vector<SubresourseSet>& srcSubresources, ITexture* dstTexture, const std::vector<SubresourseSet>& dstSubresources)
+    void CommandList::copyTexture(ITexture* srcTexture, const TextureSubresourse& srcSubresource, ITexture* dstTexture, const TextureSubresourse dstSubresource)
     {
         Texture* srcTex = dynamic_cast<Texture*>(srcTexture);
         Texture* dstTex = dynamic_cast<Texture*>(dstTexture);
@@ -372,9 +372,13 @@ namespace RHI::Vulkan
 
         VkImageCopy imageCopyRegion{};
         imageCopyRegion.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-        imageCopyRegion.srcSubresource.layerCount = 1;
+        imageCopyRegion.srcSubresource.mipLevel = srcSubresource.mipLevel;
+        imageCopyRegion.srcSubresource.baseArrayLayer = srcSubresource.baseArrayLayer;
+        imageCopyRegion.srcSubresource.layerCount = srcSubresource.layerCount;
         imageCopyRegion.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-        imageCopyRegion.dstSubresource.layerCount = 1;
+        imageCopyRegion.dstSubresource.mipLevel = dstSubresource.mipLevel;
+        imageCopyRegion.dstSubresource.baseArrayLayer = dstSubresource.baseArrayLayer;
+        imageCopyRegion.dstSubresource.layerCount = dstSubresource.layerCount;
         imageCopyRegion.extent.width = srcTex->getDesc().width;
         imageCopyRegion.extent.height = srcTex->getDesc().height;
         imageCopyRegion.extent.depth = srcTex->getDesc().depth;
@@ -389,7 +393,7 @@ namespace RHI::Vulkan
             &imageCopyRegion);
     }
 
-    void CommandList::blitTexture(ITexture* srcTexture, const std::vector<SubresourseSet>& srcSubresources, ITexture* dstTexture, const std::vector<SubresourseSet>& dstSubresources)
+    void CommandList::blitTexture(ITexture* srcTexture, const TextureSubresourse& srcSubresource, ITexture* dstTexture, const TextureSubresourse dstSubresource)
     {
         Texture* srcTex = dynamic_cast<Texture*>(srcTexture);
         Texture* dstTex = dynamic_cast<Texture*>(dstTexture);
@@ -404,10 +408,14 @@ namespace RHI::Vulkan
         blitSize.z = 1;
         VkImageBlit imageBlitRegion{};
         imageBlitRegion.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-        imageBlitRegion.srcSubresource.layerCount = 1;
+        imageBlitRegion.srcSubresource.mipLevel = srcSubresource.mipLevel;
+        imageBlitRegion.srcSubresource.baseArrayLayer = srcSubresource.baseArrayLayer;
+        imageBlitRegion.srcSubresource.layerCount = srcSubresource.layerCount;
         imageBlitRegion.srcOffsets[1] = blitSize;
         imageBlitRegion.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-        imageBlitRegion.dstSubresource.layerCount = 1;
+        imageBlitRegion.dstSubresource.mipLevel = dstSubresource.mipLevel;
+        imageBlitRegion.dstSubresource.baseArrayLayer = dstSubresource.baseArrayLayer;
+        imageBlitRegion.dstSubresource.layerCount = dstSubresource.layerCount;
         imageBlitRegion.dstOffsets[1] = blitSize;
 
         vkCmdBlitImage(
@@ -421,7 +429,7 @@ namespace RHI::Vulkan
             VK_FILTER_NEAREST);
     }
 
-    void CommandList::resolveTexture(ITexture* srcTexture, const std::vector<SubresourseSet>& srcSubresources, ITexture* dstTexture, const std::vector<SubresourseSet>& dstSubresources)
+    void CommandList::resolveTexture(ITexture* srcTexture, const TextureSubresourse& srcSubresource, ITexture* dstTexture, const TextureSubresourse dstSubresource)
     {
         Texture* srcTex = dynamic_cast<Texture*>(srcTexture);
         Texture* dstTex = dynamic_cast<Texture*>(dstTexture);
@@ -431,9 +439,13 @@ namespace RHI::Vulkan
 
         VkImageResolve imageResolveRegion{};
         imageResolveRegion.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-        imageResolveRegion.srcSubresource.layerCount = 1;
+        imageResolveRegion.srcSubresource.mipLevel = srcSubresource.mipLevel;
+        imageResolveRegion.srcSubresource.baseArrayLayer = srcSubresource.baseArrayLayer;
+        imageResolveRegion.srcSubresource.layerCount = srcSubresource.layerCount;
         imageResolveRegion.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-        imageResolveRegion.dstSubresource.layerCount = 1;
+        imageResolveRegion.dstSubresource.mipLevel = dstSubresource.mipLevel;
+        imageResolveRegion.dstSubresource.baseArrayLayer = dstSubresource.baseArrayLayer;
+        imageResolveRegion.dstSubresource.layerCount = dstSubresource.layerCount;
         imageResolveRegion.extent.width = srcTex->getDesc().width;
         imageResolveRegion.extent.height = srcTex->getDesc().height;
         imageResolveRegion.extent.depth = srcTex->getDesc().depth;
