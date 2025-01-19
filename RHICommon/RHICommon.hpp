@@ -158,13 +158,11 @@ namespace RHI
 
         Viewport()
             : minX(0), maxX(0), minY(0), maxY(0), minZ(0), maxZ(0)
-        {
-        }
+        {}
 
         Viewport(float _minX, float _maxX, float _minY, float _maxY, float _minZ, float _maxZ)
             : minX(_minX), maxX(_maxX), minY(_minY), maxY(_maxY), minZ(_minZ), maxZ(_maxZ)
-        {
-        }
+        {}
 
         float getWidth() const
         {
@@ -179,6 +177,30 @@ namespace RHI
         float getDepth() const
         {
             return std::abs(maxZ - minZ);
+        }
+    };
+
+    struct Rect
+    {
+        float minX, maxX;
+        float minY, maxY;
+
+        Rect()
+	        : minX(0), maxX(0), minY(0), maxY(0)
+        {}
+
+        Rect(float _minX, float _maxX, float _minY, float _maxY)
+	        : minX(_minX), maxX(_maxX), minY(_minY), maxY(_maxY)
+        {}
+
+        float getWidth() const
+        {
+            return std::abs(maxX - minX);
+        }
+
+        float getHeight() const
+        {
+            return std::abs(maxY - minY);
         }
     };
 
@@ -459,6 +481,7 @@ namespace RHI
         virtual void resolveTexture(ITexture* srcTexture, const TextureSubresourse& srcSubresource, ITexture* dstTexture, const TextureSubresourse dstSubresource) = 0;
         virtual void clearColorTexture(ITexture* texture, const TextureSubresourse& subresource, const Color& color) = 0;
         virtual void clearDepthTexture(ITexture* texture, const TextureSubresourse& subresource, float depthValue, uint32_t stencilValue) = 0;
+        virtual void clearAttachments(std::vector<ITexture*> colorAttachments, ITexture* depthAttachment, const std::vector<Rect>& rects) = 0;
         virtual void copyMIPBufferToImage(IBuffer* buffer, ITexture* texture, uint32_t bytesPP) = 0;
         virtual void copyBuffer(IBuffer* srcBuffer, IBuffer* dstBuffer, size_t size) = 0;
         virtual void writeBuffer(IBuffer* srcBuffer, size_t size, const void* data) = 0;

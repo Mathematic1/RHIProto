@@ -859,6 +859,7 @@ namespace RHI::Vulkan
 		virtual void resolveTexture(ITexture* srcTexture, const TextureSubresourse& srcSubresource, ITexture* dstTexture, const TextureSubresourse dstSubresource) override;
 		virtual void clearColorTexture(ITexture* texture, const TextureSubresourse& subresource, const Color& color) override;
 		virtual void clearDepthTexture(ITexture* texture, const TextureSubresourse& subresource, float depthValue, uint32_t stencilValue) override;
+		virtual void clearAttachments(std::vector<ITexture*> colorAttachments, ITexture* depthAttachment, const std::vector<Rect>& rects) override;
 
 		void beginRenderPass(Framebuffer* framebuffer);
 		void endRenderPass();

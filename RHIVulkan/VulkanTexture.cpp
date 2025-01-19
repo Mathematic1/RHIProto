@@ -479,7 +479,8 @@ namespace RHI::Vulkan
         imageSubresourceRange.baseArrayLayer = subresource.baseArrayLayer;
         imageSubresourceRange.layerCount = subresource.layerCount;
 
-        vkCmdClearColorImage(m_CurrentCommandBuffer->commandBuffer,
+        vkCmdClearColorImage(
+            m_CurrentCommandBuffer->commandBuffer,
             tex->image,
             VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
             &clearColorValue,
@@ -504,11 +505,67 @@ namespace RHI::Vulkan
         imageSubresourceRange.baseArrayLayer = subresource.baseArrayLayer;
         imageSubresourceRange.layerCount = subresource.layerCount;
 
-        vkCmdClearDepthStencilImage(m_CurrentCommandBuffer->commandBuffer,
+        vkCmdClearDepthStencilImage(
+            m_CurrentCommandBuffer->commandBuffer,
             tex->image,
             VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
             &clearDepthStencilValue,
             1,
             &imageSubresourceRange);
     }
+
+    void CommandList::clearAttachments(std::vector<ITexture*> colorAttachments, ITexture* depthAttachment, const std::vector<Rect>& rects)
+    {
+        std::vector<VkClearAttachment> clearAttachments = {};
+
+        VkClearColorValue clearColorValue{};
+        clearColorValue.float32[0] = 0.0f;
+        clearColorValue.float32[1] = 0.0f;
+        clearColorValue.float32[2] = 0.0f;
+        clearColorValue.float32[3] = 1.0f;
+
+        for(ITexture* attachment : colorAttachments)
+        {
+	        if(attachment)
+	        {
+                VkClearAttachment clearAttachment = {};
+                clearAttachment.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+                clearAttachment.colorAttachment = 0;
+                clearAttachment.clearValue.color = clearColorValue;
+                clearAttachments.push_back(clearAttachment);
+	        }
+        }
+
+        if(depthAttachment)
+        {
+            VkClearDepthStencilValue clearDepthStencilValue{};
+            clearDepthStencilValue.depth = 0.0f;
+            clearDepthStencilValue.stencil = 0x00;
+
+            VkClearAttachment clearAttachment = {};
+            clearAttachment.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+            clearAttachment.clearValue.depthStencil = clearDepthStencilValue;
+            clearAttachments.push_back(clearAttachment);
+        }
+
+        const size_t rectsCount = rects.size();
+        std::vector<VkClearRect> clearRects = {};
+        clearRects.reserve(rectsCount);
+        for(auto& rect : rects)
+        {
+            VkClearRect clearRect = {};
+            clearRect.layerCount = 1;
+            clearRect.rect.offset = { 0, 0 };
+            clearRect.rect.extent = { static_cast<uint32_t>(rect.getWidth()), static_cast<uint32_t>(rect.getHeight()) };
+            clearRects.push_back(clearRect);
+        }
+
+        vkCmdClearAttachments(
+            m_CurrentCommandBuffer->commandBuffer,
+            clearAttachments.size(),
+            clearAttachments.data(),
+            rectsCount,
+            clearRects.data());
+    }
+
 }
