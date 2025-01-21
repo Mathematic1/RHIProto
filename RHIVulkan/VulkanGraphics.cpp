@@ -97,7 +97,7 @@ namespace RHI::Vulkan
         vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
 
         auto bindingDescription = getBindingDescription(*desc.inputLayout->getVertexBindingDesc(0));
-        auto attributeDescriptions = getAttributeDescriptions(desc.inputLayout);
+        auto attributeDescriptions = getAttributeDescriptions(desc.inputLayout.get());
 
         vertexInputInfo.vertexBindingDescriptionCount = 1;
         vertexInputInfo.pVertexBindingDescriptions = &bindingDescription; // optional
@@ -191,7 +191,7 @@ namespace RHI::Vulkan
         tessellationState.flags = 0;
         tessellationState.patchControlPoints = pipeInfo.patchControlPoints;
 
-        BindingLayout* bindingLayout = dynamic_cast<BindingLayout*>(desc.bindingLayouts[0]);
+        BindingLayout* bindingLayout = dynamic_cast<BindingLayout*>(desc.bindingLayouts[0].get());
         std::vector<VkDescriptorSetLayout> descriptorSetLayouts = { bindingLayout->descriptorSetLayout };
         createPipelineLayout(descriptorSetLayouts, & pso->pipelineLayout);
 

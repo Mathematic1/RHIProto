@@ -2,7 +2,7 @@
 
 namespace RHI::Vulkan
 {
-    IInputLayout* Device::createInputLayout(const VertexInputAttributeDesc* attributes, const VertexInputBindingDesc* bindings)
+    InputLayoutHandle Device::createInputLayout(const VertexInputAttributeDesc* attributes, const VertexInputBindingDesc* bindings)
     {
         InputLayout* inputLayout = new InputLayout();
         const uint32_t attributesCount = 2; sizeof(attributes) / sizeof(VertexInputAttributeDesc);
@@ -18,7 +18,7 @@ namespace RHI::Vulkan
             inputLayout->inputBindingDesc.push_back(bindings[i]);
         }
 
-        return inputLayout;
+        return InputLayoutHandle(inputLayout);
     }
 
     VkDescriptorPool Device::createDescriptorPool(const DescriptorSetInfo& dsInfo, uint32_t dSetCount)
@@ -72,7 +72,7 @@ namespace RHI::Vulkan
     }
 
 
-    IBindingLayout* Device::createDescriptorSetLayout(const DescriptorSetInfo& dsInfo)
+    BindingLayoutHandle Device::createDescriptorSetLayout(const DescriptorSetInfo& dsInfo)
     {
         BindingLayout* bindingLayout = new BindingLayout();
 
@@ -119,10 +119,10 @@ namespace RHI::Vulkan
         //m_Resources.allDSLayouts.push_back(descriptorSetLayout);
         bindingLayout->descriptorSetLayout = descriptorSetLayout;
 
-        return bindingLayout;
+        return BindingLayoutHandle(bindingLayout);
     }
 
-    IBindingSet* Device::createDescriptorSet(const DescriptorSetInfo& dsInfo, uint32_t dSetCount, IBindingLayout* bindingLayout)
+    BindingSetHandle Device::createDescriptorSet(const DescriptorSetInfo& dsInfo, uint32_t dSetCount, IBindingLayout* bindingLayout)
     {
         BindingSet* bindingSet = new BindingSet(m_Context);
         bindingSet->descriptorPool = createDescriptorPool(dsInfo);
@@ -144,7 +144,7 @@ namespace RHI::Vulkan
 
         updateDescriptorSet(bindingSet->descriptorSet, dsInfo);
 
-        return bindingSet;
+        return BindingSetHandle(bindingSet);
     }
 
     /*
@@ -232,14 +232,14 @@ namespace RHI::Vulkan
     }
 
 
-    void CommandList::bindBindingSets(VkPipelineBindPoint bindPoint, VkPipelineLayout pipelineLayout, const std::vector<IBindingSet*> bindingSets)
+    void CommandList::bindBindingSets(VkPipelineBindPoint bindPoint, VkPipelineLayout pipelineLayout, const std::vector<BindingSetHandle> bindingSets)
     {
         std::vector<VkDescriptorSet> descriptorSets;
         descriptorSets.reserve(bindingSets.size());
         
-        for(IBindingSet* bindingSet : bindingSets)
+        for(const BindingSetHandle& bindingSet : bindingSets)
         {
-            if(BindingSet* binding = dynamic_cast<BindingSet*>(bindingSet))
+            if(BindingSet* binding = dynamic_cast<BindingSet*>(bindingSet.get()))
             {
                 descriptorSets.push_back(binding->descriptorSet);
             }

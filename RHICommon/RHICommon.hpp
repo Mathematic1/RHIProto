@@ -17,6 +17,9 @@ namespace RHI
 	class ITexture;
     class ISampler;
     class IShader;
+    class IInputLayout;
+    class IBindingLayout;
+    class IBindingSet;
     class IGraphicsPipeline;
     class IFramebuffer;
     class IRHICommandList;
@@ -26,6 +29,9 @@ namespace RHI
     typedef std::shared_ptr<ITexture> TextureHandle;
     typedef std::shared_ptr<ISampler> SamplerHandle;
     typedef std::shared_ptr<IShader> ShaderHandle;
+    typedef std::shared_ptr<IInputLayout> InputLayoutHandle;
+    typedef std::shared_ptr<IBindingLayout> BindingLayoutHandle;
+    typedef std::shared_ptr<IBindingSet> BindingSetHandle;
     typedef std::shared_ptr<IGraphicsPipeline> GraphicsPipelineHandle;
     typedef std::shared_ptr<IFramebuffer> FramebufferHandle;
     typedef std::shared_ptr<IRHICommandList> CommandListHandle;
@@ -440,7 +446,7 @@ namespace RHI
         IGraphicsPipeline* pipeline = nullptr;
         IFramebuffer* framebuffer = nullptr;
 
-        std::vector<IBindingSet*> bindingSets;
+        std::vector<BindingSetHandle> bindingSets;
         std::vector<VertexBufferBinding> vertexBufferBindings;
         IndexBufferBinding indexBufferBinding;
 
@@ -699,7 +705,7 @@ namespace RHI
     struct FramebufferDesc
     {
         std::vector<ITexture*> colorAttachments;
-        RHI::ITexture* depthAttachment = nullptr;
+        ITexture* depthAttachment = nullptr;
 
         FramebufferDesc& addColorAttachment(ITexture* value) { colorAttachments.push_back(value); return *this; }
         FramebufferDesc& setDepthAttachment(ITexture* value) { depthAttachment = value; return *this; }
@@ -846,8 +852,8 @@ namespace RHI
     struct GraphicsPipelineDesc
     {
         PrimitiveType primType = PrimitiveType::TriangleList;
-        IInputLayout* inputLayout = nullptr;
-        std::vector<IBindingLayout*> bindingLayouts;
+        InputLayoutHandle inputLayout = nullptr;
+        std::vector<BindingLayoutHandle> bindingLayouts;
 
 
         ShaderHandle VS = nullptr;
@@ -861,12 +867,12 @@ namespace RHI
         GraphicsPipelineInfo pipelineInfo;
 
         GraphicsPipelineDesc& setPrimType(PrimitiveType value) { primType = value; return *this; }
-        GraphicsPipelineDesc& setInputLayout(IInputLayout* value) { inputLayout = value; return *this; }
-        GraphicsPipelineDesc& setVertexShader(std::shared_ptr<IShader> value) { VS = value; return *this; }
-        GraphicsPipelineDesc& setTessallationControlShader(std::shared_ptr<IShader> value) { HS = value; return *this; }
-        GraphicsPipelineDesc& setTessallationEvaluationShader(std::shared_ptr<IShader> value) { DS = value; return *this; }
-        GraphicsPipelineDesc& setGeometryShader(std::shared_ptr<IShader> value) { GS = value; return *this; }
-        GraphicsPipelineDesc& setPixelShader(std::shared_ptr<IShader> value) { PS = value; return *this; }
+        GraphicsPipelineDesc& setInputLayout(IInputLayout* value) { inputLayout = InputLayoutHandle(value); return *this; }
+        GraphicsPipelineDesc& setVertexShader(IShader* value) { VS = ShaderHandle(value); return *this; }
+        GraphicsPipelineDesc& setTessallationControlShader(IShader* value) { HS = ShaderHandle(value); return *this; }
+        GraphicsPipelineDesc& setTessallationEvaluationShader(IShader* value) { DS = ShaderHandle(value); return *this; }
+        GraphicsPipelineDesc& setGeometryShader(IShader* value) { GS = ShaderHandle(value); return *this; }
+        GraphicsPipelineDesc& setPixelShader(IShader* value) { PS = ShaderHandle(value); return *this; }
     };
 
     class IGraphicsPipeline : public IResource
@@ -884,9 +890,9 @@ namespace RHI
         virtual FramebufferHandle createFramebuffer(IRenderPass* renderPass, const std::vector<ITexture*>& images) = 0;
         virtual GraphicsPipelineHandle createGraphicsPipeline(const GraphicsPipelineDesc& desc, IFramebuffer* framebuffer) = 0;
         virtual ShaderHandle createShaderModule(const char* fileName) = 0;
-        virtual IBindingLayout* createDescriptorSetLayout(const DescriptorSetInfo& dsInfo) = 0;
-        virtual IBindingSet* createDescriptorSet(const DescriptorSetInfo& dsInfo, uint32_t dSetCount, IBindingLayout* bindingLayout) = 0;
-        virtual IInputLayout* createInputLayout(const VertexInputAttributeDesc* attributes, const VertexInputBindingDesc* bindings) = 0;
+        virtual BindingLayoutHandle createDescriptorSetLayout(const DescriptorSetInfo& dsInfo) = 0;
+        virtual BindingSetHandle createDescriptorSet(const DescriptorSetInfo& dsInfo, uint32_t dSetCount, IBindingLayout* bindingLayout) = 0;
+        virtual InputLayoutHandle createInputLayout(const VertexInputAttributeDesc* attributes, const VertexInputBindingDesc* bindings) = 0;
         virtual TextureHandle createImage(const TextureDesc& desc) = 0;
         virtual bool createImageView(ITexture* texture, ImageAspectFlagBits aspectFlags) = 0;
         virtual SamplerHandle createTextureSampler(const SamplerDesc& desc = SamplerDesc()) = 0;

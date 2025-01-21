@@ -793,11 +793,11 @@ namespace RHI::Vulkan
 		/* Calculate the descriptor pool size from the list of buffers and textures */
 		VkDescriptorPool createDescriptorPool(const DescriptorSetInfo& dsInfo, uint32_t dSetCount = 1);
 
-		IBindingLayout* createDescriptorSetLayout(const DescriptorSetInfo& dsInfo);
+		virtual BindingLayoutHandle createDescriptorSetLayout(const DescriptorSetInfo& dsInfo);
 
-		virtual IBindingSet* createDescriptorSet(const DescriptorSetInfo& dsInfo, uint32_t dSetCount, IBindingLayout* bindingLayout) override;
+		virtual BindingSetHandle createDescriptorSet(const DescriptorSetInfo& dsInfo, uint32_t dSetCount, IBindingLayout* bindingLayout) override;
 
-		virtual IInputLayout* createInputLayout(const VertexInputAttributeDesc* attributes, const VertexInputBindingDesc* bindings) override;
+		virtual InputLayoutHandle createInputLayout(const VertexInputAttributeDesc* attributes, const VertexInputBindingDesc* bindings) override;
 
 		void updateDescriptorSet(VkDescriptorSet ds, const DescriptorSetInfo& dsInfo);
 
@@ -867,7 +867,7 @@ namespace RHI::Vulkan
 		void draw(const DrawArguments& args) override;
 		void drawIndexed(const DrawArguments& args) override;
 
-		void bindBindingSets(VkPipelineBindPoint bindPoint, VkPipelineLayout pipelineLayout, const std::vector<IBindingSet*> bindings);
+		void bindBindingSets(VkPipelineBindPoint bindPoint, VkPipelineLayout pipelineLayout, const std::vector<BindingSetHandle> bindings);
 
 		TrackedCommandBufferPtr getCurrentCommandBuffer() const { return m_CurrentCommandBuffer; }
 
