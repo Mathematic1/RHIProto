@@ -99,10 +99,10 @@ namespace RHI::Vulkan
             ret |= VK_IMAGE_USAGE_TRANSFER_DST_BIT;
         }
 
-        const VkFormat format = convertFormat(desc.format);
-
         if (desc.usage.isShaderResource)
             ret |= VK_IMAGE_USAGE_SAMPLED_BIT;
+
+        const VkFormat format = convertFormat(desc.format);
 
         if (desc.usage.isRenderTarget)
         {

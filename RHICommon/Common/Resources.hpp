@@ -1,4 +1,5 @@
 #pragma once
+#include <memory>
 
 class IResource
 {
@@ -15,3 +16,5 @@ public:
     IResource& operator=(const IResource&) = delete;
     IResource& operator=(const IResource&&) = delete;
 };
+
+typedef std::shared_ptr<IResource> ResourceHandle;
