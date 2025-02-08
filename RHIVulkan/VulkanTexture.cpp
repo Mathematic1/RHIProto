@@ -335,7 +335,7 @@ namespace RHI::Vulkan
         return true;
     }
 
-    void* Device::mapTextureMemory(ITexture* texture, size_t offset, size_t size)
+    void* Device::mapStagingTextureMemory(ITexture* texture, size_t offset, size_t size)
     {
         Texture* tex = dynamic_cast<Texture*>(texture);
 
@@ -345,7 +345,7 @@ namespace RHI::Vulkan
         return mappedData;
     }
 
-    void Device::unmapTextureMemory(ITexture* texture)
+    void Device::unmapStagingTextureMemory(ITexture* texture)
     {
         Texture* tex = dynamic_cast<Texture*>(texture);
 

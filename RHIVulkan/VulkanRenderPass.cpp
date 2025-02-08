@@ -17,13 +17,13 @@ namespace RHI::Vulkan
 
         VkRenderPass renderPass;
 
-        if (framebufferDesc.colorAttachments.empty() && framebufferDesc.depthAttachment == nullptr)
+        if (framebufferDesc.colorAttachments.empty() && framebufferDesc.depthAttachment.texture == nullptr)
         {
             printf("Empty list of output attachments for RenderPass\n");
             exit(EXIT_FAILURE);
         }
 
-        if(!framebufferDesc.colorAttachments.empty() && framebufferDesc.depthAttachment)
+        if(!framebufferDesc.colorAttachments.empty() && framebufferDesc.depthAttachment.texture)
         {
             printf("Creating color/depth render pass\n");
             // TODO: update create...RenderPass to support multiple color attachments
@@ -69,7 +69,7 @@ namespace RHI::Vulkan
 
         for(uint32_t i = 0; i < framebufferDesc.colorAttachments.size(); i++)
         {
-            Texture* tex = dynamic_cast<Texture*>(framebufferDesc.colorAttachments[i]);
+            Texture* tex = dynamic_cast<Texture*>(framebufferDesc.colorAttachments[i].texture);
             if(!tex)
             {
                 printf("Empty color attachment");
@@ -100,7 +100,7 @@ namespace RHI::Vulkan
 
         bool useDepth = false;
         VkAttachmentReference depthAttachmentRef{};
-        if(Texture* depthTex = dynamic_cast<Texture*>(framebufferDesc.depthAttachment))
+        if(Texture* depthTex = dynamic_cast<Texture*>(framebufferDesc.depthAttachment.texture))
         {
             useDepth = true;
 

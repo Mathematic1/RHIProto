@@ -232,14 +232,14 @@ namespace RHI::Vulkan
     }
 
 
-    void CommandList::bindBindingSets(VkPipelineBindPoint bindPoint, VkPipelineLayout pipelineLayout, const std::vector<BindingSetHandle> bindingSets)
+    void CommandList::bindBindingSets(VkPipelineBindPoint bindPoint, VkPipelineLayout pipelineLayout, const std::vector<IBindingSet*> bindingSets)
     {
         std::vector<VkDescriptorSet> descriptorSets;
         descriptorSets.reserve(bindingSets.size());
         
-        for(const BindingSetHandle& bindingSet : bindingSets)
+        for(IBindingSet* bindingSet : bindingSets)
         {
-            if(BindingSet* binding = dynamic_cast<BindingSet*>(bindingSet.get()))
+            if(BindingSet* binding = dynamic_cast<BindingSet*>(bindingSet))
             {
                 descriptorSets.push_back(binding->descriptorSet);
             }

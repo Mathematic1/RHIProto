@@ -31,25 +31,38 @@ namespace RHI::Vulkan
         return true;
     }
 
-    FramebufferHandle Device::createFramebuffer(IRenderPass* renderPass, const std::vector<ITexture*>& images)
+    FramebufferHandle Device::createFramebuffer(IRenderPass* renderPass, const FramebufferDesc& desc)
     {
         Framebuffer* fb = new Framebuffer(m_Context);
         RenderPass* rp = dynamic_cast<RenderPass*>(renderPass);
 
-        std::vector<VkImageView> attachments;
-        for (const auto& image : images)
-        {
-            Texture* texture = dynamic_cast<Texture*>(image);
-            attachments.push_back(texture->imageView);
+        fb->desc = desc;
 
-            if(texture->desiredLayout == VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL)
-            {
-                fb->desc.colorAttachments.push_back(texture);
-            }
-            else if(texture->desiredLayout == VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL)
-            {
-                fb->desc.depthAttachment = texture;
-            }
+        fb->renderPass = rp->handle;
+
+        if(desc.depthAttachment.texture)
+        {
+            fb->framebufferWidth = desc.depthAttachment.texture->getDesc().width >> desc.depthAttachment.subresource.mipLevel;
+            fb->framebufferHeight = desc.depthAttachment.texture->getDesc().height >> desc.depthAttachment.subresource.mipLevel;
+            fb->sampleCount = fb->desc.depthAttachment.texture->getDesc().sampleCount;
+        }
+        else if(!desc.colorAttachments.empty() && desc.colorAttachments[0].texture)
+        {
+            fb->framebufferWidth = desc.colorAttachments[0].texture->getDesc().width >> desc.colorAttachments[0].subresource.mipLevel;
+            fb->framebufferHeight = desc.colorAttachments[0].texture->getDesc().height >> desc.colorAttachments[0].subresource.mipLevel;
+            fb->sampleCount = fb->desc.colorAttachments[0].texture->getDesc().sampleCount;
+        }
+
+        std::vector<VkImageView> attachments(desc.colorAttachments.size());
+        for (uint32_t i = 0; i < desc.colorAttachments.size(); i++)
+        {
+            Texture* texture = dynamic_cast<Texture*>(desc.colorAttachments[i].texture);
+            attachments[i] = texture->imageView;
+        }
+        if(desc.depthAttachment.texture)
+        {
+            Texture* texture = dynamic_cast<Texture*>(desc.depthAttachment.texture);
+            attachments.push_back(texture->imageView);
         }
 
         VkFramebufferCreateInfo fbInfo{};
@@ -59,8 +72,8 @@ namespace RHI::Vulkan
         fbInfo.renderPass = rp->handle;
         fbInfo.attachmentCount = (uint32_t)attachments.size();
         fbInfo.pAttachments = attachments.data();
-        fbInfo.width = images[0]->getDesc().width;
-        fbInfo.height = images[0]->getDesc().height;
+        fbInfo.width = fb->framebufferWidth;
+        fbInfo.height = fb->framebufferHeight;
         fbInfo.layers = 1;
 
         if (vkCreateFramebuffer(m_Context.device, &fbInfo, nullptr, &fb->framebuffer) != VK_SUCCESS)
@@ -71,18 +84,6 @@ namespace RHI::Vulkan
 
         // TODO:fix allocation issue
         //m_Resources.allFramebuffers.push_back(fb->framebuffer);
-        fb->renderPass = rp->handle;
-        fb->framebufferWidth = images[0]->getDesc().width;
-        fb->framebufferHeight = images[0]->getDesc().height;
-
-        if(fb->desc.depthAttachment)
-        {
-            fb->sampleCount = fb->desc.depthAttachment->getDesc().sampleCount;
-        }
-        else if(!fb->desc.colorAttachments.empty() && fb->desc.colorAttachments[0])
-        {
-            fb->sampleCount = fb->desc.colorAttachments[0]->getDesc().sampleCount;
-        }
 
         return FramebufferHandle(fb);
     }

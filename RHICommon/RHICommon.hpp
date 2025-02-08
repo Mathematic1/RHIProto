@@ -319,13 +319,22 @@ namespace RHI
         ShaderStageFlagBits shaderStageFlags = ShaderStageFlagBits::VERTEX_BIT;
     };
 
+    struct TextureSubresourse
+    {
+        uint32_t mipLevel = 0;
+        uint32_t mipLevelCount = 1;
+        uint32_t baseArrayLayer = 0;
+        uint32_t layerCount = 1;
+        ImageAspectFlagBits aspectMask = ImageAspectFlagBits::COLOR_BIT;
+    };
+
     struct BufferAttachment
     {
-        DescriptorInfo  dInfo;
+        DescriptorInfo dInfo;
 
         IBuffer* buffer = nullptr;
-        uint32_t        offset;
-        uint32_t        size;
+        uint32_t offset;
+        uint32_t size;
 
         BufferAttachment& setDescriptorInfo(const DescriptorInfo& value) { dInfo = value; return *this; }
         BufferAttachment& setBuffer(IBuffer* value) { buffer = value; return *this; }
@@ -335,7 +344,7 @@ namespace RHI
 
     struct TextureAttachment
     {
-        DescriptorInfo  dInfo;
+        DescriptorInfo dInfo;
 
         ITexture* texture = nullptr;
         ISampler* sampler = nullptr;
@@ -347,9 +356,20 @@ namespace RHI
 
     struct TextureArrayAttachment
     {
-        DescriptorInfo  dInfo;
+        DescriptorInfo dInfo;
 
-        std::vector<ITexture*>  textures;
+        std::vector<ITexture*> textures;
+    };
+
+    struct FramebufferAttachment
+    {
+        ITexture* texture = nullptr;
+        TextureSubresourse subresource = TextureSubresourse{ 0, 1, 0, 1 };
+        Format format = Format::UNKNOWN;
+
+        FramebufferAttachment& setTexture(ITexture* value) { texture = value; return *this; }
+        FramebufferAttachment& setTextureSubresourse(const TextureSubresourse& value) { subresource = value; return *this; }
+        FramebufferAttachment& setFormat(Format value) { format = value; return *this; }
     };
 
     /** An aggregate structure with all the data for descriptor set (or descriptor set layout) allocation */
@@ -416,15 +436,6 @@ namespace RHI
 	    
     };
 
-    struct TextureSubresourse
-    {
-        ImageAspectFlagBits aspectMask = ImageAspectFlagBits::COLOR_BIT;
-        uint32_t mipLevel = 0;
-        uint32_t mipLevelCount = 1;
-        uint32_t baseArrayLayer = 0;
-        uint32_t layerCount = 1;
-    };
-
     enum class CommandQueue : uint8_t
     {
         Graphics = 0,
@@ -446,12 +457,17 @@ namespace RHI
         IGraphicsPipeline* pipeline = nullptr;
         IFramebuffer* framebuffer = nullptr;
 
-        std::vector<BindingSetHandle> bindingSets;
+        std::vector<IBindingSet*> bindingSets;
         std::vector<VertexBufferBinding> vertexBufferBindings;
         IndexBufferBinding indexBufferBinding;
 
         GraphicsState& setPipeline(IGraphicsPipeline* value) { pipeline = value; return *this; }
         GraphicsState& setFramebuffer(IFramebuffer* value) { framebuffer = value; return *this; }
+        GraphicsState& setBindingSets(const std::vector<IBindingSet*>& value) { bindingSets = value; return *this; }
+        GraphicsState& setVertexBufferBindings(const std::vector<VertexBufferBinding>& value) { vertexBufferBindings = value; return *this; }
+        GraphicsState& addBindingSet(IBindingSet* value) { bindingSets.push_back(value); return *this; }
+        GraphicsState& addVertexBufferBinding(const VertexBufferBinding& value) { vertexBufferBindings.push_back(value); return *this; }
+        GraphicsState& setIndexBufferBinding(const IndexBufferBinding& value) { indexBufferBinding = value; return *this; }
     };
 
     struct DrawArguments
@@ -704,11 +720,11 @@ namespace RHI
 
     struct FramebufferDesc
     {
-        std::vector<ITexture*> colorAttachments;
-        ITexture* depthAttachment = nullptr;
+        std::vector<FramebufferAttachment> colorAttachments;
+        FramebufferAttachment depthAttachment;
 
-        FramebufferDesc& addColorAttachment(ITexture* value) { colorAttachments.push_back(value); return *this; }
-        FramebufferDesc& setDepthAttachment(ITexture* value) { depthAttachment = value; return *this; }
+        FramebufferDesc& addColorAttachment(const FramebufferAttachment& value) { colorAttachments.push_back(value); return *this; }
+        FramebufferDesc& setDepthAttachment(const FramebufferAttachment& value) { depthAttachment = value; return *this; }
     };
 
     enum eRenderPassBit : uint8_t
@@ -833,7 +849,7 @@ namespace RHI
         bool CCWCullMode = false;
 
         // depth stencil state
-        DepthStencilState depthStencilState;
+        DepthStencilState depthStencilState = {};
 
         // blend state
         bool alphaBlend = false;
@@ -887,7 +903,7 @@ namespace RHI
         virtual uint64_t executeCommandLists(std::vector<IRHICommandList*>& commandLists, size_t numCommandLists, CommandQueue executionQueue = CommandQueue::Graphics) = 0;
         virtual GraphicsAPI getGraphicsAPI() const = 0;
         virtual IRenderPass* createRenderPass(const FramebufferDesc& framebufferDesc, const RenderPassCreateInfo& ci = RenderPassCreateInfo()) = 0;
-        virtual FramebufferHandle createFramebuffer(IRenderPass* renderPass, const std::vector<ITexture*>& images) = 0;
+        virtual FramebufferHandle createFramebuffer(IRenderPass* renderPass, const FramebufferDesc& desc) = 0;
         virtual GraphicsPipelineHandle createGraphicsPipeline(const GraphicsPipelineDesc& desc, IFramebuffer* framebuffer) = 0;
         virtual ShaderHandle createShaderModule(const char* fileName) = 0;
         virtual BindingLayoutHandle createDescriptorSetLayout(const DescriptorSetInfo& dsInfo) = 0;
@@ -906,8 +922,14 @@ namespace RHI
         virtual Format findDepthFormat() = 0;
         // mapping
         virtual void* mapBufferMemory(IBuffer* buffer, size_t offset, size_t size) = 0;
-        virtual void* mapTextureMemory(ITexture* texture, size_t offset, size_t size) = 0;
+        virtual void* mapStagingTextureMemory(ITexture* texture, size_t offset, size_t size) = 0;
         virtual void unmapBufferMemory(IBuffer* buffer) = 0;
-        virtual void unmapTextureMemory(ITexture* texture) = 0;
+        virtual void unmapStagingTextureMemory(ITexture* texture) = 0;
+
+        uint64_t executeCommandList(IRHICommandList* commandList, CommandQueue executionQueue = CommandQueue::Graphics)
+        {
+            std::vector<IRHICommandList*> commandLists{ commandList };
+            return executeCommandLists(commandLists, 1, executionQueue);
+        }
     };
 }

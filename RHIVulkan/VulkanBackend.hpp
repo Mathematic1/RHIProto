@@ -758,9 +758,9 @@ namespace RHI::Vulkan
 		void downloadBufferData(const VkDeviceMemory& bufferMemory, VkDeviceSize deviceOffset, void* outData, size_t dataSize);
 
 		virtual void* mapBufferMemory(IBuffer* buffer, size_t offset, size_t size) override;
-		virtual void* mapTextureMemory(ITexture* texture, size_t offset, size_t size) override;
+		virtual void* mapStagingTextureMemory(ITexture* texture, size_t offset, size_t size) override;
 		virtual void unmapBufferMemory(IBuffer* buffer) override;
-		virtual void unmapTextureMemory(ITexture* texture) override;
+		virtual void unmapStagingTextureMemory(ITexture* texture) override;
 
 		inline uint32_t getVulkanBufferAlignment()
 		{
@@ -803,7 +803,7 @@ namespace RHI::Vulkan
 
 		bool createColorAndDepthFramebuffers(VkRenderPass renderPass, VkImageView depthImageView, std::vector<VkFramebuffer>& swapchainFramebuffers);
 
-		virtual FramebufferHandle createFramebuffer(IRenderPass* renderPass, const std::vector<ITexture*>& images) override;
+		virtual FramebufferHandle createFramebuffer(IRenderPass* renderPass, const FramebufferDesc& desc) override;
 
 		std::vector<VkFramebuffer> addFramebuffers(VkRenderPass renderPass, VkImageView depthView = VK_NULL_HANDLE);
 
@@ -867,7 +867,7 @@ namespace RHI::Vulkan
 		void draw(const DrawArguments& args) override;
 		void drawIndexed(const DrawArguments& args) override;
 
-		void bindBindingSets(VkPipelineBindPoint bindPoint, VkPipelineLayout pipelineLayout, const std::vector<BindingSetHandle> bindings);
+		void bindBindingSets(VkPipelineBindPoint bindPoint, VkPipelineLayout pipelineLayout, const std::vector<IBindingSet*> bindings);
 
 		TrackedCommandBufferPtr getCurrentCommandBuffer() const { return m_CurrentCommandBuffer; }
 
