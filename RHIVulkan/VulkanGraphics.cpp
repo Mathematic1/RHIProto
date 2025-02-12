@@ -193,7 +193,7 @@ namespace RHI::Vulkan
 
         BindingLayout* bindingLayout = dynamic_cast<BindingLayout*>(desc.bindingLayouts[0].get());
         std::vector<VkDescriptorSetLayout> descriptorSetLayouts = { bindingLayout->descriptorSetLayout };
-        createPipelineLayout(descriptorSetLayouts, & pso->pipelineLayout);
+        createPipelineLayout(descriptorSetLayouts, desc.pushConstants, &pso->pipelineLayout);
 
         VkGraphicsPipelineCreateInfo pipelineInfo{};
         pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
@@ -234,63 +234,36 @@ namespace RHI::Vulkan
     }
 
 
-    bool Device::createPipelineLayout(std::vector<VkDescriptorSetLayout>& dsLayouts, VkPipelineLayout* pipelineLayout)
+    bool Device::createPipelineLayout(std::vector<VkDescriptorSetLayout>& dsLayouts, const PushConstantsDesc& constantsDesc, VkPipelineLayout* pipelineLayout)
     {
+        const VkPushConstantRange ranges[] =
+        {
+            {
+                    VK_SHADER_STAGE_VERTEX_BIT,		// stageFlags
+                    0,								// offset
+                    constantsDesc.vtxConstSize		// size
+            },
+
+            {
+                    VK_SHADER_STAGE_FRAGMENT_BIT,	// stageFlags
+                    constantsDesc.vtxConstSize,		// offset
+                    constantsDesc.fragConstSize		// size
+            }
+        };
+
+        uint32_t constSize = (constantsDesc.vtxConstSize > 0) + (constantsDesc.fragConstSize > 0);
+
         VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
         pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
         pipelineLayoutInfo.pNext = nullptr;
         pipelineLayoutInfo.flags = 0;
         pipelineLayoutInfo.setLayoutCount = dsLayouts.size();
         pipelineLayoutInfo.pSetLayouts = dsLayouts.data();
-        pipelineLayoutInfo.pushConstantRangeCount = 0;
-        pipelineLayoutInfo.pPushConstantRanges = nullptr;
-
-        return (vkCreatePipelineLayout(m_Context.device, &pipelineLayoutInfo, nullptr, pipelineLayout) == VK_SUCCESS);
-    }
-
-    bool Device::createPipelineLayoutWithConstants(VkDescriptorSetLayout dsLayout, VkPipelineLayout* pipelineLayout, uint32_t vtxConstSize, uint32_t fragConstSize)
-    {
-        const VkPushConstantRange ranges[] =
-        {
-                {
-                        VK_SHADER_STAGE_VERTEX_BIT,		// stageFlags
-                        0,								// offset
-                        vtxConstSize					// size
-                },
-
-                {
-                        VK_SHADER_STAGE_FRAGMENT_BIT,	// stageFlags
-                        vtxConstSize,					// offset
-                        fragConstSize					// size
-                }
-        };
-
-        uint32_t constSize = (vtxConstSize > 0) + (fragConstSize > 0);
-
-        VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
-        pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-        pipelineLayoutInfo.pNext = nullptr;
-        pipelineLayoutInfo.flags = 0;
-        pipelineLayoutInfo.setLayoutCount = 1;
-        pipelineLayoutInfo.pSetLayouts = &dsLayout;
         pipelineLayoutInfo.pushConstantRangeCount = constSize;
         pipelineLayoutInfo.pPushConstantRanges = (constSize == 0) ? nullptr :
-            (vtxConstSize > 0) ? ranges : &ranges[1];
+            (constantsDesc.vtxConstSize > 0) ? ranges : &ranges[1];
 
         return (vkCreatePipelineLayout(m_Context.device, &pipelineLayoutInfo, nullptr, pipelineLayout) == VK_SUCCESS);
-    }
-
-    VkPipelineLayout Device::addPipelineLayout(VkDescriptorSetLayout dsLayout, uint32_t vtxConstSize, uint32_t fragConstSize)
-    {
-        VkPipelineLayout pipelineLayout;
-        if (!createPipelineLayoutWithConstants(dsLayout, &pipelineLayout, vtxConstSize, fragConstSize))
-        {
-            printf("Cannot create pipeline layout\n");
-            exit(EXIT_FAILURE);
-        }
-
-        m_Resources.allPipelineLayouts.push_back(pipelineLayout);
-        return pipelineLayout;
     }
 
     void CommandList::beginRenderPass(Framebuffer* framebuffer)
@@ -366,6 +339,9 @@ namespace RHI::Vulkan
             state.indexBufferBinding.index32BitType ? VK_INDEX_TYPE_UINT32 : VK_INDEX_TYPE_UINT16);
 
         GraphicsPipeline* pso = dynamic_cast<GraphicsPipeline*>(state.pipeline);
+        m_CurrentPipelineLayout = pso->pipelineLayout;
+        m_CurrentPushConstantsVisibility = pso->pushConstantsVisibility;
+
         bindBindingSets(VK_PIPELINE_BIND_POINT_GRAPHICS, pso->pipelineLayout, state.bindingSets);
 
         m_CurrentGraphicsState = state;

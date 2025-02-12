@@ -307,13 +307,15 @@ namespace RHI::Vulkan
         return SamplerHandle(sampler);
     }
 
-    bool CommandList::updateTextureImage(ITexture* texture, const void* imageData, ImageLayout sourceImageLayout)
+    bool CommandList::updateTextureImage(ITexture* texture, uint32_t mipLevel, uint32_t baseArrayLayer, const void* imageData, ImageLayout sourceImageLayout)
     {
     	Texture* tex = dynamic_cast<Texture*>(texture);
 
         uint32_t bytesPerPixel = bytesPerTexFormat(tex->desc.format);
 
-        VkDeviceSize layerSize = tex->desc.width * tex->desc.height * bytesPerPixel;
+        const uint32_t width = tex->desc.width >> mipLevel;
+        const uint32_t height = tex->desc.height >> mipLevel;
+        VkDeviceSize layerSize = width * height * tex->desc.depth * bytesPerPixel;
         VkDeviceSize imageSize = layerSize * tex->desc.layerCount;
 
         BufferDesc stagingDesc = BufferDesc{}

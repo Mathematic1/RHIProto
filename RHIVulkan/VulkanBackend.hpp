@@ -668,6 +668,7 @@ namespace RHI::Vulkan
 		GraphicsPipelineDesc desc = {};
 		VkPipeline pipeline;
 		VkPipelineLayout pipelineLayout;
+		VkShaderStageFlagBits pushConstantsVisibility;
 
 		explicit GraphicsPipeline(const VulkanContext& context)
 			: m_Context(context)
@@ -780,7 +781,7 @@ namespace RHI::Vulkan
 		IRenderPass* addDepthRenderPass(const RenderPassCreateInfo ci = {
 			false, true, eRenderPassBit_Offscreen | eRenderPassBit_First });
 
-		bool createPipelineLayout(std::vector<VkDescriptorSetLayout>& dsLayouts, VkPipelineLayout* pipelineLayout);
+		bool createPipelineLayout(std::vector<VkDescriptorSetLayout>& dsLayouts, const PushConstantsDesc& constantsDesc, VkPipelineLayout* pipelineLayout);
 
 		bool createPipelineLayoutWithConstants(VkDescriptorSetLayout dsLayout, VkPipelineLayout* pipelineLayout, uint32_t vtxConstSize, uint32_t fragConstSize);
 
@@ -849,9 +850,9 @@ namespace RHI::Vulkan
 		void transitionBufferLayoutCmd(VkBuffer buffer, VkFormat format, VkAccessFlags oldAccess, VkAccessFlags newAccess, uint32_t offset = 0, uint32_t size = 0);
 
 		/* VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL for real update of an existing texture */
-		virtual bool updateTextureImage(ITexture* texture, const void* imageData, ImageLayout sourceImageLayout = ImageLayout::UNDEFINED) override;
+		virtual bool updateTextureImage(ITexture* texture, uint32_t mipLevel, uint32_t baseArrayLayer, const void* imageData, ImageLayout sourceImageLayout = ImageLayout::UNDEFINED) override;
 
-		virtual void copyBufferToImage(IBuffer* buffer, ITexture* texture) override;
+		virtual void copyBufferToImage(IBuffer* buffer, ITexture* texture, uint32_t mipLevel = 0, uint32_t baseArrayLayer = 0) override;
 		virtual void copyMIPBufferToImage(IBuffer* buffer, ITexture* texture, uint32_t bytesPP) override;
 		void copyImageToBuffer(VkImage image, VkBuffer buffer, uint32_t width, uint32_t height, uint32_t layerCount = 1);
 		virtual void copyTexture(ITexture* srcTexture, const TextureSubresourse& srcSubresource, ITexture* dstTexture, const TextureSubresourse dstSubresource) override;
@@ -868,6 +869,7 @@ namespace RHI::Vulkan
 		void drawIndexed(const DrawArguments& args) override;
 
 		void bindBindingSets(VkPipelineBindPoint bindPoint, VkPipelineLayout pipelineLayout, const std::vector<IBindingSet*> bindings);
+		void setPushConstants(const void* data, size_t byteSize) override;
 
 		TrackedCommandBufferPtr getCurrentCommandBuffer() const { return m_CurrentCommandBuffer; }
 
@@ -880,6 +882,9 @@ namespace RHI::Vulkan
 
 		VkCommandPool m_CommandPool;
 		VkCommandBuffer m_CommandBuffer;
+
+		VkPipelineLayout m_CurrentPipelineLayout;
+		VkShaderStageFlags m_CurrentPushConstantsVisibility;
 
 		GraphicsState m_CurrentGraphicsState{};
 	};

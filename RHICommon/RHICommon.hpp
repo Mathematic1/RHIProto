@@ -496,8 +496,8 @@ namespace RHI
         virtual void setGraphicsState(const GraphicsState& state) = 0;
         virtual void transitionImageLayout(ITexture* texture, ImageLayout oldLayout, ImageLayout newLayout) = 0;
         virtual void transitionBufferLayout(IBuffer* texture, ImageLayout oldLayout, ImageLayout newLayout) = 0;
-        virtual bool updateTextureImage(ITexture* texture, const void* imageData, ImageLayout sourceImageLayout = ImageLayout::UNDEFINED) = 0;
-        virtual void copyBufferToImage(IBuffer* buffer, ITexture* texture) = 0;
+        virtual bool updateTextureImage(ITexture* texture, uint32_t mipLevel, uint32_t baseArrayLayer, const void* imageData, ImageLayout sourceImageLayout = ImageLayout::UNDEFINED) = 0;
+        virtual void copyBufferToImage(IBuffer* buffer, ITexture* texture, uint32_t mipLevel = 0, uint32_t baseArrayLayer = 0) = 0;
         virtual void copyTexture(ITexture* srcTexture, const TextureSubresourse& srcSubresource, ITexture* dstTexture, const TextureSubresourse dstSubresource) = 0;
         virtual void blitTexture(ITexture* srcTexture, const TextureSubresourse& srcSubresource, ITexture* dstTexture, const TextureSubresourse dstSubresource) = 0;
         virtual void resolveTexture(ITexture* srcTexture, const TextureSubresourse& srcSubresource, ITexture* dstTexture, const TextureSubresourse dstSubresource) = 0;
@@ -507,6 +507,7 @@ namespace RHI
         virtual void copyMIPBufferToImage(IBuffer* buffer, ITexture* texture, uint32_t bytesPP) = 0;
         virtual void copyBuffer(IBuffer* srcBuffer, IBuffer* dstBuffer, size_t size) = 0;
         virtual void writeBuffer(IBuffer* srcBuffer, size_t size, const void* data) = 0;
+        virtual void setPushConstants(const void* data, size_t byteSize) = 0;
     };
 
     class IInstance : public IResource
@@ -865,12 +866,17 @@ namespace RHI
         bool multisampleAA = false;
     };
 
+    struct PushConstantsDesc
+    {
+        uint32_t vtxConstSize = 0;
+        uint32_t fragConstSize = 0;
+    };
+
     struct GraphicsPipelineDesc
     {
         PrimitiveType primType = PrimitiveType::TriangleList;
         InputLayoutHandle inputLayout = nullptr;
         std::vector<BindingLayoutHandle> bindingLayouts;
-
 
         ShaderHandle VS = nullptr;
         ShaderHandle HS = nullptr;
@@ -881,6 +887,7 @@ namespace RHI
         RenderState renderState;
 
         GraphicsPipelineInfo pipelineInfo;
+        PushConstantsDesc pushConstants;
 
         GraphicsPipelineDesc& setPrimType(PrimitiveType value) { primType = value; return *this; }
         GraphicsPipelineDesc& setInputLayout(IInputLayout* value) { inputLayout = InputLayoutHandle(value); return *this; }

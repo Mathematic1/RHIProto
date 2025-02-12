@@ -272,7 +272,7 @@ namespace RHI::Vulkan
             0, nullptr);
     }
 
-    void CommandList::copyBufferToImage(IBuffer* buffer, ITexture* texture)
+    void CommandList::copyBufferToImage(IBuffer* buffer, ITexture* texture, uint32_t mipLevel, uint32_t baseArrayLayer)
     {
         Texture* tex = dynamic_cast<Texture*>(texture);
         Buffer* buf = dynamic_cast<Buffer*>(buffer);
@@ -282,11 +282,11 @@ namespace RHI::Vulkan
         region.bufferRowLength = 0;
         region.bufferImageHeight = 0;
         region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-        region.imageSubresource.mipLevel = 0;
-        region.imageSubresource.baseArrayLayer = 0;
+        region.imageSubresource.mipLevel = mipLevel;
+        region.imageSubresource.baseArrayLayer = baseArrayLayer;
         region.imageSubresource.layerCount = tex->getDesc().layerCount;
         region.imageOffset = VkOffset3D{ 0, 0, 0 };
-        region.imageExtent = VkExtent3D{ tex->getDesc().width, tex->getDesc().height, 1 };
+        region.imageExtent = VkExtent3D{ tex->getDesc().width, tex->getDesc().height, tex->getDesc().depth };
 
         vkCmdCopyBufferToImage(m_CurrentCommandBuffer->commandBuffer, buf->buffer, tex->image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
     }
@@ -343,6 +343,13 @@ namespace RHI::Vulkan
         region.imageExtent = VkExtent3D{ width, height, 1 };
 
         vkCmdCopyImageToBuffer(m_CurrentCommandBuffer->commandBuffer, image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, buffer, 1, &region);
+    }
+
+    void CommandList::setPushConstants(const void* data, size_t byteSize)
+    {
+        assert(m_CurrentCommandBuffer);
+
+        vkCmdPushConstants(m_CurrentCommandBuffer->commandBuffer, m_CurrentPipelineLayout, m_CurrentPushConstantsVisibility, 0, byteSize, data);
     }
 
     void CommandList::draw(const DrawArguments& args)
