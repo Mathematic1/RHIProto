@@ -36,6 +36,8 @@ namespace RHI::Vulkan
     {
         Buffer* buffer = new Buffer(m_Context);
 
+        buffer->desc = desc;
+
         VkBufferCreateInfo bufferInfo{};
         bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
         bufferInfo.pNext = nullptr;

@@ -798,7 +798,9 @@ namespace RHI::Vulkan
 
 		virtual BindingSetHandle createDescriptorSet(const DescriptorSetInfo& dsInfo, uint32_t dSetCount, IBindingLayout* bindingLayout) override;
 
-		virtual InputLayoutHandle createInputLayout(const VertexInputAttributeDesc* attributes, const VertexInputBindingDesc* bindings) override;
+		virtual InputLayoutHandle createInputLayout(
+			const VertexInputAttributeDesc* attributes, uint32_t attributeCount,
+			const VertexInputBindingDesc* bindings, uint32_t bindingCount) override;
 
 		void updateDescriptorSet(VkDescriptorSet ds, const DescriptorSetInfo& dsInfo);
 

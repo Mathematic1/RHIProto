@@ -286,7 +286,7 @@ namespace RHI::Vulkan
         region.imageSubresource.baseArrayLayer = baseArrayLayer;
         region.imageSubresource.layerCount = tex->getDesc().layerCount;
         region.imageOffset = VkOffset3D{ 0, 0, 0 };
-        region.imageExtent = VkExtent3D{ tex->getDesc().width, tex->getDesc().height, tex->getDesc().depth };
+        region.imageExtent = VkExtent3D{ tex->getDesc().width >> mipLevel, tex->getDesc().height >> mipLevel, tex->getDesc().depth >> mipLevel };
 
         vkCmdCopyBufferToImage(m_CurrentCommandBuffer->commandBuffer, buf->buffer, tex->image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
     }

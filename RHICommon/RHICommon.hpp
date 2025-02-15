@@ -915,9 +915,9 @@ namespace RHI
         virtual ShaderHandle createShaderModule(const char* fileName) = 0;
         virtual BindingLayoutHandle createDescriptorSetLayout(const DescriptorSetInfo& dsInfo) = 0;
         virtual BindingSetHandle createDescriptorSet(const DescriptorSetInfo& dsInfo, uint32_t dSetCount, IBindingLayout* bindingLayout) = 0;
-        virtual InputLayoutHandle createInputLayout(const VertexInputAttributeDesc* attributes, const VertexInputBindingDesc* bindings) = 0;
+        virtual InputLayoutHandle createInputLayout(const VertexInputAttributeDesc* attributes, uint32_t attributeCount, const VertexInputBindingDesc* bindings, uint32_t bindingCount) = 0;
         virtual TextureHandle createImage(const TextureDesc& desc) = 0;
-        virtual bool createImageView(ITexture* texture, ImageAspectFlagBits aspectFlags) = 0;
+        virtual bool createImageView(ITexture* texture, ImageAspectFlagBits aspectFlags = ImageAspectFlagBits::COLOR_BIT) = 0;
         virtual SamplerHandle createTextureSampler(const SamplerDesc& desc = SamplerDesc()) = 0;
         virtual SamplerHandle createDepthSampler() = 0;
         virtual BufferHandle createBuffer(const BufferDesc& desc) = 0;

@@ -154,6 +154,31 @@ namespace RHI::Vulkan
         return ret;
     }
 
+    static VkImageType textureDimensionToImageType(TextureDimension dimension)
+    {
+        switch (dimension)
+        {
+        case TextureDimension::Texture1D:
+        case TextureDimension::Texture1DArray:
+            return VK_IMAGE_TYPE_1D;
+
+        case TextureDimension::Texture2D:
+        case TextureDimension::Texture2DMS:
+        case TextureDimension::Texture2DArray:
+        case TextureDimension::Texture2DMSArray:
+        case TextureDimension::TextureCube:
+        case TextureDimension::TextureCubeArray:
+            return VK_IMAGE_TYPE_2D;
+
+        case TextureDimension::Texture3D:
+            return VK_IMAGE_TYPE_3D;
+
+        case TextureDimension::Unknown:
+        default:
+            return VK_IMAGE_TYPE_2D;
+        }
+    }
+
     static VkImageViewType textureDimensionToImageViewType(TextureDimension dimension)
     {
         switch (dimension)
@@ -196,7 +221,7 @@ namespace RHI::Vulkan
         imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
         imageInfo.pNext = nullptr;
         imageInfo.flags = pickImageFlag(desc);
-        imageInfo.imageType = VK_IMAGE_TYPE_2D;
+        imageInfo.imageType = textureDimensionToImageType(desc.dimension);
         imageInfo.format = convertFormat(desc.format);
         imageInfo.extent = VkExtent3D{ desc.width, desc.height, desc.depth };
         imageInfo.mipLevels = desc.mipLevels;
@@ -315,7 +340,8 @@ namespace RHI::Vulkan
 
         const uint32_t width = tex->desc.width >> mipLevel;
         const uint32_t height = tex->desc.height >> mipLevel;
-        VkDeviceSize layerSize = width * height * tex->desc.depth * bytesPerPixel;
+        const uint32_t depth = tex->desc.depth >> mipLevel;
+        VkDeviceSize layerSize = width * height * depth * bytesPerPixel;
         VkDeviceSize imageSize = layerSize * tex->desc.layerCount;
 
         BufferDesc stagingDesc = BufferDesc{}
@@ -328,7 +354,7 @@ namespace RHI::Vulkan
         m_Device->uploadBufferData(stagingBuffer.get(), 0, imageData, imageSize);
 
         transitionImageLayout(tex, sourceImageLayout, ImageLayout::TRANSFER_DST_OPTIMAL);
-        copyBufferToImage(stagingBuffer.get(), tex);
+        copyBufferToImage(stagingBuffer.get(), tex, mipLevel, baseArrayLayer);
         transitionImageLayout(tex, ImageLayout::TRANSFER_DST_OPTIMAL, ImageLayout::SHADER_READ_ONLY_OPTIMAL);
 
         // TODO: fixup memory cleanup

@@ -2,18 +2,19 @@
 
 namespace RHI::Vulkan
 {
-    InputLayoutHandle Device::createInputLayout(const VertexInputAttributeDesc* attributes, const VertexInputBindingDesc* bindings)
+    InputLayoutHandle Device::createInputLayout(
+        const VertexInputAttributeDesc* attributes, uint32_t attributeCount,
+        const VertexInputBindingDesc* bindings, uint32_t bindingCount)
     {
         InputLayout* inputLayout = new InputLayout();
-        const uint32_t attributesCount = 2; sizeof(attributes) / sizeof(VertexInputAttributeDesc);
-        inputLayout->inputAttributeDesc.reserve(attributesCount);
-        for(uint32_t i = 0; i < attributesCount; ++i)
+        inputLayout->inputAttributeDesc.reserve(attributeCount);
+        for(uint32_t i = 0; i < attributeCount; ++i)
         {
             inputLayout->inputAttributeDesc.push_back(attributes[i]);
         }
 
-        const uint32_t bindingsCount = sizeof(bindings) / sizeof(VertexInputBindingDesc);
-        for (uint32_t i = 0; i < bindingsCount; ++i)
+        inputLayout->inputBindingDesc.reserve(bindingCount);
+        for (uint32_t i = 0; i < bindingCount; ++i)
         {
             inputLayout->inputBindingDesc.push_back(bindings[i]);
         }
