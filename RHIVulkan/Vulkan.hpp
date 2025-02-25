@@ -3,7 +3,7 @@
 #include <RHICommon.hpp>
 
 #define VK_NO_PROTOTYPES
-#include "Volk/volk.h"
+#include <Volk/volk.h>
 
 namespace RHI::Vulkan
 {

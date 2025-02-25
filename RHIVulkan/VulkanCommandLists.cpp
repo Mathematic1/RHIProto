@@ -250,8 +250,8 @@ namespace RHI::Vulkan
     {
         VkBufferMemoryBarrier barrier{};
 
-        VkPipelineStageFlags sourceStage;
-        VkPipelineStageFlags destinationStage;
+        VkPipelineStageFlags sourceStage{};
+        VkPipelineStageFlags destinationStage{};
 
         barrier.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
         barrier.pNext = nullptr;

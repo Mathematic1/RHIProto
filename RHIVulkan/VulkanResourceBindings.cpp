@@ -134,7 +134,7 @@ namespace RHI::Vulkan
         allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
         allocInfo.pNext = nullptr;
         allocInfo.descriptorPool = bindingSet->descriptorPool;
-        allocInfo.descriptorSetCount = 1;
+        allocInfo.descriptorSetCount = dSetCount;
         allocInfo.pSetLayouts = &dsLayout->descriptorSetLayout;
 
         if (vkAllocateDescriptorSets(m_Context.device, &allocInfo, &bindingSet->descriptorSet) != VK_SUCCESS)

@@ -2,6 +2,9 @@
 
 #include <unordered_set>
 
+#define VOLK_IMPLEMENTATION
+#include <Volk/volk.h>
+
 #ifdef NDEBUG
 const bool enableValidationLayers = false;
 const bool enableValidationFeaturesEnabled = false;
