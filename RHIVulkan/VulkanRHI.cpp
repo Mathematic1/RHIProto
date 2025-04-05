@@ -60,6 +60,7 @@ namespace RHI::Vulkan
 
 	VulkanDynamicRHI::~VulkanDynamicRHI()
 	{
+        destroyDevice();
         destroyVulkanInstance();
 	}
 
@@ -73,7 +74,7 @@ namespace RHI::Vulkan
 		return false;
 	}
 
-    VulkanContextExtensions& VulkanDynamicRHI::initializeContextExtensions()
+    VulkanContextExtensions VulkanDynamicRHI::initializeContextExtensions()
     {
         VulkanContextExtensions contextExtensions{
             .KHR_swapchain = true,
@@ -87,7 +88,7 @@ namespace RHI::Vulkan
         return contextExtensions;
     }
 
-    VulkanContextFeatures& VulkanDynamicRHI::initializeContextFeatures()
+    VulkanContextFeatures VulkanDynamicRHI::initializeContextFeatures()
     {
         VulkanContextFeatures contextFeatures{
             .supportsScreenshots_ = true,
@@ -324,12 +325,15 @@ namespace RHI::Vulkan
             vkDestroyImageView(m_VulkanDevice, m_SwapchainImageViews[i], nullptr);
         }
         m_SwapchainImageViews.clear();
+        m_SwapchainImages.clear();
 
         if(m_SwapChain)
         {
             vkDestroySwapchainKHR(m_VulkanDevice, m_SwapChain, nullptr);
             m_SwapChain = nullptr;
         }
+
+        m_SwapchainTextures.clear();
     }
 
     uint32_t VulkanDynamicRHI::GetBackBufferCount()
@@ -620,6 +624,7 @@ namespace RHI::Vulkan
     void VulkanDynamicRHI::destroyDevice()
     {
         destroySwapChain();
+        m_DepthSwapChainTexture = nullptr;
 
         //vkDestroyCommandPool(m_VulkanDevice, m_C, nullptr);
 

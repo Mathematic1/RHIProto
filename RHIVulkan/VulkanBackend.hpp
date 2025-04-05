@@ -252,8 +252,8 @@ namespace RHI::Vulkan
 		virtual TextureHandle GetDepthBuffer() override;
 		virtual FramebufferHandle GetFramebuffer(uint32_t index) override;
 
-		static VulkanContextFeatures& initializeContextFeatures();
-		static VulkanContextExtensions& initializeContextExtensions();
+		static VulkanContextFeatures initializeContextFeatures();
+		static VulkanContextExtensions initializeContextExtensions();
 
 	private:
 		void createInstance();
