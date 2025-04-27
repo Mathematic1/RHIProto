@@ -115,6 +115,13 @@ namespace RHI::Vulkan
 			vkCmdBeginRenderPass(cmdBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 		}
 
+		bool setVkObjectName(void* object, VkObjectType objectType, const char* name);
+
+		inline bool setVkImageName(void* object, const char* name)
+		{
+			return setVkObjectName(object, VK_OBJECT_TYPE_IMAGE, name);
+		}
+
 		VkInstance instance;
 		VkPhysicalDevice physicalDevice;
 		VkDevice device;
@@ -547,13 +554,6 @@ namespace RHI::Vulkan
 			(fmt == VK_FORMAT_D16_UNORM_S8_UINT) ||
 			(fmt == VK_FORMAT_D24_UNORM_S8_UINT) ||
 			(fmt == VK_FORMAT_D32_SFLOAT_S8_UINT);
-	}
-
-	bool setVkObjectName(Device& vkDev, void* object, VkObjectType objectType, const char* name);
-
-	inline bool setVkImageName(Device& vkDev, void* object, const char* name)
-	{
-		return setVkObjectName(vkDev, object, VK_OBJECT_TYPE_IMAGE, name);
 	}
 
 	/* This routine updates one texture discriptor in one descriptor set */

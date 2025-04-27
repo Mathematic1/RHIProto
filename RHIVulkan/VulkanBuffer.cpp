@@ -50,6 +50,8 @@ namespace RHI::Vulkan
 
         VK_CHECK(vkCreateBuffer(m_Context.device, &bufferInfo, nullptr, &buffer->buffer));
 
+        m_Context.setVkObjectName(buffer->buffer, VkObjectType::VK_OBJECT_TYPE_BUFFER, desc.debugName.c_str());
+
         VkMemoryRequirements memRequirements;
         vkGetBufferMemoryRequirements(m_Context.device, buffer->buffer, &memRequirements);
 

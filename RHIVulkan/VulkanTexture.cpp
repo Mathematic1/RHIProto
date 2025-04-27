@@ -236,6 +236,8 @@ namespace RHI::Vulkan
 
         VK_CHECK(vkCreateImage(m_Context.device, &imageInfo, nullptr, &tex->image));
 
+        m_Context.setVkImageName(tex->image, desc.debugName.c_str());
+
         VkMemoryRequirements memRequirements;
         vkGetImageMemoryRequirements(m_Context.device, tex->image, &memRequirements);
 

@@ -803,6 +803,20 @@ namespace RHI::Vulkan
         return true;
     }
 
+    bool VulkanContext::setVkObjectName(void* object, VkObjectType objectType, const char* name)
+    {
+        if (!enableValidationLayers) return false;
+
+        VkDebugUtilsObjectNameInfoEXT nameInfo{};
+        nameInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT;
+        nameInfo.pNext = nullptr;
+        nameInfo.objectType = objectType;
+        nameInfo.objectHandle = (uint64_t)object;
+        nameInfo.pObjectName = name;
+
+        return (vkSetDebugUtilsObjectNameEXT(device, &nameInfo) == VK_SUCCESS);
+    }
+
     SwapchainSupportDetails querySwapchainSupport(VkPhysicalDevice device, VkSurfaceKHR surface)
     {
         SwapchainSupportDetails details;

@@ -4,6 +4,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <string>
 #include <vector>
 
 #define ENUM_CLASS_FLAG_OPERATORS(T) \
@@ -436,7 +437,7 @@ namespace RHI
 	    
     };
 
-    enum class CommandQueue : uint8_t
+    enum CommandQueue : uint8_t
     {
         Graphics = 0,
         Compute,
@@ -648,8 +649,8 @@ namespace RHI
         bool isLinearTiling = false;
         CreateFlagBits flags = CreateFlagBits::NONE_BIT;
         TextureDimension dimension = TextureDimension::Texture2D;
-
         ImageUsage usage = {};
+        std::string debugName;
 
         TextureDesc& setWidth(uint32_t value) { width = value; return *this; }
         TextureDesc& setHeight(uint32_t value) { height = value; return *this; }
@@ -665,6 +666,7 @@ namespace RHI
         TextureDesc& setIsShaderResource(bool value) { usage.isShaderResource = value; return *this; }
         TextureDesc& setIsRenderTarget(bool value) { usage.isRenderTarget = value; return *this; }
         TextureDesc& setIsUAV(bool value) { usage.isUAV = value; return *this; }
+        TextureDesc& setDebugName(const std::string& value) { debugName = value; return *this; }
     };
 
     class ITexture : public IResource
@@ -690,6 +692,7 @@ namespace RHI
         Format format = Format::UNKNOWN;
         MemoryPropertiesBits memoryProperties = MemoryPropertiesBits::DEVICE_LOCAL_BIT;
         BufferUsage usage = {};
+        std::string debugName;
 
         constexpr BufferDesc& setSize(uint64_t value) { size = value; return *this; }
         constexpr BufferDesc& setFormat(Format value) { format = value; return *this; }
@@ -701,6 +704,7 @@ namespace RHI
         constexpr BufferDesc& setIsUniformBuffer(bool value) { usage.isUniformBuffer = value; return *this; }
         constexpr BufferDesc& setIsStorageBuffer(bool value) { usage.isStorageBuffer = value; return *this; }
         constexpr BufferDesc& setIsDrawIndirectBuffer(bool value) { usage.isDrawIndirectBuffer = value; return *this; }
+        constexpr BufferDesc& setDebugName(const std::string& value) { debugName = value; return *this; }
     };
 
     class IBuffer : public IResource
