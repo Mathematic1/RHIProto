@@ -4,9 +4,22 @@ namespace RHI::Vulkan
 {
     Texture::~Texture()
     {
-        vkDestroyImageView(m_Context.device, imageView, nullptr);
-        vkDestroyImage(m_Context.device, image, nullptr);
-        vkFreeMemory(m_Context.device, imageMemory, nullptr);
+        if (imageView)
+        {
+            vkDestroyImageView(m_Context.device, imageView, nullptr);
+        }
+
+        if (managed)
+        {
+            if (image)
+            {
+                vkDestroyImage(m_Context.device, image, nullptr);
+            }
+            if (memory)
+            {
+                vkFreeMemory(m_Context.device, memory, nullptr);
+            }
+        }
     }
 
     Sampler::~Sampler()
@@ -247,9 +260,9 @@ namespace RHI::Vulkan
         allocInfo.allocationSize = memRequirements.size;
         allocInfo.memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits, pickMemoryProperties(desc.memoryProperties));
 
-        VK_CHECK(vkAllocateMemory(m_Context.device, &allocInfo, nullptr, &tex->imageMemory));
+        VK_CHECK(vkAllocateMemory(m_Context.device, &allocInfo, nullptr, &tex->memory));
 
-        vkBindImageMemory(m_Context.device, tex->image, tex->imageMemory, 0);
+        vkBindImageMemory(m_Context.device, tex->image, tex->memory, 0);
         return TextureHandle(tex);
     }
 
@@ -370,7 +383,7 @@ namespace RHI::Vulkan
         Texture* tex = dynamic_cast<Texture*>(texture);
 
         void* mappedData = nullptr;
-        vkMapMemory(m_Context.device, tex->imageMemory, offset, size, 0, &mappedData);
+        vkMapMemory(m_Context.device, tex->memory, offset, size, 0, &mappedData);
 
         return mappedData;
     }
@@ -379,7 +392,7 @@ namespace RHI::Vulkan
     {
         Texture* tex = dynamic_cast<Texture*>(texture);
 
-        vkUnmapMemory(m_Context.device, tex->imageMemory);
+        vkUnmapMemory(m_Context.device, tex->memory);
     }
 
     TextureHandle Device::createTextureForNative(VkImage image, VkImageView imageView, ImageAspectFlagBits aspectFlags, const TextureDesc& desc)
@@ -387,6 +400,7 @@ namespace RHI::Vulkan
         Texture* tex = new Texture(m_Context);
         tex->desc = desc;
         tex->image = image;
+        tex->managed = false;
         createImageView(tex, aspectFlags);
 
         return TextureHandle(tex);

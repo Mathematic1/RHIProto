@@ -189,10 +189,11 @@ namespace RHI::Vulkan
 
     void CommandList::writeBuffer(IBuffer* srcBuffer, size_t size, const void* data)
     {
-    	BufferDesc stagingDesc = BufferDesc{}
+        BufferDesc stagingDesc = BufferDesc{}
             .setSize(size)
             .setIsTransferSrc(true)
-            .setMemoryProperties(MemoryPropertiesBits::HOST_VISIBLE_BIT | MemoryPropertiesBits::HOST_COHERENT_BIT);
+            .setMemoryProperties(MemoryPropertiesBits::HOST_VISIBLE_BIT | MemoryPropertiesBits::HOST_COHERENT_BIT)
+            .setDebugName("WriteBuffer_StagingBuffer");
         BufferHandle stagingBuffer = m_Device->createBuffer(stagingDesc);
 
         m_Device->uploadBufferData(stagingBuffer.get(), 0, data, size);
@@ -204,7 +205,16 @@ namespace RHI::Vulkan
 
     Buffer::~Buffer()
 	{
-        vkDestroyBuffer(m_Context.device, buffer, nullptr);
-        vkFreeMemory(m_Context.device, memory, nullptr);
+        if (managed)
+        {
+            if (buffer)
+            {
+                vkDestroyBuffer(m_Context.device, buffer, nullptr);
+            }
+            if (memory)
+            {
+                vkFreeMemory(m_Context.device, memory, nullptr);
+            }
+        }
 	}
 }

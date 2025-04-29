@@ -153,7 +153,7 @@ namespace RHI::Vulkan
 		{
 		}
 
-		~TrackedCommandBuffer() {}
+		~TrackedCommandBuffer();
 
 	private:
 		const VulkanContext& m_Context;
@@ -317,6 +317,13 @@ namespace RHI::Vulkan
 		std::vector<VkPresentModeKHR> presentModes;
 	};
 
+	class MemoryResource
+	{
+	public:
+		bool managed = true;
+		VkDeviceMemory memory = VK_NULL_HANDLE;
+	};
+
 	class Shader final : public IShader
 	{
 	public:
@@ -329,7 +336,7 @@ namespace RHI::Vulkan
 		VkShaderStageFlagBits stage{};
 	};
 
-	class Buffer : public IBuffer
+	class Buffer : public IBuffer, public MemoryResource
 	{
 	public:
 		Buffer(const VulkanContext& context)
@@ -341,7 +348,6 @@ namespace RHI::Vulkan
 
 		VkBuffer		buffer = VK_NULL_HANDLE;
 		VkDeviceSize	size = 0u;
-		VkDeviceMemory	memory = VK_NULL_HANDLE;
 
 		/* Permanent mapping to CPU address space (see VulkanResources::addBuffer) */
 		void* ptr = nullptr;
@@ -377,7 +383,7 @@ namespace RHI::Vulkan
 	};
 
 	// Aggregate structure for passing around the texture data
-	class Texture : public ITexture
+	class Texture : public ITexture, public MemoryResource
 	{
 	public:
 		Texture(const VulkanContext& context)
@@ -390,7 +396,6 @@ namespace RHI::Vulkan
 		VkFormat format;
 
 		VkImage image = nullptr;
-		VkDeviceMemory imageMemory = nullptr;
 		VkImageView imageView = nullptr;
 
 		// Offscreen buffers require VK_IMAGE_LAYOUT_GENERAL && static textures have VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL

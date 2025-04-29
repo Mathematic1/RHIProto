@@ -320,12 +320,10 @@ namespace RHI::Vulkan
 
     void VulkanDynamicRHI::destroySwapChain()
     {
-        for (size_t i = 0; i < m_SwapchainImages.size(); i++)
+        if (m_VulkanDevice)
         {
-            vkDestroyImageView(m_VulkanDevice, m_SwapchainImageViews[i], nullptr);
+            vkDeviceWaitIdle(m_VulkanDevice);
         }
-        m_SwapchainImageViews.clear();
-        m_SwapchainImages.clear();
 
         if(m_SwapChain)
         {
@@ -334,6 +332,8 @@ namespace RHI::Vulkan
         }
 
         m_SwapchainTextures.clear();
+        m_SwapchainImageViews.clear();
+        m_SwapchainImages.clear();
     }
 
     uint32_t VulkanDynamicRHI::GetBackBufferCount()
