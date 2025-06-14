@@ -12,9 +12,6 @@
 #include <string>
 #include <unordered_set>
 
-#include <glslang/Include/glslang_c_interface.h>
-#include <glslang/Public/resource_limits_c.h>
-
 #define VK_CHECK(value) CHECK(value == VK_SUCCESS, __FILE__, __LINE__);
 #define VK_CHECK_RET(value) if(value != VK_SUCCESS) { CHECK(false, __FILE__, __LINE__); return value; }
 #define BL_CHECK(value) CHECK(value, __FILE__, __LINE__);
@@ -459,8 +456,6 @@ namespace RHI::Vulkan
 
 	bool setupDebugCallbacks(VkInstance instance, VkDebugUtilsMessengerEXT* messenger, VkDebugReportCallbackEXT* reportCallback);
 
-	size_t compileShaderFile(const char* file, Shader& shaderModule);
-
 	inline VkPipelineShaderStageCreateInfo shaderStageInfo(VkShaderStageFlagBits shaderStage, Shader& shader, const char* entryPoint)
 	{
 		VkPipelineShaderStageCreateInfo createInfo{};
@@ -563,9 +558,6 @@ namespace RHI::Vulkan
 
 	/* This routine updates one texture discriptor in one descriptor set */
 	void updateTextureInDescriptorSetArray(Device& vkDev, VkDescriptorSet ds, Texture t, uint32_t textureIndex, uint32_t bindingIdx);
-
-	VkShaderStageFlagBits glslangShaderStageToVulkan(glslang_stage_t sh);
-	glslang_stage_t glslangShaderStageFromFileName(const char* fileName);
 
 	bool hasStencilComponent(VkFormat format);
 
@@ -815,7 +807,7 @@ namespace RHI::Vulkan
 
 		std::vector<VkFramebuffer> addFramebuffers(VkRenderPass renderPass, VkImageView depthView = VK_NULL_HANDLE);
 
-		virtual ShaderHandle createShaderModule(const char* fileName) override;
+		virtual ShaderHandle createShaderModule(const char* fileName, const std::vector<unsigned int>& SPIRV) override;
 
 		virtual CommandListHandle createCommandList(const CommandListParameters& params) override;
 		virtual uint64_t executeCommandLists(std::vector<IRHICommandList*>& commandLists, size_t numCommandLists, CommandQueue executionQueue) override;

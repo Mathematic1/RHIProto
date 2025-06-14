@@ -20,7 +20,7 @@ namespace RHI::Vulkan
     VulkanRHIModule::VulkanRHIModule()
 	    : IRHIModule()
     {
-        glslang_initialize_process();
+        //glslang_initialize_process();
 
         volkInitialize();
     }

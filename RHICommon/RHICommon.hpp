@@ -916,7 +916,7 @@ namespace RHI
         virtual IRenderPass* createRenderPass(const FramebufferDesc& framebufferDesc, const RenderPassCreateInfo& ci = RenderPassCreateInfo()) = 0;
         virtual FramebufferHandle createFramebuffer(IRenderPass* renderPass, const FramebufferDesc& desc) = 0;
         virtual GraphicsPipelineHandle createGraphicsPipeline(const GraphicsPipelineDesc& desc, IFramebuffer* framebuffer) = 0;
-        virtual ShaderHandle createShaderModule(const char* fileName) = 0;
+        virtual ShaderHandle createShaderModule(const char* fileName, const std::vector<unsigned int>& SPIRV) = 0;
         virtual BindingLayoutHandle createDescriptorSetLayout(const DescriptorSetInfo& dsInfo) = 0;
         virtual BindingSetHandle createDescriptorSet(const DescriptorSetInfo& dsInfo, uint32_t dSetCount, IBindingLayout* bindingLayout) = 0;
         virtual InputLayoutHandle createInputLayout(const VertexInputAttributeDesc* attributes, uint32_t attributeCount, const VertexInputBindingDesc* bindings, uint32_t bindingCount) = 0;
