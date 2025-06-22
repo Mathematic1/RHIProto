@@ -353,9 +353,9 @@ namespace RHI::Vulkan
 
         uint32_t bytesPerPixel = bytesPerTexFormat(tex->desc.format);
 
-        const uint32_t width = tex->desc.width >> mipLevel;
-        const uint32_t height = tex->desc.height >> mipLevel;
-        const uint32_t depth = tex->desc.depth >> mipLevel;
+        const uint32_t width = std::max(tex->desc.width >> mipLevel, uint32_t (1));
+        const uint32_t height = std::max(tex->desc.height >> mipLevel, uint32_t(1));
+        const uint32_t depth = std::max(tex->desc.depth >> mipLevel, uint32_t(1));
         VkDeviceSize layerSize = width * height * depth * bytesPerPixel;
         VkDeviceSize imageSize = layerSize * tex->desc.layerCount;
 
