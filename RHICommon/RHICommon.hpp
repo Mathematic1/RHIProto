@@ -122,32 +122,14 @@ namespace RHI
         COUNT,
     };
 
-    inline uint32_t bytesPerTexFormat(Format fmt)
+    struct FormatInfo
     {
-        switch (fmt)
-        {
-        case Format::R8_SINT:
-        case Format::R8_UNORM:
-            return 1;
-        case Format::R16_FLOAT:
-            return 2;
-        case Format::RG16_FLOAT:
-            return 4;
-        case Format::RG16_SNORM:
-            return 4;
-        case Format::BGRA8_UNORM:
-            return 4;
-        case Format::RGBA8_UNORM:
-            return 4;
-        case Format::RGBA16_FLOAT:
-            return 4 * sizeof(uint16_t);
-        case Format::RGBA32_FLOAT:
-            return 4 * sizeof(float);
-        default:
-            break;
-        }
-        return 0;
-    }
+        Format format;
+        uint8_t bytesPerBlock;
+        uint8_t blockSize;
+    };
+
+    const FormatInfo& getFormatInfo(Format format);
 
     struct Color
     {
@@ -505,7 +487,7 @@ namespace RHI
         virtual void clearColorTexture(ITexture* texture, const TextureSubresourse& subresource, const Color& color) = 0;
         virtual void clearDepthTexture(ITexture* texture, const TextureSubresourse& subresource, float depthValue, uint32_t stencilValue) = 0;
         virtual void clearAttachments(std::vector<ITexture*> colorAttachments, ITexture* depthAttachment, const std::vector<Rect>& rects) = 0;
-        virtual void copyMIPBufferToImage(IBuffer* buffer, ITexture* texture, uint32_t bytesPP) = 0;
+        virtual void copyMIPBufferToImage(IBuffer* buffer, ITexture* texture) = 0;
         virtual void copyBuffer(IBuffer* srcBuffer, IBuffer* dstBuffer, size_t size) = 0;
         virtual void writeBuffer(IBuffer* srcBuffer, size_t size, const void* data) = 0;
         virtual void setPushConstants(const void* data, size_t byteSize) = 0;

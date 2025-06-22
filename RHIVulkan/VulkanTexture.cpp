@@ -351,12 +351,16 @@ namespace RHI::Vulkan
     {
     	Texture* tex = dynamic_cast<Texture*>(texture);
 
-        uint32_t bytesPerPixel = bytesPerTexFormat(tex->desc.format);
+        FormatInfo formatInfo = getFormatInfo(tex->desc.format);
 
-        const uint32_t width = std::max(tex->desc.width >> mipLevel, uint32_t (1));
-        const uint32_t height = std::max(tex->desc.height >> mipLevel, uint32_t(1));
-        const uint32_t depth = std::max(tex->desc.depth >> mipLevel, uint32_t(1));
-        VkDeviceSize layerSize = width * height * depth * bytesPerPixel;
+        const uint32_t mipWidth = std::max(tex->desc.width >> mipLevel, uint32_t (1));
+        const uint32_t mipHeight = std::max(tex->desc.height >> mipLevel, uint32_t(1));
+        const uint32_t mipDepth = std::max(tex->desc.depth >> mipLevel, uint32_t(1));
+
+        const uint32_t numColumns = (mipWidth + formatInfo.blockSize - 1) / formatInfo.blockSize;
+        const uint32_t numRows = (mipHeight + formatInfo.blockSize - 1) / formatInfo.blockSize;
+        const uint32_t rowSize = numColumns * formatInfo.bytesPerBlock;
+        VkDeviceSize layerSize = rowSize * numRows * mipDepth;
         VkDeviceSize imageSize = layerSize * tex->desc.layerCount;
 
         BufferDesc stagingDesc = BufferDesc{}

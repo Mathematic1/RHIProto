@@ -291,17 +291,26 @@ namespace RHI::Vulkan
         vkCmdCopyBufferToImage(m_CurrentCommandBuffer->commandBuffer, buf->buffer, tex->image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
     }
 
-    void CommandList::copyMIPBufferToImage(IBuffer* buffer, ITexture* texture, uint32_t bytesPP)
+    void CommandList::copyMIPBufferToImage(IBuffer* buffer, ITexture* texture)
     {
         Buffer* buf = dynamic_cast<Buffer*>(buffer);
         Texture* tex = dynamic_cast<Texture*>(texture);
 
-        uint32_t w = tex->getDesc().width, h = tex->getDesc().height;
+        FormatInfo formatInfo = getFormatInfo(tex->getDesc().format);
+        uint32_t mipWidth = tex->getDesc().width, mipHeight = tex->getDesc().height, mipDepth = tex->getDesc().depth;
         uint32_t offset = 0;
         std::vector<VkBufferImageCopy> regions(tex->getDesc().mipLevels);
-
         for (uint32_t i = 0; i < tex->getDesc().mipLevels; i++)
         {
+            mipWidth = std::max(mipWidth >> 1, uint32_t(1));
+            mipHeight = std::max(mipHeight >> 1, uint32_t(1));
+            mipDepth = std::max(mipDepth >> 1, uint32_t(1));
+
+            const uint32_t numColumns = (mipWidth + formatInfo.blockSize - 1) / formatInfo.blockSize;
+            const uint32_t numRows = (mipHeight + formatInfo.blockSize - 1) / formatInfo.blockSize;
+            const uint32_t rowSize = numColumns * formatInfo.bytesPerBlock;
+            size_t layerSize = rowSize * numRows * mipDepth;
+
             VkImageSubresourceLayers subresource{};
             subresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
             subresource.mipLevel = i;
@@ -313,14 +322,11 @@ namespace RHI::Vulkan
             region.bufferImageHeight = 0;
             region.imageSubresource = subresource;
             region.imageOffset = VkOffset3D{ 0, 0, 0 };
-            region.imageExtent = VkExtent3D{ w, h, 1 };
+            region.imageExtent = VkExtent3D{ mipWidth, mipHeight, 1 };
 
-            offset += w * h * tex->getDesc().layerCount * bytesPP;
+            offset += layerSize * tex->getDesc().layerCount;
 
             regions[i] = region;
-
-            w >>= 1;
-            h >>= 1;
         }
 
         vkCmdCopyBufferToImage(m_CurrentCommandBuffer->commandBuffer, buf->buffer, tex->image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, (uint32_t)regions.size(), regions.data());
