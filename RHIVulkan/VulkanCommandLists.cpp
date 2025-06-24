@@ -277,6 +277,10 @@ namespace RHI::Vulkan
         Texture* tex = dynamic_cast<Texture*>(texture);
         Buffer* buf = dynamic_cast<Buffer*>(buffer);
 
+        const uint32_t mipWidth = std::max(tex->desc.width >> mipLevel, uint32_t(1));
+        const uint32_t mipHeight = std::max(tex->desc.height >> mipLevel, uint32_t(1));
+        const uint32_t mipDepth = std::max(tex->desc.depth >> mipLevel, uint32_t(1));
+
         VkBufferImageCopy region{};
         region.bufferOffset = 0;
         region.bufferRowLength = 0;
@@ -286,7 +290,7 @@ namespace RHI::Vulkan
         region.imageSubresource.baseArrayLayer = baseArrayLayer;
         region.imageSubresource.layerCount = tex->getDesc().layerCount;
         region.imageOffset = VkOffset3D{ 0, 0, 0 };
-        region.imageExtent = VkExtent3D{ tex->getDesc().width >> mipLevel, tex->getDesc().height >> mipLevel, tex->getDesc().depth >> mipLevel };
+        region.imageExtent = VkExtent3D{mipWidth, mipHeight, mipDepth};
 
         vkCmdCopyBufferToImage(m_CurrentCommandBuffer->commandBuffer, buf->buffer, tex->image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
     }
