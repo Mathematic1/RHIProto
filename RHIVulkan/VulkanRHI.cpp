@@ -105,7 +105,7 @@ namespace RHI::Vulkan
         return contextFeatures;
     }
 
-    bool isDeviceSuitable(VkPhysicalDevice device)
+    int32_t isDeviceSuitable(VkPhysicalDevice device)
     {
         VkPhysicalDeviceProperties deviceProperties;
         vkGetPhysicalDeviceProperties(device, &deviceProperties);
@@ -115,14 +115,26 @@ namespace RHI::Vulkan
 
         const bool isDiscreteGPU = deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU;
         const bool isIntegratedGPU = deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU;
-        const bool isGPU = isDiscreteGPU || isIntegratedGPU;
+        //const bool isGPU = isDiscreteGPU || isIntegratedGPU;
 
 #if defined(WIN32)
-        return isGPU && deviceFeatures.geometryShader;
-#elif defined(__APPLE__)
-        return isGPU;
+        if (!deviceFeatures.geometryShader)
+            return -1;
 #endif
-        return false;
+
+        int32_t score = 0;
+
+        if (isDiscreteGPU)
+            score += 1000;
+        else if (isIntegratedGPU)
+            score += 100;
+
+        score += deviceProperties.limits.maxComputeSharedMemorySize / 1024;
+        score += deviceProperties.limits.timestampComputeAndGraphics
+                     ? deviceProperties.limits.maxComputeWorkGroupInvocations
+                     : 0;
+
+        return score;
     }
 
     void VulkanDynamicRHI::createDeviceInternal()
@@ -868,7 +880,7 @@ namespace RHI::Vulkan
     }
 
 
-    VkResult findSuitablePhysicalDevice(VkInstance instance, std::function<bool(VkPhysicalDevice)> selector, VkPhysicalDevice* physicalDevice)
+    VkResult findSuitablePhysicalDevice(VkInstance instance, std::function<int32_t(VkPhysicalDevice)> selector, VkPhysicalDevice* physicalDevice)
     {
         uint32_t deviceCount = 0;
         VK_CHECK_RET(vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr));
@@ -878,13 +890,21 @@ namespace RHI::Vulkan
         std::vector<VkPhysicalDevice> devices(deviceCount);
         VK_CHECK_RET(vkEnumeratePhysicalDevices(instance, &deviceCount, devices.data()));
 
+        int32_t bestScore = -1;
+        VkPhysicalDevice bestDevice = nullptr;
+
         for (const auto& device : devices)
         {
-            if (selector(device))
-            {
-                *physicalDevice = device;
-                return VK_SUCCESS;
+            int32_t score = selector(device);
+            if (score > bestScore) {
+                bestScore = score;
+                bestDevice = device;
             }
+        }
+
+        if (bestDevice) {
+            *physicalDevice = bestDevice;
+            return VK_SUCCESS;  
         }
 
         return VK_ERROR_INITIALIZATION_FAILED;
