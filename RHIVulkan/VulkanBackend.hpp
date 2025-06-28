@@ -751,6 +751,11 @@ namespace RHI::Vulkan
 		virtual void uploadBufferData(IBuffer* buffer, size_t deviceOffset, const void* data, const size_t dataSize) override;
 		virtual void uploadVertexIndexBufferData(IBuffer* buffer, size_t deviceOffset, size_t vertexDataSize, const void* vertexData,
 			size_t indexDataSize, const void* indexData, const size_t dataSize) override;
+		virtual void uploadMipLevelToStagingBuffer(IBuffer *stagingBuffer, size_t deviceOffset, const void *imageData, const size_t imageSize,
+			uint32_t deviceNumRows, uint32_t deviceNumColumns, uint32_t mipDepth, uint32_t layerCount,
+			size_t rowPitch,          // from source
+			size_t depthPitch,        // from source
+			size_t deviceRowSize) override; // GPU expected row size
 
 		/** Copy GPU device buffer data to [outData] */
 		void downloadBufferData(const VkDeviceMemory& bufferMemory, VkDeviceSize deviceOffset, void* outData, size_t dataSize);
@@ -849,7 +854,8 @@ namespace RHI::Vulkan
 		void transitionBufferLayoutCmd(VkBuffer buffer, VkFormat format, VkAccessFlags oldAccess, VkAccessFlags newAccess, uint32_t offset = 0, uint32_t size = 0);
 
 		/* VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL for real update of an existing texture */
-		virtual bool updateTextureImage(ITexture* texture, uint32_t mipLevel, uint32_t baseArrayLayer, const void* imageData, ImageLayout sourceImageLayout = ImageLayout::UNDEFINED) override;
+		virtual bool updateTextureImage(ITexture* texture, uint32_t mipLevel, uint32_t baseArrayLayer, const void* imageData,
+			size_t rowPitch = 0, size_t depthPitch = 0, ImageLayout sourceImageLayout = ImageLayout::UNDEFINED) override;
 
 		virtual void copyBufferToImage(IBuffer* buffer, ITexture* texture, uint32_t mipLevel = 0, uint32_t baseArrayLayer = 0) override;
 		virtual void copyMIPBufferToImage(IBuffer* buffer, ITexture* texture) override;

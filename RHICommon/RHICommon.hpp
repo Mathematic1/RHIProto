@@ -479,7 +479,8 @@ namespace RHI
         virtual void setGraphicsState(const GraphicsState& state) = 0;
         virtual void transitionImageLayout(ITexture* texture, ImageLayout oldLayout, ImageLayout newLayout) = 0;
         virtual void transitionBufferLayout(IBuffer* texture, ImageLayout oldLayout, ImageLayout newLayout) = 0;
-        virtual bool updateTextureImage(ITexture* texture, uint32_t mipLevel, uint32_t baseArrayLayer, const void* imageData, ImageLayout sourceImageLayout = ImageLayout::UNDEFINED) = 0;
+        virtual bool updateTextureImage(ITexture* texture, uint32_t mipLevel, uint32_t baseArrayLayer, const void* imageData,
+            size_t rowPitch = 0, size_t depthPitch = 0, ImageLayout sourceImageLayout = ImageLayout::UNDEFINED) = 0;
         virtual void copyBufferToImage(IBuffer* buffer, ITexture* texture, uint32_t mipLevel = 0, uint32_t baseArrayLayer = 0) = 0;
         virtual void copyTexture(ITexture* srcTexture, const TextureSubresourse& srcSubresource, ITexture* dstTexture, const TextureSubresourse dstSubresource) = 0;
         virtual void blitTexture(ITexture* srcTexture, const TextureSubresourse& srcSubresource, ITexture* dstTexture, const TextureSubresourse dstSubresource) = 0;
@@ -912,6 +913,11 @@ namespace RHI
         virtual void uploadBufferData(IBuffer* buffer, size_t deviceOffset, const void* data, const size_t dataSize) = 0;
         virtual void uploadVertexIndexBufferData(IBuffer* buffer, size_t deviceOffset, size_t vertexDataSize, const void* vertexData,
             size_t indexDataSize, const void* indexData, const size_t dataSize) = 0;
+        virtual void uploadMipLevelToStagingBuffer(IBuffer* stagingBuffer, size_t deviceOffset, const void* imageData, const size_t imageSize,
+            uint32_t deviceNumRows, uint32_t deviceNumColumns, uint32_t mipDepth, uint32_t layerCount,
+            size_t rowPitch,     // from source
+            size_t depthPitch,   // from source
+            size_t deviceRowSize) = 0; // GPU expected row size
         virtual Format findDepthFormat() = 0;
         // mapping
         virtual void* mapBufferMemory(IBuffer* buffer, size_t offset, size_t size) = 0;

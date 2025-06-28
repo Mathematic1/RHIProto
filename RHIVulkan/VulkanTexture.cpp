@@ -347,7 +347,8 @@ namespace RHI::Vulkan
         return SamplerHandle(sampler);
     }
 
-    bool CommandList::updateTextureImage(ITexture* texture, uint32_t mipLevel, uint32_t baseArrayLayer, const void* imageData, ImageLayout sourceImageLayout)
+    bool CommandList::updateTextureImage(ITexture *texture, uint32_t mipLevel, uint32_t baseArrayLayer,
+        const void *imageData, size_t rowPitch, size_t depthPitch, ImageLayout sourceImageLayout)
     {
     	Texture* tex = dynamic_cast<Texture*>(texture);
 
@@ -357,11 +358,14 @@ namespace RHI::Vulkan
         const uint32_t mipHeight = std::max(tex->desc.height >> mipLevel, uint32_t(1));
         const uint32_t mipDepth = std::max(tex->desc.depth >> mipLevel, uint32_t(1));
 
-        const uint32_t numColumns = (mipWidth + formatInfo.blockSize - 1) / formatInfo.blockSize;
-        const uint32_t numRows = (mipHeight + formatInfo.blockSize - 1) / formatInfo.blockSize;
-        const uint32_t rowSize = numColumns * formatInfo.bytesPerBlock;
-        VkDeviceSize layerSize = rowSize * numRows * mipDepth;
+        const uint32_t deviceNumColumns = (mipWidth + formatInfo.blockSize - 1) / formatInfo.blockSize;
+        const uint32_t deviceNumRows = (mipHeight + formatInfo.blockSize - 1) / formatInfo.blockSize;
+        const uint32_t deviceRowSize = deviceNumColumns * formatInfo.bytesPerBlock;
+        VkDeviceSize layerSize = deviceRowSize * deviceNumRows * mipDepth;
         VkDeviceSize imageSize = layerSize * tex->desc.layerCount;
+
+        if (rowPitch == 0)
+            rowPitch = deviceRowSize;
 
         BufferDesc stagingDesc = BufferDesc{}
             .setSize(imageSize)
@@ -370,7 +374,9 @@ namespace RHI::Vulkan
         BufferHandle stagingBuffer = m_Device->createBuffer(stagingDesc);
         m_CurrentCommandBuffer->referencedStagingBuffers.push_back(stagingBuffer);
 
-        m_Device->uploadBufferData(stagingBuffer.get(), 0, imageData, imageSize);
+        //m_Device->uploadBufferData(stagingBuffer.get(), 0, imageData, imageSize);
+        m_Device->uploadMipLevelToStagingBuffer(stagingBuffer.get(), 0, imageData, imageSize, deviceNumRows,
+                                                deviceNumColumns, mipDepth, tex->desc.layerCount, rowPitch, depthPitch, deviceRowSize);
 
         transitionImageLayout(tex, sourceImageLayout, ImageLayout::TRANSFER_DST_OPTIMAL);
         copyBufferToImage(stagingBuffer.get(), tex, mipLevel, baseArrayLayer);

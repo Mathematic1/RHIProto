@@ -140,6 +140,39 @@ namespace RHI::Vulkan
         vkUnmapMemory(m_Context.device, buf->memory);
     }
 
+    void Device::uploadMipLevelToStagingBuffer(IBuffer *stagingBuffer, size_t deviceOffset, const void *imageData, const size_t imageSize,
+        uint32_t deviceNumRows, uint32_t deviceNumColumns, uint32_t mipDepth, uint32_t layerCount,
+        size_t rowPitch, size_t depthPitch, size_t deviceRowSize)
+    {
+        Buffer *buf = dynamic_cast<Buffer *>(stagingBuffer);
+
+        void *mappedMemory = nullptr;
+        vkMapMemory(m_Context.device, buf->memory, deviceOffset, imageSize, 0, &mappedMemory);
+
+        uint8_t *dstPtr = reinterpret_cast<uint8_t *>(mappedMemory);
+
+        const size_t minRowSize = std::min(deviceRowSize, rowPitch);
+
+        if (deviceRowSize == rowPitch && depthPitch == deviceRowSize * deviceNumRows) {
+            memcpy(mappedMemory, imageData, imageSize);
+        }else {
+            for (uint32_t layer = 0; layer < layerCount; ++layer) {
+                for (uint32_t slice = 0; slice < mipDepth; ++slice) {
+                    const uint8_t *srcSlice = reinterpret_cast<const uint8_t *>(imageData) +
+                                              layer * mipDepth * depthPitch + slice * depthPitch;
+
+                    for (uint32_t row = 0; row < deviceNumRows; ++row) {
+                        const uint8_t *srcRow = srcSlice + row * rowPitch;
+                        std::memcpy(dstPtr, srcRow, minRowSize);
+                        dstPtr += deviceRowSize; // GPU expected stride
+                    }
+                }
+            }
+        }
+
+        vkUnmapMemory(m_Context.device, buf->memory);
+    }
+
     void Device::downloadBufferData(const VkDeviceMemory& bufferMemory, VkDeviceSize deviceOffset, void* outData, size_t dataSize)
     {
         //EASY_FUNCTION()
