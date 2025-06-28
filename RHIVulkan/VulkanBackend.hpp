@@ -512,9 +512,7 @@ namespace RHI::Vulkan
 		return descriptorSet;
 	}
 
-	VkResult createSemaphore(VkDevice device, VkSemaphore* outSemaphore);
-
-	int32_t isDeviceSuitable(VkPhysicalDevice device);
+	int32_t rateDeviceSuitability(VkPhysicalDevice device);
 
 	SwapchainSupportDetails querySwapchainSupport(VkPhysicalDevice device, VkSurfaceKHR surface);
 
@@ -524,7 +522,7 @@ namespace RHI::Vulkan
 
 	uint32_t chooseSwapImageCount(const VkSurfaceCapabilitiesKHR& caps);
 
-	VkResult findSuitablePhysicalDevice(VkInstance instance, std::function<int32_t(VkPhysicalDevice)> selector, VkPhysicalDevice* physicalDevice);
+	VkResult findBestSuitablePhysicalDevice(VkInstance instance, std::function<int32_t(VkPhysicalDevice)> selector, VkPhysicalDevice* physicalDevice);
 
 	uint32_t findQueueFamilies(VkPhysicalDevice device, VkQueueFlags desiredFlags);
 

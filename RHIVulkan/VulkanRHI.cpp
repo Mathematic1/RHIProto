@@ -105,7 +105,7 @@ namespace RHI::Vulkan
         return contextFeatures;
     }
 
-    int32_t isDeviceSuitable(VkPhysicalDevice device)
+    int32_t rateDeviceSuitability(VkPhysicalDevice device)
     {
         VkPhysicalDeviceProperties deviceProperties;
         vkGetPhysicalDeviceProperties(device, &deviceProperties);
@@ -142,7 +142,7 @@ namespace RHI::Vulkan
         VkPhysicalDeviceFeatures2 deviceFeatures2{};
         VkPhysicalDeviceFeatures deviceFeatures = initVulkanRenderDeviceFeatures(m_VulkanFeatures, deviceFeatures2);
 
-        VK_CHECK(findSuitablePhysicalDevice(m_VulkanInstance.instance, isDeviceSuitable, &m_VulkanPhysicalDevice));
+        VK_CHECK(findBestSuitablePhysicalDevice(m_VulkanInstance.instance, rateDeviceSuitability, &m_VulkanPhysicalDevice));
 
         std::unordered_set<uint32_t> uniqueQueueFamilies{};
         if (m_DeviceParams.useGraphicsQueue)
@@ -880,7 +880,8 @@ namespace RHI::Vulkan
     }
 
 
-    VkResult findSuitablePhysicalDevice(VkInstance instance, std::function<int32_t(VkPhysicalDevice)> selector, VkPhysicalDevice* physicalDevice)
+    VkResult findBestSuitablePhysicalDevice(VkInstance instance, std::function<int32_t(VkPhysicalDevice)> selector,
+                                            VkPhysicalDevice *physicalDevice)
     {
         uint32_t deviceCount = 0;
         VK_CHECK_RET(vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr));
