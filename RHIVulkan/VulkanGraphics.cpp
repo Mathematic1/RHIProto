@@ -191,6 +191,13 @@ namespace RHI::Vulkan
         tessellationState.flags = 0;
         tessellationState.patchControlPoints = pipeInfo.patchControlPoints;
 
+        // TODO: refactor push constant visibility logic
+        pso->pushConstantsVisibility = VkShaderStageFlagBits();
+        if (desc.pushConstants.vtxConstSize > 0)
+            pso->pushConstantsVisibility = VK_SHADER_STAGE_VERTEX_BIT;
+        if (desc.pushConstants.fragConstSize > 0)
+            pso->pushConstantsVisibility = VK_SHADER_STAGE_FRAGMENT_BIT;
+        
         BindingLayout* bindingLayout = dynamic_cast<BindingLayout*>(desc.bindingLayouts[0].get());
         std::vector<VkDescriptorSetLayout> descriptorSetLayouts = { bindingLayout->descriptorSetLayout };
         createPipelineLayout(descriptorSetLayouts, desc.pushConstants, &pso->pipelineLayout);
