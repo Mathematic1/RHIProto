@@ -36,7 +36,7 @@ namespace RHI
     typedef std::shared_ptr<IGraphicsPipeline> GraphicsPipelineHandle;
     typedef std::shared_ptr<IFramebuffer> FramebufferHandle;
     typedef std::shared_ptr<IRHICommandList> CommandListHandle;
-    typedef std::shared_ptr<IDevice> DeviceHandle;
+    typedef IDevice* DeviceHandle;
 
 	enum class GraphicsAPI : uint8_t
     {
