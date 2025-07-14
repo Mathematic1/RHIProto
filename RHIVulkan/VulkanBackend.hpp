@@ -238,13 +238,13 @@ namespace RHI::Vulkan
 	{
 	public:
 		VulkanDynamicRHI(const DeviceParams& deviceParams);
-		virtual ~VulkanDynamicRHI();
+		~VulkanDynamicRHI() override;
 
 		void setWindowSurface(VkSurfaceKHR surface);
 		virtual GraphicsAPI getGraphicsAPI() const override;
 		virtual void createDeviceInternal() override;
 		VkResult createDevice(std::unordered_set<uint32_t>& uniqueQueueFamilies, VkPhysicalDeviceFeatures deviceFeatures, VkPhysicalDeviceFeatures2 deviceFeatures2);
-		virtual IDevice* getDevice() const override;
+		virtual RHI::DeviceHandle getDevice() const override;
 		const VulkanInstance& getVulkanInstance() const;
 		bool CreateSwapchain();
 		virtual bool BeginFrame() override;
@@ -324,13 +324,18 @@ namespace RHI::Vulkan
 	class Shader final : public IShader
 	{
 	public:
-		Shader(){}
-		virtual ~Shader() override {}
+		explicit Shader(const VulkanContext &context)
+		: m_Context(context)
+		{}
+		~Shader() override;
 
 		std::vector<unsigned int> SPIRV;
 		VkShaderModule shaderModule = nullptr;
 
 		VkShaderStageFlagBits stage{};
+
+	private:
+		const VulkanContext &m_Context;
 	};
 
 	class Buffer : public IBuffer, public MemoryResource
@@ -609,7 +614,7 @@ namespace RHI::Vulkan
 			: m_Context(context)
 		{}
 
-		virtual ~Framebuffer() override {}
+		~Framebuffer() override;
 
 		const FramebufferDesc& getDesc() const override { return desc; }
 
@@ -641,7 +646,13 @@ namespace RHI::Vulkan
 	public:
 		VkDescriptorSetLayout descriptorSetLayout;
 
-		virtual ~BindingLayout() {};
+		explicit BindingLayout(const VulkanContext &context)
+		: m_Context(context)
+		{}
+		~BindingLayout() override;
+
+	private:
+		const VulkanContext &m_Context;
 	};
 
 	class BindingSet : public IBindingSet
@@ -669,7 +680,7 @@ namespace RHI::Vulkan
 			: m_Context(context)
 		{}
 
-		virtual ~GraphicsPipeline() override {};
+		~GraphicsPipeline() override;
 		const GraphicsPipelineDesc& getDesc() const override { return desc; }
 	private:
 		const VulkanContext& m_Context;

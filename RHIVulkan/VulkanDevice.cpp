@@ -73,7 +73,7 @@ namespace RHI::Vulkan
 
     Device::~Device()
     {
-
+        
     }
 
     CommandListHandle Device::createCommandList(const CommandListParameters& params)

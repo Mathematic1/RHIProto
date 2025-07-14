@@ -97,4 +97,17 @@ namespace RHI::Vulkan
             //m_Resources.allFramebuffers.push_back(f);
         return framebuffers;
     }
+
+    Framebuffer::~Framebuffer()
+    {
+        if (renderPass) {
+            vkDestroyRenderPass(m_Context.device, renderPass, nullptr);
+            renderPass = nullptr;
+        }
+
+        if (framebuffer) {
+            vkDestroyFramebuffer(m_Context.device, framebuffer, nullptr);
+            framebuffer = nullptr;
+        }
+    }
 }

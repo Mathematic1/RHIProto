@@ -48,9 +48,9 @@ namespace RHI::Vulkan
         }
 	}
 
-    IDevice* VulkanDynamicRHI::getDevice() const
+    RHI::DeviceHandle VulkanDynamicRHI::getDevice() const
     {
-        return m_Device.get();
+        return m_Device;
     }
 
     void VulkanDynamicRHI::setWindowSurface(VkSurfaceKHR surface)
@@ -60,6 +60,8 @@ namespace RHI::Vulkan
 
 	VulkanDynamicRHI::~VulkanDynamicRHI()
 	{
+        m_SwapChainFramebuffers.clear();
+
         destroyDevice();
         destroyVulkanInstance();
 	}

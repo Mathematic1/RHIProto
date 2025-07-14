@@ -36,7 +36,7 @@ namespace RHI
     typedef std::shared_ptr<IGraphicsPipeline> GraphicsPipelineHandle;
     typedef std::shared_ptr<IFramebuffer> FramebufferHandle;
     typedef std::shared_ptr<IRHICommandList> CommandListHandle;
-    typedef IDevice* DeviceHandle;
+    typedef std::shared_ptr<IDevice> DeviceHandle;
 
 	enum class GraphicsAPI : uint8_t
     {
@@ -542,7 +542,7 @@ namespace RHI
         virtual uint32_t GetCurrentBackBufferIndex() = 0;
         virtual uint32_t GetBackBufferCount() = 0;
         virtual FramebufferHandle GetFramebuffer(uint32_t index) = 0;
-        virtual IDevice* getDevice() const = 0;
+        virtual DeviceHandle getDevice() const = 0;
         virtual GraphicsAPI getGraphicsAPI() const = 0;
 
         virtual DeviceParams& getDeviceParams()

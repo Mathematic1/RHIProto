@@ -75,7 +75,7 @@ namespace RHI::Vulkan
 
     BindingLayoutHandle Device::createDescriptorSetLayout(const DescriptorSetInfo& dsInfo)
     {
-        BindingLayout* bindingLayout = new BindingLayout();
+        BindingLayout* bindingLayout = new BindingLayout(m_Context);
 
         VkDescriptorSetLayout descriptorSetLayout;
 
@@ -247,6 +247,14 @@ namespace RHI::Vulkan
         }
 
         vkCmdBindDescriptorSets(m_CurrentCommandBuffer->commandBuffer, bindPoint, pipelineLayout, 0, uint32_t(descriptorSets.size()), descriptorSets.data() , 0, nullptr);
+    }
+
+    BindingLayout::~BindingLayout()
+    {
+        if (descriptorSetLayout) {
+            vkDestroyDescriptorSetLayout(m_Context.device, descriptorSetLayout, nullptr);
+            descriptorSetLayout = VkDescriptorSetLayout();
+        }
     }
 
     BindingSet::BindingSet(const VulkanContext& context)

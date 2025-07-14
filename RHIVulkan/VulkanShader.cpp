@@ -4,7 +4,7 @@ namespace RHI::Vulkan
 {
     ShaderHandle Device::createShaderModule(const char* fileName, const std::vector<unsigned int>& SPIRV)
     {
-        Shader* shader = new Shader();
+        Shader* shader = new Shader(m_Context);
 
         shader->SPIRV = SPIRV;
 
@@ -42,5 +42,14 @@ namespace RHI::Vulkan
             return &inputBindingDesc[index];
         else
             return nullptr;
+    }
+
+    Shader::~Shader()
+    {
+        if (shaderModule)
+        {
+            vkDestroyShaderModule(m_Context.device, shaderModule, nullptr);
+            shaderModule = VkShaderModule();
+        }
     }
 }

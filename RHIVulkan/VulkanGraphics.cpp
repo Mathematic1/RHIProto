@@ -273,6 +273,19 @@ namespace RHI::Vulkan
         return (vkCreatePipelineLayout(m_Context.device, &pipelineLayoutInfo, nullptr, pipelineLayout) == VK_SUCCESS);
     }
 
+    GraphicsPipeline::~GraphicsPipeline()
+    {
+        if (pipeline) {
+            vkDestroyPipeline(m_Context.device, pipeline, nullptr);
+            pipeline = nullptr;
+        }
+
+        if (pipelineLayout) {
+            vkDestroyPipelineLayout(m_Context.device, pipelineLayout, nullptr);
+            pipelineLayout = nullptr;
+        }
+    }
+
     void CommandList::beginRenderPass(Framebuffer* framebuffer)
     {
         VkRect2D rect = {};
