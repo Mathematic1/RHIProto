@@ -200,7 +200,7 @@ namespace RHI::Vulkan
             for (size_t j = 0; j < dsInfo.textureArrays[ta].textures.size(); j++)
             {
                 Texture* tex = dynamic_cast<Texture*>(dsInfo.textureArrays[ta].textures[j]);
-                Sampler* sampler = dynamic_cast<Sampler*>(dsInfo.textures[ta].sampler);
+                Sampler *sampler = dynamic_cast<Sampler *>(dsInfo.textureArrays[ta].sampler);
 
                 VkDescriptorImageInfo imageInfo = {
                     sampler->sampler,

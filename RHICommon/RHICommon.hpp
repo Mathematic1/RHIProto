@@ -342,6 +342,7 @@ namespace RHI
         DescriptorInfo dInfo;
 
         std::vector<ITexture*> textures;
+        ISampler *sampler = nullptr;
     };
 
     struct FramebufferAttachment

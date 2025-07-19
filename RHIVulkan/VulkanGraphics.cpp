@@ -12,13 +12,21 @@ namespace RHI::Vulkan
         numShaders++;
     }
 
-    static VkVertexInputBindingDescription getBindingDescription(const VertexInputBindingDesc& description) {
-        VkVertexInputBindingDescription bindingDescription{};
-        bindingDescription.binding = description.binding;
-        bindingDescription.stride = description.stride;
-        bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+    static std::vector<VkVertexInputBindingDescription> getBindingDescription(IInputLayout *inputLayout)
+    {
+        std::vector<VkVertexInputBindingDescription> bindingDescriptions{};
+        bindingDescriptions.reserve(inputLayout->getNumBindings());
 
-        return bindingDescription;
+        for (uint32_t idx = 0; idx < inputLayout->getNumBindings(); idx++) {
+            const VertexInputBindingDesc &description = *inputLayout->getVertexBindingDesc(idx);
+            VkVertexInputBindingDescription bindingDescription;
+            bindingDescription.binding = description.binding;
+            bindingDescription.stride = description.stride;
+            bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+            bindingDescriptions.push_back(bindingDescription);
+        }
+
+        return bindingDescriptions;
     }
 
     static std::vector<VkVertexInputAttributeDescription> getAttributeDescriptions(IInputLayout* inputLayout) {
@@ -96,11 +104,11 @@ namespace RHI::Vulkan
         VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
         vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
 
-        auto bindingDescription = getBindingDescription(*desc.inputLayout->getVertexBindingDesc(0));
+        auto bindingDescriptions = getBindingDescription(desc.inputLayout.get());
         auto attributeDescriptions = getAttributeDescriptions(desc.inputLayout.get());
 
-        vertexInputInfo.vertexBindingDescriptionCount = 1;
-        vertexInputInfo.pVertexBindingDescriptions = &bindingDescription; // optional
+        vertexInputInfo.vertexBindingDescriptionCount = static_cast<uint32_t>(bindingDescriptions.size());
+        vertexInputInfo.pVertexBindingDescriptions = bindingDescriptions.data(); // optional
         vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
         vertexInputInfo.pVertexAttributeDescriptions = attributeDescriptions.data(); // optional
 
@@ -350,13 +358,17 @@ namespace RHI::Vulkan
 	        }
         }
 
-        vkCmdBindVertexBuffers(m_CurrentCommandBuffer->commandBuffer, 0,
-            maxVertexBufferIndex + 1, vertexBuffers.data(), vertexBuffersOffsets.data()); 
+        if (state.indexBufferBinding.buffer && m_CurrentGraphicsState.indexBufferBinding.buffer != state.indexBufferBinding.buffer) {
+            Buffer *indexBuf = dynamic_cast<Buffer *>(state.indexBufferBinding.buffer);
+            vkCmdBindIndexBuffer(m_CurrentCommandBuffer->commandBuffer, indexBuf->buffer,
+                                 state.indexBufferBinding.offset,
+                                 state.indexBufferBinding.index32BitType ? VK_INDEX_TYPE_UINT32 : VK_INDEX_TYPE_UINT16);
+        }
 
-        Buffer* indexBuf = dynamic_cast<Buffer*>(state.indexBufferBinding.buffer);
-        vkCmdBindIndexBuffer(m_CurrentCommandBuffer->commandBuffer,
-            indexBuf->buffer, state.indexBufferBinding.offset,
-            state.indexBufferBinding.index32BitType ? VK_INDEX_TYPE_UINT32 : VK_INDEX_TYPE_UINT16);
+        if (!vertexBuffers.empty()) {
+            vkCmdBindVertexBuffers(m_CurrentCommandBuffer->commandBuffer, 0, maxVertexBufferIndex + 1,
+                                   vertexBuffers.data(), vertexBuffersOffsets.data()); 
+        }
 
         GraphicsPipeline* pso = dynamic_cast<GraphicsPipeline*>(state.pipeline);
         m_CurrentPipelineLayout = pso->pipelineLayout;
