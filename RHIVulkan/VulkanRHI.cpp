@@ -679,8 +679,14 @@ namespace RHI::Vulkan
     {
         vkDestroySurfaceKHR(m_VulkanInstance.instance, m_VulkanInstance.surface, nullptr);
 
-        vkDestroyDebugReportCallbackEXT(m_VulkanInstance.instance, m_VulkanInstance.reportCallback, nullptr);
-        vkDestroyDebugUtilsMessengerEXT(m_VulkanInstance.instance, m_VulkanInstance.messenger, nullptr);
+        if (m_VulkanInstance.reportCallback)
+        {
+            vkDestroyDebugReportCallbackEXT(m_VulkanInstance.instance, m_VulkanInstance.reportCallback, nullptr);
+        }
+        if (m_VulkanInstance.messenger)
+        {
+            vkDestroyDebugUtilsMessengerEXT(m_VulkanInstance.instance, m_VulkanInstance.messenger, nullptr);
+        }
 
         vkDestroyInstance(m_VulkanInstance.instance, nullptr);
     }
