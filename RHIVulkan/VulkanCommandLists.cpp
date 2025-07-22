@@ -362,6 +362,15 @@ namespace RHI::Vulkan
         vkCmdPushConstants(m_CurrentCommandBuffer->commandBuffer, m_CurrentPipelineLayout, m_CurrentPushConstantsVisibility, 0, byteSize, data);
     }
 
+    void CommandList::executed(Queue &queue, const uint64_t submissionID)
+    {
+        assert(m_CurrentCommandBuffer);
+
+        m_CurrentCommandBuffer->submissionID = submissionID;
+
+        m_CurrentCommandBuffer = nullptr;
+    }
+
     void CommandList::draw(const DrawArguments& args)
 	{
         assert(m_CurrentCommandBuffer);

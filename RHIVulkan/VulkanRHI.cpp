@@ -17,8 +17,7 @@ const bool enableValidationFeaturesDisabled = true;
 
 namespace RHI::Vulkan
 {
-    VulkanRHIModule::VulkanRHIModule()
-	    : IRHIModule()
+    VulkanRHIModule::VulkanRHIModule() : IRHIModule()
     {
         //glslang_initialize_process();
 
@@ -27,26 +26,27 @@ namespace RHI::Vulkan
 
     VulkanRHIModule::~VulkanRHIModule()
     {
-	    
     }
 
-	IDynamicRHI* VulkanRHIModule::createRHI(const DeviceParams& deviceParams)
-	{
-		VulkanDynamicRHI* VulkanRHI = new VulkanDynamicRHI(deviceParams);
-		return VulkanRHI;
-	}
+    IDynamicRHI *VulkanRHIModule::createRHI(const DeviceParams &deviceParams)
+    {
+        VulkanDynamicRHI *VulkanRHI = new VulkanDynamicRHI(deviceParams);
+        return VulkanRHI;
+    }
 
-	VulkanDynamicRHI::VulkanDynamicRHI(const DeviceParams& deviceParams)
-		: IDynamicRHI(deviceParams)
-	{
-		createInstance();
+    VulkanDynamicRHI::VulkanDynamicRHI(const DeviceParams &deviceParams) : IDynamicRHI(deviceParams)
+    {
+        createInstance();
 
-        if (!setupDebugCallbacks(m_VulkanInstance.instance, &m_VulkanInstance.messenger, &m_VulkanInstance.reportCallback))
-        {
+        m_VulkanExtensions = initializeContextExtensions();
+        m_VulkanFeatures = initializeContextFeatures();
+
+        if (!setupDebugCallbacks(m_VulkanInstance.instance, &m_VulkanInstance.messenger,
+                                 &m_VulkanInstance.reportCallback)) {
             printf("Cannot initialize debug callbacks\n");
             exit(EXIT_FAILURE);
         }
-	}
+    }
 
     RHI::DeviceHandle VulkanDynamicRHI::getDevice() const
     {
@@ -58,23 +58,23 @@ namespace RHI::Vulkan
         m_VulkanInstance.surface = surface;
     }
 
-	VulkanDynamicRHI::~VulkanDynamicRHI()
-	{
+    VulkanDynamicRHI::~VulkanDynamicRHI()
+    {
         m_SwapChainFramebuffers.clear();
 
         destroyDevice();
         destroyVulkanInstance();
-	}
+    }
 
-	bool IsExtensionAvailable(const std::vector<VkExtensionProperties>& properties,
-		const char* extension) noexcept {
-		for (const VkExtensionProperties& p : properties) {
-			if (strcmp(p.extensionName, extension) == 0) {
-				return true;
-			}
-		}
-		return false;
-	}
+    bool IsExtensionAvailable(const std::vector<VkExtensionProperties> &properties, const char *extension) noexcept
+    {
+        for (const VkExtensionProperties &p : properties) {
+            if (strcmp(p.extensionName, extension) == 0) {
+                return true;
+            }
+        }
+        return false;
+    }
 
     VulkanContextExtensions VulkanDynamicRHI::initializeContextExtensions()
     {
@@ -102,7 +102,8 @@ namespace RHI::Vulkan
             .fragmentStoresAndAtomics_ = true,
             .shaderSampledImageArrayDynamicIndexing = true,
             .shaderInt64 = true,
-            .deviceDescriptorIndexing = true
+            .deviceDescriptorIndexing = true,
+            .timelineSemaphore = true
         };
         return contextFeatures;
     }
@@ -141,9 +142,6 @@ namespace RHI::Vulkan
 
     void VulkanDynamicRHI::createDeviceInternal()
     {
-        VkPhysicalDeviceFeatures2 deviceFeatures2{};
-        VkPhysicalDeviceFeatures deviceFeatures = initVulkanRenderDeviceFeatures(m_VulkanFeatures, deviceFeatures2);
-
         VK_CHECK(findBestSuitablePhysicalDevice(m_VulkanInstance.instance, rateDeviceSuitability, &m_VulkanPhysicalDevice));
 
         std::unordered_set<uint32_t> uniqueQueueFamilies{};
@@ -152,6 +150,8 @@ namespace RHI::Vulkan
             m_GraphicsQueueFamily = findQueueFamilies(m_VulkanPhysicalDevice, VK_QUEUE_GRAPHICS_BIT);
             uniqueQueueFamilies.insert(m_GraphicsQueueFamily);
         }
+
+        //vkGetPhysicalDeviceFeatures2(m_VulkanPhysicalDevice, &deviceFeatures2);
         //	VK_CHECK(createDevice2(m_Context.m_PhysicalDevice, deviceFeatures2, vkDev.graphicsFamily, &m_Context.m_Device));
         //	VK_CHECK(vkGetBestComputeQueue(m_Context.m_PhysicalDevice, &vkDev.computeFamily));
         if (m_DeviceParams.useComputeQueue)
@@ -192,7 +192,7 @@ namespace RHI::Vulkan
             uniqueQueueFamilies.insert(m_PresentQueueFamily);
         }
 
-    	VK_CHECK(createDevice(uniqueQueueFamilies, deviceFeatures, deviceFeatures2));
+    	VK_CHECK(createDevice(uniqueQueueFamilies));
 
         if (m_DeviceParams.useGraphicsQueue)
         {
@@ -245,10 +245,9 @@ namespace RHI::Vulkan
         const size_t imageCount = createSwapchainImages();
         m_SwapChainIndex = 0;
 
-
-
         m_PresentSemaphores.reserve(m_DeviceParams.maxFramesInFlight + 1);
         m_AcquireSemaphores.reserve(m_DeviceParams.maxFramesInFlight + 1);
+
         const VkSemaphoreCreateInfo semaphoreCreateInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO };
         for (uint32_t i = 0; i < m_DeviceParams.maxFramesInFlight + 1; ++i)
         {
@@ -263,7 +262,7 @@ namespace RHI::Vulkan
         BackBufferResized();
     }
 
-    VkResult VulkanDynamicRHI::createDevice(std::unordered_set<uint32_t>& uniqueQueueFamilies, VkPhysicalDeviceFeatures deviceFeatures, VkPhysicalDeviceFeatures2 deviceFeatures2)
+    VkResult VulkanDynamicRHI::createDevice(std::unordered_set<uint32_t> &uniqueQueueFamilies)
     {
         std::vector<const char*> extensions{};
         if (m_VulkanExtensions.KHR_swapchain)
@@ -290,6 +289,54 @@ namespace RHI::Vulkan
             extensions.push_back("VK_KHR_portability_subset");
         }
 #endif
+
+        VkPhysicalDeviceFeatures deviceFeatures{};
+        /* for wireframe outlines */
+        deviceFeatures.geometryShader = (VkBool32)(m_VulkanFeatures.geometryShader_ ? VK_TRUE : VK_FALSE);
+        /* for tesselation experiments */
+        deviceFeatures.tessellationShader = (VkBool32)(m_VulkanFeatures.tessellationShader_ ? VK_TRUE : VK_FALSE);
+        /* for indirect instanced rendering */
+        deviceFeatures.multiDrawIndirect = (VkBool32)(m_VulkanFeatures.multiDrawIndirect ? VK_TRUE : VK_FALSE);
+        deviceFeatures.drawIndirectFirstInstance =
+            (VkBool32)(m_VulkanFeatures.drawIndirectFirstInstance ? VK_TRUE : VK_FALSE);
+        /* for OIT and general atomic operations */
+        deviceFeatures.vertexPipelineStoresAndAtomics =
+            (VkBool32)(m_VulkanFeatures.vertexPipelineStoresAndAtomics_ ? VK_TRUE : VK_FALSE);
+        deviceFeatures.fragmentStoresAndAtomics =
+            (VkBool32)(m_VulkanFeatures.fragmentStoresAndAtomics_ ? VK_TRUE : VK_FALSE);
+        /* for arrays of textures */
+        deviceFeatures.shaderSampledImageArrayDynamicIndexing =
+            (VkBool32)(m_VulkanFeatures.shaderSampledImageArrayDynamicIndexing ? VK_TRUE : VK_FALSE);
+        /* for GL <-> VK material shader compatibility */
+        deviceFeatures.shaderInt64 = (VkBool32)(m_VulkanFeatures.shaderInt64 ? VK_TRUE : VK_FALSE);
+
+        void *pNext = nullptr;
+        VkPhysicalDeviceDescriptorIndexingFeaturesEXT descriptorIndexing = {};
+        if (m_VulkanFeatures.deviceDescriptorIndexing) {
+            descriptorIndexing.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES_EXT;
+            descriptorIndexing.pNext = nullptr;
+            descriptorIndexing.shaderSampledImageArrayNonUniformIndexing = VK_TRUE;
+            descriptorIndexing.descriptorBindingVariableDescriptorCount = VK_TRUE;
+            descriptorIndexing.runtimeDescriptorArray = VK_TRUE;
+
+            pNext = &descriptorIndexing;
+        }
+
+        VkPhysicalDeviceTimelineSemaphoreFeatures timelineSemaphore = {};
+        if (m_VulkanFeatures.timelineSemaphore) {
+            timelineSemaphore.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_TIMELINE_SEMAPHORE_FEATURES;
+            timelineSemaphore.pNext = pNext;
+            timelineSemaphore.timelineSemaphore = VK_TRUE;
+
+            pNext = &timelineSemaphore;
+        }
+
+        VkPhysicalDeviceFeatures2 deviceFeatures2 = {};
+        if (m_VulkanFeatures.deviceDescriptorIndexing || m_VulkanFeatures.timelineSemaphore) {
+            deviceFeatures2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
+            deviceFeatures2.pNext = pNext;
+            deviceFeatures2.features = deviceFeatures;
+        }
 
         if (m_GraphicsQueueFamily == m_ComputeQueueFamily)
         {
@@ -472,41 +519,6 @@ namespace RHI::Vulkan
             destroySwapChain();
             createSwapchain();
         }
-    }
-
-    VkPhysicalDeviceFeatures VulkanDynamicRHI::initVulkanRenderDeviceFeatures(const VulkanContextFeatures& ctxFeatures, VkPhysicalDeviceFeatures2& deviceFeatures2)
-    {
-        VkPhysicalDeviceFeatures deviceFeatures{};
-        /* for wireframe outlines */
-        deviceFeatures.geometryShader = (VkBool32)(ctxFeatures.geometryShader_ ? VK_TRUE : VK_FALSE);
-        /* for tesselation experiments */
-        deviceFeatures.tessellationShader = (VkBool32)(ctxFeatures.tessellationShader_ ? VK_TRUE : VK_FALSE);
-        /* for indirect instanced rendering */
-        deviceFeatures.multiDrawIndirect = (VkBool32)(ctxFeatures.multiDrawIndirect ? VK_TRUE : VK_FALSE);
-        deviceFeatures.drawIndirectFirstInstance = (VkBool32)(ctxFeatures.drawIndirectFirstInstance ? VK_TRUE : VK_FALSE);
-        /* for OIT and general atomic operations */
-        deviceFeatures.vertexPipelineStoresAndAtomics = (VkBool32)(ctxFeatures.vertexPipelineStoresAndAtomics_ ? VK_TRUE : VK_FALSE);
-        deviceFeatures.fragmentStoresAndAtomics = (VkBool32)(ctxFeatures.fragmentStoresAndAtomics_ ? VK_TRUE : VK_FALSE);
-        /* for arrays of textures */
-        deviceFeatures.shaderSampledImageArrayDynamicIndexing = (VkBool32)(ctxFeatures.shaderSampledImageArrayDynamicIndexing ? VK_TRUE : VK_FALSE);
-        /* for GL <-> VK material shader compatibility */
-        deviceFeatures.shaderInt64 = (VkBool32)(ctxFeatures.shaderInt64 ? VK_TRUE : VK_FALSE);
-
-        if (ctxFeatures.deviceDescriptorIndexing)
-        {
-            VkPhysicalDeviceDescriptorIndexingFeaturesEXT physicalDeviceDescriptorIndexingFeatures{};
-            physicalDeviceDescriptorIndexingFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES_EXT;
-            physicalDeviceDescriptorIndexingFeatures.shaderSampledImageArrayNonUniformIndexing = VK_TRUE;
-            physicalDeviceDescriptorIndexingFeatures.descriptorBindingVariableDescriptorCount = VK_TRUE;
-            physicalDeviceDescriptorIndexingFeatures.runtimeDescriptorArray = VK_TRUE;
-
-            deviceFeatures2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
-            deviceFeatures2.pNext = &physicalDeviceDescriptorIndexingFeatures;
-            deviceFeatures2.features = deviceFeatures;
-        }
-
-        return deviceFeatures;
-        //return initVulkanRenderDeviceWithCompute(vk, vkDev, width, height, ctxExtensions, isDeviceSuitable, deviceFeatures, deviceFeatures2, ctxFeatures.supportsScreenshots_);
     }
 
 	void VulkanDynamicRHI::createInstance()

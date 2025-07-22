@@ -48,6 +48,8 @@ namespace RHI::Vulkan
 		bool shaderInt64 = false;
 
 		bool deviceDescriptorIndexing = false;
+
+		bool timelineSemaphore = false;
 	};
 
 	struct VulkanContextExtensions
@@ -176,6 +178,10 @@ namespace RHI::Vulkan
 		// submits a command buffer to this queue, returns submissionID
 		uint64_t submit(std::vector<IRHICommandList*>& commandLists, size_t numCommandLists);
 
+		// retire any command buffers that have finished execution from the pending execution list
+		void retireCommandBuffers();
+
+		uint64_t updateLastFinishedID();
 		CommandQueue getQueueID() const { return m_QueueID; }
 		uint32_t getQueueFamilyIndex() const { return m_QueueFamilyIndex; }
 		VkQueue getVkQueue() const { return m_Queue; }
@@ -190,7 +196,12 @@ namespace RHI::Vulkan
 		std::mutex m_Mutex;
 
 		std::vector<VkSemaphore> m_WaitSemaphores;
+		std::vector<uint64_t> m_WaitSemaphoreValues;
 		std::vector<VkSemaphore> m_SignalSemaphores;
+		std::vector<uint64_t> m_SignalSemaphoreValues;
+
+		uint64_t m_LastSubmittedID = 0;
+		uint64_t m_LastFinishedID = 0;
 
 		// tracks the list of command buffers in flight on this queue
 		std::list<TrackedCommandBufferPtr> m_CommandBuffersInFlight;
@@ -243,7 +254,7 @@ namespace RHI::Vulkan
 		void setWindowSurface(VkSurfaceKHR surface);
 		virtual GraphicsAPI getGraphicsAPI() const override;
 		virtual void createDeviceInternal() override;
-		VkResult createDevice(std::unordered_set<uint32_t>& uniqueQueueFamilies, VkPhysicalDeviceFeatures deviceFeatures, VkPhysicalDeviceFeatures2 deviceFeatures2);
+		VkResult createDevice(std::unordered_set<uint32_t> &uniqueQueueFamilies);
 		virtual RHI::DeviceHandle getDevice() const override;
 		const VulkanInstance& getVulkanInstance() const;
 		bool CreateSwapchain();
@@ -268,7 +279,6 @@ namespace RHI::Vulkan
 		void resizeSwapchain();
 		size_t createSwapchainImages();
 		void createDepthSwapchainImage();
-		VkPhysicalDeviceFeatures initVulkanRenderDeviceFeatures(const VulkanContextFeatures& ctxFeatures, VkPhysicalDeviceFeatures2& deviceFeatures2);
 
 	private:
 		VulkanInstance m_VulkanInstance;
@@ -826,6 +836,9 @@ namespace RHI::Vulkan
 		virtual CommandListHandle createCommandList(const CommandListParameters& params) override;
 		virtual uint64_t executeCommandLists(std::vector<IRHICommandList*>& commandLists, size_t numCommandLists, CommandQueue executionQueue) override;
 
+		virtual bool waitForIdle() override;
+		virtual void runGarbageCollection() override;
+
 		// vulkan::IDevice implementation
 		VkSemaphore getQueueSemaphore(CommandQueue queueID) override;
 		void queueWaitForSemaphore(CommandQueue waitQueueID, VkSemaphore semaphore, uint64_t value) override;
@@ -850,6 +863,8 @@ namespace RHI::Vulkan
 	public:
 		CommandList(Device* device, VulkanContext& context, const CommandListParameters& parameters);
 		virtual ~CommandList() override;
+
+		void executed(Queue &queue, uint64_t submissionID);
 
 		virtual void beginSingleTimeCommands() override;
 		virtual void endSingleTimeCommands() override;

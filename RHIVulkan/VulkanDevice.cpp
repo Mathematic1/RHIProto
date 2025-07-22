@@ -90,9 +90,28 @@ namespace RHI::Vulkan
     {
         Queue& queue = *m_Queues[uint32_t(executionQueue)];
 
-        queue.submit(commandLists, numCommandLists);
+        uint64_t submissionID = queue.submit(commandLists, numCommandLists);
+
+        for (size_t i = 0; i < numCommandLists; i++) {
+            static_cast<CommandList *>(commandLists[i])->executed(queue, submissionID);
+        }
 
         return 0;
+    }
+
+    bool Device::waitForIdle()
+    {
+        vkDeviceWaitIdle(m_Context.device);
+        return true;
+    }
+
+    void Device::runGarbageCollection()
+    {
+        for (auto &queue : m_Queues) {
+            if (queue) {
+                queue->retireCommandBuffers();
+            }
+        }
     }
 
     void CHECK(bool check, const char* fileName, int lineNumber)

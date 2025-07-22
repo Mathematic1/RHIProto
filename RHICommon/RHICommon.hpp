@@ -896,6 +896,8 @@ namespace RHI
     public:
         virtual CommandListHandle createCommandList(const CommandListParameters& params = CommandListParameters()) = 0;
         virtual uint64_t executeCommandLists(std::vector<IRHICommandList*>& commandLists, size_t numCommandLists, CommandQueue executionQueue = CommandQueue::Graphics) = 0;
+        virtual bool waitForIdle() = 0;
+        virtual void runGarbageCollection() = 0;
         virtual GraphicsAPI getGraphicsAPI() const = 0;
         virtual IRenderPass* createRenderPass(const FramebufferDesc& framebufferDesc, const RenderPassCreateInfo& ci = RenderPassCreateInfo()) = 0;
         virtual FramebufferHandle createFramebuffer(IRenderPass* renderPass, const FramebufferDesc& desc) = 0;
