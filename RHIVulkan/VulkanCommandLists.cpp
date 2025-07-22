@@ -3,24 +3,20 @@
 
 namespace RHI::Vulkan
 {
-	CommandList::CommandList(Device* device, VulkanContext& context, const CommandListParameters& parameters)
-		: m_Device(device)
-		, m_Context(context)
-		, m_CommandListParameters(parameters)
-	{
-		
-	}
+    CommandList::CommandList(Device *device, VulkanContext &context, const CommandListParameters &parameters)
+        : m_Device(device), m_Context(context), m_CommandListParameters(parameters)
+    {
+    }
 
-	CommandList::~CommandList()
-	{
-		
-	}
+    CommandList::~CommandList()
+    {
+    }
 
     void CommandList::beginSingleTimeCommands()
     {
         m_CurrentCommandBuffer = m_Device->getQueue(m_CommandListParameters.queueType)->getOrCreateCommandBuffer();
 
-        vkResetCommandBuffer(m_CurrentCommandBuffer->commandBuffer, /*VkCommandBufferResetFlagBits*/ 0);
+        //vkResetCommandBuffer(m_CurrentCommandBuffer->commandBuffer, /*VkCommandBufferResetFlagBits*/ 0);
 
         VkCommandBufferBeginInfo beginInfo{};
         beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;

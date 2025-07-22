@@ -121,7 +121,7 @@ namespace RHI::Vulkan
 
         VkCommandPoolCreateInfo cpi{};
         cpi.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-        cpi.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+        cpi.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT | VK_COMMAND_POOL_CREATE_TRANSIENT_BIT;
         cpi.queueFamilyIndex = m_QueueFamilyIndex;
 
         VK_CHECK(vkCreateCommandPool(m_Context.device, &cpi, nullptr, &commandBuffer->commandPool));
@@ -145,7 +145,7 @@ namespace RHI::Vulkan
         TrackedCommandBufferPtr commandBuffer;
         if (m_CommandBuffersPool.empty()) {
             commandBuffer = createCommandBuffer();
-            m_CommandBuffersPool.push_back(commandBuffer);
+            //m_CommandBuffersPool.push_back(commandBuffer);
         } else {
             commandBuffer = m_CommandBuffersPool.front();
             // TODO:fix memory leaking
