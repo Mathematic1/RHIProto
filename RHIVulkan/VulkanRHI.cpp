@@ -311,10 +311,17 @@ namespace RHI::Vulkan
         deviceFeatures.shaderInt64 = (VkBool32)(m_VulkanFeatures.shaderInt64 ? VK_TRUE : VK_FALSE);
 
         void *pNext = nullptr;
+
+        VkPhysicalDeviceVulkan11Features features11{};
+        features11.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES;
+        features11.shaderDrawParameters = VK_TRUE;
+        features11.pNext = nullptr;
+        pNext = &features11;
+
         VkPhysicalDeviceDescriptorIndexingFeaturesEXT descriptorIndexing = {};
         if (m_VulkanFeatures.deviceDescriptorIndexing) {
             descriptorIndexing.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES_EXT;
-            descriptorIndexing.pNext = nullptr;
+            descriptorIndexing.pNext = pNext;
             descriptorIndexing.shaderSampledImageArrayNonUniformIndexing = VK_TRUE;
             descriptorIndexing.descriptorBindingVariableDescriptorCount = VK_TRUE;
             descriptorIndexing.runtimeDescriptorArray = VK_TRUE;
