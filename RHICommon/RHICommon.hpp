@@ -474,6 +474,10 @@ namespace RHI
     public:
         virtual void beginSingleTimeCommands() = 0;
         virtual void endSingleTimeCommands() = 0;
+
+        // Clears the graphics state of the underlying command list object and resets the state cache.
+        virtual void clearState() = 0;
+
         virtual void queueWaitIdle() = 0;
         virtual void draw(const DrawArguments& args) = 0;
         virtual void drawIndexed(const DrawArguments& args) = 0;

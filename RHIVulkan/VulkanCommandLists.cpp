@@ -25,6 +25,8 @@ namespace RHI::Vulkan
         beginInfo.pInheritanceInfo = nullptr;
 
         vkBeginCommandBuffer(m_CurrentCommandBuffer->commandBuffer, &beginInfo);
+
+        clearState();
     }
 
     void CommandList::endSingleTimeCommands()
@@ -32,6 +34,8 @@ namespace RHI::Vulkan
         endRenderPass();
 
         vkEndCommandBuffer(m_CurrentCommandBuffer->commandBuffer);
+
+        clearState();
 
         /*VkSubmitInfo submitInfo{};
         submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -49,6 +53,16 @@ namespace RHI::Vulkan
         VkResult resultQueueWaidIdle = vkQueueWaitIdle(submitQueue);
 
         vkFreeCommandBuffers(m_Context.device, m_CurrentCommandBuffer->commandPool, 1, &m_CurrentCommandBuffer->commandBuffer);*/
+    }
+
+    void CommandList::clearState()
+    {
+        endRenderPass();
+
+        m_CurrentPipelineLayout = VkPipelineLayout();
+        m_CurrentPushConstantsVisibility = VkShaderStageFlags();
+
+        m_CurrentGraphicsState = GraphicsState();
     }
 
     void CommandList::queueWaitIdle()

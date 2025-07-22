@@ -868,6 +868,7 @@ namespace RHI::Vulkan
 
 		virtual void beginSingleTimeCommands() override;
 		virtual void endSingleTimeCommands() override;
+		virtual void clearState() override;
 		virtual void queueWaitIdle() override;
 
 		virtual void copyBuffer(IBuffer* srcBuffer, IBuffer* dstBuffer, size_t size) override;
