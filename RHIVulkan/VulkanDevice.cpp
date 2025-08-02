@@ -113,14 +113,4 @@ namespace RHI::Vulkan
             }
         }
     }
-
-    void CHECK(bool check, const char* fileName, int lineNumber)
-    {
-        if (!check)
-        {
-            printf("CHECK() failed at %s:%i\n", fileName, lineNumber);
-            assert(false);
-            exit(EXIT_FAILURE);
-        }
-    }
 }

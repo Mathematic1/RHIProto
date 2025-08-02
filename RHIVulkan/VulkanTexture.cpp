@@ -247,7 +247,7 @@ namespace RHI::Vulkan
         imageInfo.pQueueFamilyIndices = nullptr;
         imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 
-        VK_CHECK(vkCreateImage(m_Context.device, &imageInfo, nullptr, &tex->image));
+        checkSuccess(vkCreateImage(m_Context.device, &imageInfo, nullptr, &tex->image));
 
         m_Context.setVkImageName(tex->image, desc.debugName.c_str());
 
@@ -260,7 +260,7 @@ namespace RHI::Vulkan
         allocInfo.allocationSize = memRequirements.size;
         allocInfo.memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits, pickMemoryProperties(desc.memoryProperties));
 
-        VK_CHECK(vkAllocateMemory(m_Context.device, &allocInfo, nullptr, &tex->memory));
+        checkSuccess(vkAllocateMemory(m_Context.device, &allocInfo, nullptr, &tex->memory));
 
         vkBindImageMemory(m_Context.device, tex->image, tex->memory, 0);
         return TextureHandle(tex);

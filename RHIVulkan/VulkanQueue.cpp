@@ -81,7 +81,7 @@ namespace RHI::Vulkan
         si.pSignalSemaphores = m_SignalSemaphores.data();
 
         VkResult result = vkQueueSubmit(m_Queue, 1, &si, nullptr);
-        VK_CHECK(result);
+        checkSuccess(result);
 
         m_WaitSemaphores.clear();
         m_WaitSemaphoreValues.clear();
@@ -124,7 +124,7 @@ namespace RHI::Vulkan
         cpi.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT | VK_COMMAND_POOL_CREATE_TRANSIENT_BIT;
         cpi.queueFamilyIndex = m_QueueFamilyIndex;
 
-        VK_CHECK(vkCreateCommandPool(m_Context.device, &cpi, nullptr, &commandBuffer->commandPool));
+        checkSuccess(vkCreateCommandPool(m_Context.device, &cpi, nullptr, &commandBuffer->commandPool));
 
         VkCommandBufferAllocateInfo ai{};
         ai.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
@@ -133,7 +133,7 @@ namespace RHI::Vulkan
         ai.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
         ai.commandBufferCount = static_cast<uint32_t>(1);
 
-        VK_CHECK(vkAllocateCommandBuffers(m_Context.device, &ai, &commandBuffer->commandBuffer));
+        checkSuccess(vkAllocateCommandBuffers(m_Context.device, &ai, &commandBuffer->commandBuffer));
 
         return commandBuffer;
     }
