@@ -69,7 +69,10 @@ namespace RHI::Vulkan
     {
         vkQueueWaitIdle(m_Device->getQueue(m_CommandListParameters.queueType)->getVkQueue());
 
-        vkFreeCommandBuffers(m_Context.device, m_CurrentCommandBuffer->commandPool, 1, &m_CurrentCommandBuffer->commandBuffer);
+        if (m_CurrentCommandBuffer) {
+            vkFreeCommandBuffers(m_Context.device, m_CurrentCommandBuffer->commandPool, 1,
+                                 &m_CurrentCommandBuffer->commandBuffer);
+        }
     }
 
     void CommandList::copyBuffer(IBuffer* srcBuffer, IBuffer* dstBuffer, size_t size)

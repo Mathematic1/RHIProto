@@ -222,6 +222,8 @@ namespace RHI::Vulkan
 
     void CommandList::writeBuffer(IBuffer* srcBuffer, size_t size, const void* data)
     {
+        //endRenderPass();
+
         BufferDesc stagingDesc = BufferDesc{}
             .setSize(size)
             .setIsTransferSrc(true)

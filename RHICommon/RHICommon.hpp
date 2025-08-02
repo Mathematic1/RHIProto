@@ -9,7 +9,9 @@
 
 #define ENUM_CLASS_FLAG_OPERATORS(T) \
     inline T operator & (T a, T b) { return T(uint8_t(a) & uint8_t(b)); } \
+    inline T& operator &= (T &a, const T &b) { a = a & b; return a; } \
     inline T operator | (T a, T b) { return T(uint8_t(a) | uint8_t(b)); } \
+    inline T& operator |= (T &a, const T &b) { a = a | b; return a; } \
     inline bool operator != (T a, uint8_t b) { return uint8_t(a) != b; }
 
 namespace RHI
