@@ -65,10 +65,10 @@ namespace RHI::Vulkan
 
 	struct VulkanInstance final
 	{
-		VkInstance instance;
-		VkSurfaceKHR surface;
-		VkDebugUtilsMessengerEXT messenger;
-		VkDebugReportCallbackEXT reportCallback;
+		VkInstance instance = VK_NULL_HANDLE;
+		VkSurfaceKHR surface = VK_NULL_HANDLE;
+		VkDebugUtilsMessengerEXT messenger = VK_NULL_HANDLE;
+		VkDebugReportCallbackEXT reportCallback = VK_NULL_HANDLE;
 	};
 
 	struct VulkanContext
@@ -127,7 +127,6 @@ namespace RHI::Vulkan
 		VkQueue graphicsQueue;
 		VkDescriptorPool descriptorPool;
 
-		VulkanInstance vulkanInstance;
 		VulkanContextExtensions ctxExtensions;
 		VulkanContextFeatures ctxFeatures;
 	};
@@ -340,7 +339,7 @@ namespace RHI::Vulkan
 		~Shader() override;
 
 		std::vector<unsigned int> SPIRV;
-		VkShaderModule shaderModule = nullptr;
+		VkShaderModule shaderModule = VK_NULL_HANDLE;
 
 		VkShaderStageFlagBits stage{};
 

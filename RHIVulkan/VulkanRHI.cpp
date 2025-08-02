@@ -701,13 +701,18 @@ namespace RHI::Vulkan
         if (m_VulkanInstance.reportCallback)
         {
             vkDestroyDebugReportCallbackEXT(m_VulkanInstance.instance, m_VulkanInstance.reportCallback, nullptr);
+            m_VulkanInstance.reportCallback = VK_NULL_HANDLE;
         }
         if (m_VulkanInstance.messenger)
         {
             vkDestroyDebugUtilsMessengerEXT(m_VulkanInstance.instance, m_VulkanInstance.messenger, nullptr);
+            m_VulkanInstance.messenger = VK_NULL_HANDLE;
         }
 
-        vkDestroyInstance(m_VulkanInstance.instance, nullptr);
+        if (m_VulkanInstance.instance) {
+            vkDestroyInstance(m_VulkanInstance.instance, nullptr);
+            m_VulkanInstance.instance = VK_NULL_HANDLE;
+        }
     }
 
     bool VulkanDynamicRHI::BeginFrame()
