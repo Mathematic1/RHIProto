@@ -48,7 +48,7 @@ namespace RHI::Vulkan
         bufferInfo.queueFamilyIndexCount = 0;
         bufferInfo.pQueueFamilyIndices = nullptr;
 
-        VK_CHECK(vkCreateBuffer(m_Context.device, &bufferInfo, nullptr, &buffer->buffer));
+        checkSuccess(vkCreateBuffer(m_Context.device, &bufferInfo, nullptr, &buffer->buffer));
 
         m_Context.setVkObjectName(buffer->buffer, VkObjectType::VK_OBJECT_TYPE_BUFFER, desc.debugName.c_str());
 
@@ -61,7 +61,7 @@ namespace RHI::Vulkan
         allocInfo.allocationSize = memRequirements.size;
         allocInfo.memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits, pickMemoryProperties(desc.memoryProperties));
 
-        VK_CHECK(vkAllocateMemory(m_Context.device, &allocInfo, nullptr, &buffer->memory));
+        checkSuccess(vkAllocateMemory(m_Context.device, &allocInfo, nullptr, &buffer->memory));
 
         vkBindBufferMemory(m_Context.device, buffer->buffer, buffer->memory, 0);
 
@@ -87,7 +87,7 @@ namespace RHI::Vulkan
         bufferInfo.queueFamilyIndexCount = static_cast<uint32_t>(m_DeviceQueueIndices.size());
         bufferInfo.pQueueFamilyIndices = (familyCount > 1) ? m_DeviceQueueIndices.data() : nullptr;
 
-        VK_CHECK(vkCreateBuffer(m_Context.device, &bufferInfo, nullptr, &buffer->buffer));
+        checkSuccess(vkCreateBuffer(m_Context.device, &bufferInfo, nullptr, &buffer->buffer));
 
         VkMemoryRequirements memRequirements;
         vkGetBufferMemoryRequirements(m_Context.device, buffer->buffer, &memRequirements);
@@ -98,7 +98,7 @@ namespace RHI::Vulkan
         allocInfo.allocationSize = memRequirements.size;
         allocInfo.memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits, pickMemoryProperties(desc.memoryProperties));
 
-        VK_CHECK(vkAllocateMemory(m_Context.device, &allocInfo, nullptr, &buffer->memory));
+        checkSuccess(vkAllocateMemory(m_Context.device, &allocInfo, nullptr, &buffer->memory));
 
         vkBindBufferMemory(m_Context.device, buffer->buffer, buffer->memory, 0);
 

@@ -1,5 +1,7 @@
 #include <VulkanBackend.hpp>
 
+#include <cassert>
+
 #include <unordered_set>
 
 #define VOLK_IMPLEMENTATION
@@ -17,6 +19,21 @@ const bool enableValidationFeaturesDisabled = true;
 
 namespace RHI::Vulkan
 {
+namespace
+{
+    void vkDefaultErrorHandler(VkResult error)
+    {
+
+    #ifdef NDEBUG
+    // no-op in release builds
+    #else
+        assert(error == VK_SUCCESS);
+    #endif
+    }
+
+    VulkanDynamicRHI::VkErrorHandler vkErrorHandler = vkDefaultErrorHandler;
+}
+
     VulkanRHIModule::VulkanRHIModule() : IRHIModule()
     {
         //glslang_initialize_process();
@@ -142,7 +159,7 @@ namespace RHI::Vulkan
 
     void VulkanDynamicRHI::createDeviceInternal()
     {
-        VK_CHECK(findBestSuitablePhysicalDevice(m_VulkanInstance.instance, rateDeviceSuitability, &m_VulkanPhysicalDevice));
+        checkSuccess(findBestSuitablePhysicalDevice(m_VulkanInstance.instance, rateDeviceSuitability, &m_VulkanPhysicalDevice));
 
         std::unordered_set<uint32_t> uniqueQueueFamilies{};
         if (m_DeviceParams.useGraphicsQueue)
@@ -152,8 +169,8 @@ namespace RHI::Vulkan
         }
 
         //vkGetPhysicalDeviceFeatures2(m_VulkanPhysicalDevice, &deviceFeatures2);
-        //	VK_CHECK(createDevice2(m_Context.m_PhysicalDevice, deviceFeatures2, vkDev.graphicsFamily, &m_Context.m_Device));
-        //	VK_CHECK(vkGetBestComputeQueue(m_Context.m_PhysicalDevice, &vkDev.computeFamily));
+        //	checkSuccess(createDevice2(m_Context.m_PhysicalDevice, deviceFeatures2, vkDev.graphicsFamily, &m_Context.m_Device));
+        //	checkSuccess(vkGetBestComputeQueue(m_Context.m_PhysicalDevice, &vkDev.computeFamily));
         if (m_DeviceParams.useComputeQueue)
         {
             m_ComputeQueueFamily = findQueueFamilies(m_VulkanPhysicalDevice, VK_QUEUE_COMPUTE_BIT);
@@ -192,7 +209,7 @@ namespace RHI::Vulkan
             uniqueQueueFamilies.insert(m_PresentQueueFamily);
         }
 
-    	VK_CHECK(createDevice(uniqueQueueFamilies));
+    	checkSuccess(createDevice(uniqueQueueFamilies));
 
         if (m_DeviceParams.useGraphicsQueue)
         {
@@ -429,6 +446,11 @@ namespace RHI::Vulkan
         return m_SwapChainFramebuffers[index];
     }
 
+    void VulkanDynamicRHI::setErrorHandler(VkErrorHandler handler)
+    {
+        vkErrorHandler = handler;
+    }
+
     bool VulkanDynamicRHI::createSwapchain()
     {
         destroySwapChain();
@@ -457,7 +479,7 @@ namespace RHI::Vulkan
                 VK_TRUE,
                 VK_NULL_HANDLE };
 
-        VK_CHECK(vkCreateSwapchainKHR(m_VulkanDevice, &ci, nullptr, &m_SwapChain));
+        checkSuccess(vkCreateSwapchainKHR(m_VulkanDevice, &ci, nullptr, &m_SwapChain));
 
         return true;
     }
@@ -465,12 +487,12 @@ namespace RHI::Vulkan
     size_t VulkanDynamicRHI::createSwapchainImages()
     {
         uint32_t imageCount = 0;
-        VK_CHECK(vkGetSwapchainImagesKHR(m_VulkanDevice, m_SwapChain, &imageCount, nullptr));
+        checkSuccess(vkGetSwapchainImagesKHR(m_VulkanDevice, m_SwapChain, &imageCount, nullptr));
 
         m_SwapchainImages.resize(imageCount);
         m_SwapchainImageViews.resize(imageCount);
 
-        VK_CHECK(vkGetSwapchainImagesKHR(m_VulkanDevice, m_SwapChain, &imageCount, m_SwapchainImages.data()));
+        checkSuccess(vkGetSwapchainImagesKHR(m_VulkanDevice, m_SwapChain, &imageCount, m_SwapchainImages.data()));
 
         Vulkan::IDevice* device = dynamic_cast<Vulkan::IDevice*>(m_Device.get());
         for (unsigned i = 0; i < imageCount; i++)
@@ -539,7 +561,7 @@ namespace RHI::Vulkan
         std::vector<VkExtensionProperties> properties;
         vkEnumerateInstanceExtensionProperties(nullptr, &propertiesCount, nullptr);
         properties.resize(static_cast<int>(propertiesCount));
-        VK_CHECK(vkEnumerateInstanceExtensionProperties(nullptr, &propertiesCount, properties.data()));
+        checkSuccess(vkEnumerateInstanceExtensionProperties(nullptr, &propertiesCount, properties.data()));
 
         std::vector<const char*> exts = {
                 "VK_KHR_surface",
@@ -649,7 +671,7 @@ namespace RHI::Vulkan
 #endif
 #endif
 
-        VK_CHECK(vkCreateInstance(&createInfo, nullptr, &m_VulkanInstance.instance));
+        checkSuccess(vkCreateInstance(&createInfo, nullptr, &m_VulkanInstance.instance));
 
         volkLoadInstance(m_VulkanInstance.instance);
     }
@@ -774,10 +796,10 @@ namespace RHI::Vulkan
 
         m_PresentSemaphoreIndex = (m_PresentSemaphoreIndex + 1) % m_PresentSemaphores.size();
 
-        //VK_CHECK(vkQueuePresentKHR(m_PresentQueue, &pi));
-        VK_CHECK(vkQueuePresentKHR(m_PresentQueue, &pi));
-        //VK_CHECK(vkDeviceWaitIdle(m_VulkanDevice));
-        VK_CHECK(vkQueueWaitIdle(m_PresentQueue));
+        //checkSuccess(vkQueuePresentKHR(m_PresentQueue, &pi));
+        checkSuccess(vkQueuePresentKHR(m_PresentQueue, &pi));
+        //checkSuccess(vkDeviceWaitIdle(m_VulkanDevice));
+        checkSuccess(vkQueueWaitIdle(m_PresentQueue));
 
         return true;
     }
@@ -813,6 +835,16 @@ namespace RHI::Vulkan
         return VK_FALSE;
     }
 
+    bool checkSuccess(VkResult result)
+    {
+        if (result == VK_SUCCESS) [[likely]] {
+            return true;
+        }
+
+        vkErrorHandler(result);
+        return false;
+    }
+
     bool setupDebugCallbacks(VkInstance instance, VkDebugUtilsMessengerEXT* messenger, VkDebugReportCallbackEXT* reportCallback)
     {
         if (!enableValidationLayers) return true;
@@ -828,7 +860,7 @@ namespace RHI::Vulkan
             ci.pfnUserCallback = &VulkanDebugCallback;
             ci.pUserData = nullptr;
 
-            VK_CHECK(vkCreateDebugUtilsMessengerEXT(instance, &ci, nullptr, messenger));
+            checkSuccess(vkCreateDebugUtilsMessengerEXT(instance, &ci, nullptr, messenger));
         }
         {
             VkDebugReportCallbackCreateInfoEXT ci{};
@@ -841,7 +873,7 @@ namespace RHI::Vulkan
             ci.pfnCallback = &VulkanDebugReportCallback;
             ci.pUserData = nullptr;
 
-            VK_CHECK(vkCreateDebugReportCallbackEXT(instance, &ci, nullptr, reportCallback));
+            checkSuccess(vkCreateDebugReportCallbackEXT(instance, &ci, nullptr, reportCallback));
         }
 
         return true;
@@ -916,12 +948,12 @@ namespace RHI::Vulkan
                                             VkPhysicalDevice *physicalDevice)
     {
         uint32_t deviceCount = 0;
-        VK_CHECK_RET(vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr));
+        checkSuccess(vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr));
 
         if (!deviceCount) return VK_ERROR_INITIALIZATION_FAILED;
 
         std::vector<VkPhysicalDevice> devices(deviceCount);
-        VK_CHECK_RET(vkEnumeratePhysicalDevices(instance, &deviceCount, devices.data()));
+        checkSuccess(vkEnumeratePhysicalDevices(instance, &deviceCount, devices.data()));
 
         int32_t bestScore = -1;
         VkPhysicalDevice bestDevice = nullptr;

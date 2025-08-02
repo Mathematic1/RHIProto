@@ -25,7 +25,7 @@ namespace RHI::Vulkan
             framebufferInfo.height = m_DeviceDesc.framebufferHeight;
             framebufferInfo.layers = 1;
 
-            VK_CHECK(vkCreateFramebuffer(m_Context.device, &framebufferInfo, nullptr, &swapchainFramebuffers[i]));
+            checkSuccess(vkCreateFramebuffer(m_Context.device, &framebufferInfo, nullptr, &swapchainFramebuffers[i]));
         }
 
         return true;

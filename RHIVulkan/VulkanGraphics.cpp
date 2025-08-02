@@ -229,7 +229,8 @@ namespace RHI::Vulkan
         pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
         pipelineInfo.basePipelineIndex = -1;
 
-        VK_CHECK(vkCreateGraphicsPipelines(m_Context.device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &pso->pipeline));
+        checkSuccess(
+            vkCreateGraphicsPipelines(m_Context.device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &pso->pipeline));
 
         return GraphicsPipelineHandle(pso);
     }

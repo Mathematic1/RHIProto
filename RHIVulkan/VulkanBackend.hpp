@@ -12,10 +12,6 @@
 #include <string>
 #include <unordered_set>
 
-#define VK_CHECK(value) CHECK(value == VK_SUCCESS, __FILE__, __LINE__);
-#define VK_CHECK_RET(value) if(value != VK_SUCCESS) { CHECK(false, __FILE__, __LINE__); return value; }
-#define BL_CHECK(value) CHECK(value, __FILE__, __LINE__);
-
 namespace RHI::Vulkan
 {
 	class Buffer;
@@ -247,6 +243,8 @@ namespace RHI::Vulkan
 	class VulkanDynamicRHI : public IDynamicRHI
 	{
 	public:
+        using VkErrorHandler = void (*)(VkResult error);
+
 		VulkanDynamicRHI(const DeviceParams& deviceParams);
 		~VulkanDynamicRHI() override;
 
@@ -266,6 +264,7 @@ namespace RHI::Vulkan
 		virtual TextureHandle GetDepthBuffer() override;
 		virtual FramebufferHandle GetFramebuffer(uint32_t index) override;
 
+		static void setErrorHandler(VkErrorHandler handler);
 		static VulkanContextFeatures initializeContextFeatures();
 		static VulkanContextExtensions initializeContextExtensions();
 
@@ -466,9 +465,9 @@ namespace RHI::Vulkan
 		return makeBufferAttachment(buffer, offset, size, DescriptorType::STORAGE_BUFFER, shaderStageFlags);
 	}
 
-	void CHECK(bool check, const char* fileName, int lineNumber);
+    bool checkSuccess(VkResult result);
 
-	bool setupDebugCallbacks(VkInstance instance, VkDebugUtilsMessengerEXT* messenger, VkDebugReportCallbackEXT* reportCallback);
+    bool setupDebugCallbacks(VkInstance instance, VkDebugUtilsMessengerEXT* messenger, VkDebugReportCallbackEXT* reportCallback);
 
 	inline VkPipelineShaderStageCreateInfo shaderStageInfo(VkShaderStageFlagBits shaderStage, Shader& shader, const char* entryPoint)
 	{
