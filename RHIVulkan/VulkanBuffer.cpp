@@ -152,6 +152,7 @@ namespace RHI::Vulkan
         uint8_t *dstPtr = reinterpret_cast<uint8_t *>(mappedMemory);
 
         const size_t minRowSize = std::min(deviceRowSize, rowPitch);
+        size_t layerSize = mipDepth * depthPitch;
 
         if (deviceRowSize == rowPitch && depthPitch == deviceRowSize * deviceNumRows) {
             memcpy(mappedMemory, imageData, imageSize);
@@ -159,7 +160,7 @@ namespace RHI::Vulkan
             for (uint32_t layer = 0; layer < layerCount; ++layer) {
                 for (uint32_t slice = 0; slice < mipDepth; ++slice) {
                     const uint8_t *srcSlice = reinterpret_cast<const uint8_t *>(imageData) +
-                                              layer * mipDepth * depthPitch + slice * depthPitch;
+                                              layer * layerSize + slice * depthPitch;
 
                     for (uint32_t row = 0; row < deviceNumRows; ++row) {
                         const uint8_t *srcRow = srcSlice + row * rowPitch;

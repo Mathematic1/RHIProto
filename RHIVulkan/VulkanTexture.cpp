@@ -367,6 +367,9 @@ namespace RHI::Vulkan
         if (rowPitch == 0)
             rowPitch = deviceRowSize;
 
+        if (depthPitch == 0)
+            depthPitch = rowPitch * deviceNumRows;
+
         BufferDesc stagingDesc = BufferDesc{}
             .setSize(imageSize)
             .setIsTransferSrc(true)

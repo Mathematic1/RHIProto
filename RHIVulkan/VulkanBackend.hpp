@@ -243,7 +243,7 @@ namespace RHI::Vulkan
 	class VulkanDynamicRHI : public IDynamicRHI
 	{
 	public:
-        using VkErrorHandler = void (*)(VkResult error);
+		using VkErrorHandler = void (*)(VkResult error);
 
 		VulkanDynamicRHI(const DeviceParams& deviceParams);
 		~VulkanDynamicRHI() override;
@@ -465,9 +465,9 @@ namespace RHI::Vulkan
 		return makeBufferAttachment(buffer, offset, size, DescriptorType::STORAGE_BUFFER, shaderStageFlags);
 	}
 
-    bool checkSuccess(VkResult result);
+	bool checkSuccess(VkResult result);
 
-    bool setupDebugCallbacks(VkInstance instance, VkDebugUtilsMessengerEXT* messenger, VkDebugReportCallbackEXT* reportCallback);
+	bool setupDebugCallbacks(VkInstance instance, VkDebugUtilsMessengerEXT* messenger, VkDebugReportCallbackEXT* reportCallback);
 
 	inline VkPipelineShaderStageCreateInfo shaderStageInfo(VkShaderStageFlagBits shaderStage, Shader& shader, const char* entryPoint)
 	{
