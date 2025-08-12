@@ -143,7 +143,7 @@ namespace RHI::Vulkan
             exit(EXIT_FAILURE);
         }
 
-        updateDescriptorSet(bindingSet->descriptorSet, dsInfo);
+        updateDescriptorSet(bindingSet, dsInfo);
 
         return BindingSetHandle(bindingSet);
     }
@@ -153,8 +153,10 @@ namespace RHI::Vulkan
         creates a list of DescriptorWrite operations with required buffer/image info structures
         and calls the vkUpdateDescriptorSets()
     */
-    void Device::updateDescriptorSet(VkDescriptorSet ds, const DescriptorSetInfo& dsInfo)
+    void Device::updateDescriptorSet(IBindingSet* ds, const DescriptorSetInfo& dsInfo)
     {
+        BindingSet *bindingSet = dynamic_cast<BindingSet *>(ds);
+
         uint32_t bindingIdx = 0;
         std::vector<VkWriteDescriptorSet> descriptorWrites;
 
@@ -174,7 +176,8 @@ namespace RHI::Vulkan
                 (b.size > 0) ? b.size : VK_WHOLE_SIZE
             };
 
-            descriptorWrites.push_back(bufferWriteDescriptorSet(ds, &bufferDescriptors[i], bindingIdx++, convertDescriptorType(b.dInfo.type)));
+            descriptorWrites.push_back(bufferWriteDescriptorSet(bindingSet->descriptorSet, &bufferDescriptors[i],
+                                                                bindingIdx++, convertDescriptorType(b.dInfo.type)));
         }
 
         for (size_t i = 0; i < dsInfo.textures.size(); i++)
@@ -188,7 +191,8 @@ namespace RHI::Vulkan
                 /* t.texture.layout */ VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
             };
 
-            descriptorWrites.push_back(imageWriteDescriptorSet(ds, &imageDescriptors[i], bindingIdx++));
+            descriptorWrites.push_back(
+                imageWriteDescriptorSet(bindingSet->descriptorSet, &imageDescriptors[i], bindingIdx++));
         }
 
         uint32_t taOffset = 0;
@@ -219,7 +223,7 @@ namespace RHI::Vulkan
             VkWriteDescriptorSet writeSet{};
             writeSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
             writeSet.pNext = nullptr;
-            writeSet.dstSet = ds;
+            writeSet.dstSet = bindingSet->descriptorSet;
             writeSet.dstBinding = bindingIdx++;
             writeSet.dstArrayElement = 0;
             writeSet.descriptorCount = static_cast<uint32_t>(dsInfo.textureArrays[ta].textures.size());

@@ -313,10 +313,18 @@ namespace RHI
         ImageAspectFlagBits aspectMask = ImageAspectFlagBits::COLOR_BIT;
     };
 
+    enum class ResourceAttachmentType : uint8_t {
+        None,
+        Buffer,
+        Texture,
+        TextureArray,
+
+        Count
+    };
+
     struct BufferAttachment
     {
         DescriptorInfo dInfo;
-
         IBuffer* buffer = nullptr;
         uint32_t offset;
         uint32_t size;
@@ -330,7 +338,6 @@ namespace RHI
     struct TextureAttachment
     {
         DescriptorInfo dInfo;
-
         ITexture* texture = nullptr;
         ISampler* sampler = nullptr;
 
@@ -342,9 +349,10 @@ namespace RHI
     struct TextureArrayAttachment
     {
         DescriptorInfo dInfo;
-
         std::vector<ITexture*> textures;
         ISampler *sampler = nullptr;
+
+        TextureArrayAttachment &setTextures(const std::vector<ITexture *> &value) { textures = value; return *this; }
     };
 
     struct FramebufferAttachment
@@ -911,6 +919,7 @@ namespace RHI
         virtual ShaderHandle createShaderModule(const char* fileName, const std::vector<unsigned int>& SPIRV) = 0;
         virtual BindingLayoutHandle createDescriptorSetLayout(const DescriptorSetInfo& dsInfo) = 0;
         virtual BindingSetHandle createDescriptorSet(const DescriptorSetInfo& dsInfo, uint32_t dSetCount, IBindingLayout* bindingLayout) = 0;
+        virtual void updateDescriptorSet(IBindingSet *ds, const DescriptorSetInfo &dsInfo) = 0;
         virtual InputLayoutHandle createInputLayout(const VertexInputAttributeDesc* attributes, uint32_t attributeCount, const VertexInputBindingDesc* bindings, uint32_t bindingCount) = 0;
         virtual TextureHandle createImage(const TextureDesc& desc) = 0;
         virtual bool createImageView(ITexture* texture, ImageAspectFlagBits aspectFlags = ImageAspectFlagBits::COLOR_BIT) = 0;

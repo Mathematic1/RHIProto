@@ -821,7 +821,7 @@ namespace RHI::Vulkan
 			const VertexInputAttributeDesc* attributes, uint32_t attributeCount,
 			const VertexInputBindingDesc* bindings, uint32_t bindingCount) override;
 
-		void updateDescriptorSet(VkDescriptorSet ds, const DescriptorSetInfo& dsInfo);
+		virtual void updateDescriptorSet(IBindingSet* ds, const DescriptorSetInfo& dsInfo) override;
 
 		bool createColorAndDepthFramebuffers(VkRenderPass renderPass, VkImageView depthImageView, std::vector<VkFramebuffer>& swapchainFramebuffers);
 
