@@ -110,13 +110,14 @@ namespace
     VulkanContextFeatures VulkanDynamicRHI::initializeContextFeatures()
     {
         VulkanContextFeatures contextFeatures{
-            .supportsScreenshots_ = true,
+            .supportsScreenshots = true,
+            .samplerAnisotropy = true,
             .geometryShader_ = true,
-            .tessellationShader_ = true,
+            .tessellationShader = true,
             .multiDrawIndirect = true,
             .drawIndirectFirstInstance = true,
-            .vertexPipelineStoresAndAtomics_ = true,
-            .fragmentStoresAndAtomics_ = true,
+            .vertexPipelineStoresAndAtomics = true,
+            .fragmentStoresAndAtomics = true,
             .shaderSampledImageArrayDynamicIndexing = true,
             .shaderInt64 = true,
             .deviceDescriptorIndexing = true,
@@ -308,19 +309,21 @@ namespace
 #endif
 
         VkPhysicalDeviceFeatures deviceFeatures{};
+        /* for sampler anisotropy */
+        deviceFeatures.samplerAnisotropy = (VkBool32)(m_VulkanFeatures.samplerAnisotropy ? VK_TRUE : VK_FALSE);
         /* for wireframe outlines */
         deviceFeatures.geometryShader = (VkBool32)(m_VulkanFeatures.geometryShader_ ? VK_TRUE : VK_FALSE);
         /* for tesselation experiments */
-        deviceFeatures.tessellationShader = (VkBool32)(m_VulkanFeatures.tessellationShader_ ? VK_TRUE : VK_FALSE);
+        deviceFeatures.tessellationShader = (VkBool32)(m_VulkanFeatures.tessellationShader ? VK_TRUE : VK_FALSE);
         /* for indirect instanced rendering */
         deviceFeatures.multiDrawIndirect = (VkBool32)(m_VulkanFeatures.multiDrawIndirect ? VK_TRUE : VK_FALSE);
         deviceFeatures.drawIndirectFirstInstance =
             (VkBool32)(m_VulkanFeatures.drawIndirectFirstInstance ? VK_TRUE : VK_FALSE);
         /* for OIT and general atomic operations */
         deviceFeatures.vertexPipelineStoresAndAtomics =
-            (VkBool32)(m_VulkanFeatures.vertexPipelineStoresAndAtomics_ ? VK_TRUE : VK_FALSE);
+            (VkBool32)(m_VulkanFeatures.vertexPipelineStoresAndAtomics ? VK_TRUE : VK_FALSE);
         deviceFeatures.fragmentStoresAndAtomics =
-            (VkBool32)(m_VulkanFeatures.fragmentStoresAndAtomics_ ? VK_TRUE : VK_FALSE);
+            (VkBool32)(m_VulkanFeatures.fragmentStoresAndAtomics ? VK_TRUE : VK_FALSE);
         /* for arrays of textures */
         deviceFeatures.shaderSampledImageArrayDynamicIndexing =
             (VkBool32)(m_VulkanFeatures.shaderSampledImageArrayDynamicIndexing ? VK_TRUE : VK_FALSE);

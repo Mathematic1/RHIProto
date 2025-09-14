@@ -22,20 +22,23 @@ namespace RHI::Vulkan
 	// Features we need for our Vulkan context
 	struct VulkanContextFeatures
 	{
-		bool supportsScreenshots_ = false;
+		bool supportsScreenshots = false;
+
+		/* for sampler anisotropy */
+		bool samplerAnisotropy = false;
 
 		/* for wireframe outlines */
 		bool geometryShader_ = true;
 		/* for tesselation experiments */
-		bool tessellationShader_ = false;
+		bool tessellationShader = false;
 
 		/* for indirect instanced rendering */
 		bool multiDrawIndirect = false;
 		bool drawIndirectFirstInstance = false;
 
 		/* for OIT and general atomic operations */
-		bool vertexPipelineStoresAndAtomics_ = false;
-		bool fragmentStoresAndAtomics_ = false;
+		bool vertexPipelineStoresAndAtomics = false;
+		bool fragmentStoresAndAtomics = false;
 
 		/* for arrays of textures */
 		bool shaderSampledImageArrayDynamicIndexing = false;
