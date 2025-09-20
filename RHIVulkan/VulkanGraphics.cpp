@@ -200,11 +200,13 @@ namespace RHI::Vulkan
         tessellationState.patchControlPoints = pipeInfo.patchControlPoints;
 
         // TODO: refactor push constant visibility logic
-        pso->pushConstantsVisibility = VkShaderStageFlagBits();
+        pso->pushConstantsVisibility = 0;
+
         if (desc.pushConstants.vtxConstSize > 0)
-            pso->pushConstantsVisibility = VK_SHADER_STAGE_VERTEX_BIT;
+            pso->pushConstantsVisibility |= VK_SHADER_STAGE_VERTEX_BIT;
+
         if (desc.pushConstants.fragConstSize > 0)
-            pso->pushConstantsVisibility = VK_SHADER_STAGE_FRAGMENT_BIT;
+            pso->pushConstantsVisibility |= VK_SHADER_STAGE_FRAGMENT_BIT;
         
         BindingLayout* bindingLayout = dynamic_cast<BindingLayout*>(desc.bindingLayouts[0].get());
         std::vector<VkDescriptorSetLayout> descriptorSetLayouts = { bindingLayout->descriptorSetLayout };
@@ -252,22 +254,21 @@ namespace RHI::Vulkan
 
     bool Device::createPipelineLayout(std::vector<VkDescriptorSetLayout>& dsLayouts, const PushConstantsDesc& constantsDesc, VkPipelineLayout* pipelineLayout)
     {
-        const VkPushConstantRange ranges[] =
-        {
-            {
-                    VK_SHADER_STAGE_VERTEX_BIT,		// stageFlags
-                    0,								// offset
-                    constantsDesc.vtxConstSize		// size
-            },
+        std::vector<VkPushConstantRange> ranges;
 
-            {
-                    VK_SHADER_STAGE_FRAGMENT_BIT,	// stageFlags
-                    constantsDesc.vtxConstSize,		// offset
-                    constantsDesc.fragConstSize		// size
-            }
-        };
+        const uint32_t totalSize = constantsDesc.vtxConstSize + constantsDesc.fragConstSize;
 
-        uint32_t constSize = (constantsDesc.vtxConstSize > 0) + (constantsDesc.fragConstSize > 0);
+        if (totalSize > 0) {
+            VkShaderStageFlags stages = 0;
+
+            if (constantsDesc.vtxConstSize > 0)
+                stages |= VK_SHADER_STAGE_VERTEX_BIT;
+
+            if (constantsDesc.fragConstSize > 0)
+                stages |= VK_SHADER_STAGE_FRAGMENT_BIT;
+
+            ranges.push_back({stages, 0, totalSize});
+        }
 
         VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
         pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
@@ -275,9 +276,8 @@ namespace RHI::Vulkan
         pipelineLayoutInfo.flags = 0;
         pipelineLayoutInfo.setLayoutCount = dsLayouts.size();
         pipelineLayoutInfo.pSetLayouts = dsLayouts.data();
-        pipelineLayoutInfo.pushConstantRangeCount = constSize;
-        pipelineLayoutInfo.pPushConstantRanges = (constSize == 0) ? nullptr :
-            (constantsDesc.vtxConstSize > 0) ? ranges : &ranges[1];
+        pipelineLayoutInfo.pushConstantRangeCount = static_cast<uint32_t>(ranges.size());
+        pipelineLayoutInfo.pPushConstantRanges = ranges.empty() ? nullptr : ranges.data();
 
         return (vkCreatePipelineLayout(m_Context.device, &pipelineLayoutInfo, nullptr, pipelineLayout) == VK_SUCCESS);
     }

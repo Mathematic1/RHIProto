@@ -685,7 +685,7 @@ namespace RHI::Vulkan
 		GraphicsPipelineDesc desc = {};
 		VkPipeline pipeline;
 		VkPipelineLayout pipelineLayout;
-		VkShaderStageFlagBits pushConstantsVisibility;
+		VkShaderStageFlags pushConstantsVisibility;
 
 		explicit GraphicsPipeline(const VulkanContext& context)
 			: m_Context(context)
