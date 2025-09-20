@@ -114,7 +114,7 @@ namespace RHI::Vulkan
         layoutInfo.pNext = nullptr; //dsInfo.textureArrays.empty() ? nullptr : &setLayoutBindingFlags;
         layoutInfo.flags = 0;
         layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
-        layoutInfo.pBindings = bindings.size() > 0 ? bindings.data() : nullptr;
+        layoutInfo.pBindings = bindings.empty() ? nullptr : bindings.data();
 
         if (vkCreateDescriptorSetLayout(m_Context.device, &layoutInfo, nullptr, &descriptorSetLayout) != VK_SUCCESS)
         {
