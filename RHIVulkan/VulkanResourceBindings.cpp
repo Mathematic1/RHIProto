@@ -98,15 +98,20 @@ namespace RHI::Vulkan
             bindings.push_back(descriptorSetLayoutBinding(bindingIdx++, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, pickShaderStage(t.dInfo.shaderStageFlags), static_cast<uint32_t>(t.textures.size())));
         }
 
-        /*const VkDescriptorSetLayoutBindingFlagsCreateInfoEXT setLayoutBindingFlags = {
-            .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_BINDING_FLAGS_CREATE_INFO_EXT,
-            .bindingCount = static_cast<uint32_t>(descriptorBindingFlags.size()),
-            .pBindingFlags = descriptorBindingFlags.data() };*/
+        //std::vector<VkDescriptorBindingFlags> descriptorBindingFlags(bindings.size(), 0);
+        //descriptorBindingFlags.back() =
+        //    VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT | VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT;
+        ///*std::vector<VkDescriptorBindingFlags> descriptorBindingFlags = {
+        //    VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT | VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT};*/
+        //const VkDescriptorSetLayoutBindingFlagsCreateInfoEXT setLayoutBindingFlags = {
+        //    .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_BINDING_FLAGS_CREATE_INFO_EXT,
+        //    .bindingCount = static_cast<uint32_t>(descriptorBindingFlags.size()/*bindings.size()*/),
+        //    .pBindingFlags = descriptorBindingFlags.data() };
 
 
         VkDescriptorSetLayoutCreateInfo layoutInfo{};
         layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-        layoutInfo.pNext = nullptr; // dsInfo.textureArrays.empty() ? nullptr : &setLayoutBindingFlags
+        layoutInfo.pNext = nullptr; //dsInfo.textureArrays.empty() ? nullptr : &setLayoutBindingFlags;
         layoutInfo.flags = 0;
         layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
         layoutInfo.pBindings = bindings.size() > 0 ? bindings.data() : nullptr;
@@ -208,7 +213,7 @@ namespace RHI::Vulkan
 
                 VkDescriptorImageInfo imageInfo = {
                     sampler->sampler,
-                    tex->imageView,
+                    tex ? tex->imageView : nullptr,
                     VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
                 };
 
