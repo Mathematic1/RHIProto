@@ -344,6 +344,19 @@ namespace RHI::Vulkan
 
         vkCmdBindPipeline(m_CurrentCommandBuffer->commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->pipeline);
 
+        if (m_CurrentGraphicsState.viewport.viewport != state.viewport.viewport) {
+            const Viewport &vp = state.viewport.viewport;
+            const VkViewport viewport = VkViewport{vp.minX, vp.minY, vp.getWidth(), vp.getHeight(), vp.minZ, vp.maxZ};
+            vkCmdSetViewport(m_CurrentCommandBuffer->commandBuffer, 0, 1, &viewport);
+        }
+
+        if (m_CurrentGraphicsState.viewport.scissorRect != state.viewport.scissorRect) {
+            const Rect &sc = state.viewport.scissorRect;
+            const VkRect2D scissor = VkRect2D{VkOffset2D{sc.minX, sc.minY}, VkExtent2D{static_cast<uint32_t>(std::abs(sc.getWidth())),
+                                                                  static_cast<uint32_t>(std::abs(sc.getHeight()))}};
+            vkCmdSetScissor(m_CurrentCommandBuffer->commandBuffer, 0, 1, &scissor);
+        }
+
         std::vector<VkBuffer> vertexBuffers;
         std::vector<VkDeviceSize> vertexBuffersOffsets{};
         vertexBuffers.reserve(state.vertexBufferBindings.size());

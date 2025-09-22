@@ -6,6 +6,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <cmath>
 
 #define ENUM_CLASS_FLAG_OPERATORS(T) \
     inline T operator & (T a, T b) { return T(uint8_t(a) & uint8_t(b)); } \
@@ -147,51 +148,74 @@ namespace RHI
         float minY, maxY;
         float minZ, maxZ;
 
-        Viewport()
-            : minX(0), maxX(0), minY(0), maxY(0), minZ(0), maxZ(0)
-        {}
+        Viewport() : minX(0), maxX(0), minY(0), maxY(0), minZ(0), maxZ(0)
+        {
+        }
 
         Viewport(float _minX, float _maxX, float _minY, float _maxY, float _minZ, float _maxZ)
             : minX(_minX), maxX(_maxX), minY(_minY), maxY(_maxY), minZ(_minZ), maxZ(_maxZ)
-        {}
+        {
+        }
+
+        bool operator==(const Viewport &rhs) const
+        {
+            constexpr float eps = 1e-5f;
+            return std::fabs(minX - rhs.minX) < eps && std::fabs(maxX - rhs.maxX) < eps &&
+                   std::fabs(minY - rhs.minY) < eps && std::fabs(maxY - rhs.maxY) < eps &&
+                   std::fabs(minZ - rhs.minZ) < eps && std::fabs(maxZ - rhs.maxZ) < eps;
+        }
+
+        bool operator!=(const Viewport &rhs) const
+        {
+            return !(*this == rhs);
+        }
 
         float getWidth() const
         {
-            return std::abs(maxX - minX);
+            return maxX - minX;
         }
 
         float getHeight() const
         {
-            return std::abs(maxY - minY);
+            return maxY - minY;
         }
 
         float getDepth() const
         {
-            return std::abs(maxZ - minZ);
+            return maxZ - minZ;
         }
     };
 
     struct Rect
     {
-        float minX, maxX;
-        float minY, maxY;
+        int32_t minX, maxX;
+        int32_t minY, maxY;
 
         Rect()
-	        : minX(0), maxX(0), minY(0), maxY(0)
+        : minX(0), maxX(0), minY(0), maxY(0)
         {}
 
-        Rect(float _minX, float _maxX, float _minY, float _maxY)
-	        : minX(_minX), maxX(_maxX), minY(_minY), maxY(_maxY)
+        Rect(int32_t _minX, int32_t _maxX, int32_t _minY, int32_t _maxY)
+        : minX(_minX), maxX(_maxX), minY(_minY), maxY(_maxY)
         {}
 
-        float getWidth() const
+        bool operator==(const Rect &rhs) const
         {
-            return std::abs(maxX - minX);
+            return minX == rhs.minX && minY == rhs.minY && maxX == rhs.maxX && maxY == rhs.maxY;
+        }
+        bool operator!=(const Rect &rhs) const
+        {
+            return !(*this == rhs);
         }
 
-        float getHeight() const
+        int32_t getWidth() const
         {
-            return std::abs(maxY - minY);
+            return maxX - minX;
+        }
+
+        int32_t getHeight() const
+        {
+            return maxY - minY;
         }
     };
 
@@ -446,6 +470,15 @@ namespace RHI
         CommandQueue queueType = CommandQueue::Graphics;
     };
 
+    struct ViewportState
+    {
+        Viewport viewport;
+        Rect scissorRect;
+
+        ViewportState &setViewport(const Viewport &value) { viewport = value; return *this; }
+        ViewportState &setScissorRect(const Rect &value) { scissorRect = value; return *this; }
+    };
+
     struct GraphicsState
     {
         IGraphicsPipeline* pipeline = nullptr;
@@ -455,8 +488,11 @@ namespace RHI
         std::vector<VertexBufferBinding> vertexBufferBindings;
         IndexBufferBinding indexBufferBinding;
 
+        ViewportState viewport;
+
         GraphicsState& setPipeline(IGraphicsPipeline* value) { pipeline = value; return *this; }
         GraphicsState& setFramebuffer(IFramebuffer* value) { framebuffer = value; return *this; }
+        GraphicsState& setViewport(const ViewportState& value) { viewport = value; return *this; }
         GraphicsState& setBindingSets(const std::vector<IBindingSet*>& value) { bindingSets = value; return *this; }
         GraphicsState& setVertexBufferBindings(const std::vector<VertexBufferBinding>& value) { vertexBufferBindings = value; return *this; }
         GraphicsState& addBindingSet(IBindingSet* value) { bindingSets.push_back(value); return *this; }
