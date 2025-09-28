@@ -1,4 +1,5 @@
 #include <VulkanBackend.hpp>
+#include <cstring>
 
 //#include <EasyProfilerWrapper.hpp>
 
