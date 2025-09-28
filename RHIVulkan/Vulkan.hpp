@@ -3,7 +3,11 @@
 #include <RHICommon.hpp>
 
 #define VK_NO_PROTOTYPES
+#ifdef _WIN32
 #include <Volk/volk.h>
+#else
+#include <volk.h>
+#endif
 
 namespace RHI::Vulkan
 {

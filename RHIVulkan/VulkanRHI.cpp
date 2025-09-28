@@ -1,11 +1,16 @@
 #include <VulkanBackend.hpp>
 
 #include <cassert>
+#include <cstring>
 
 #include <unordered_set>
 
 #define VOLK_IMPLEMENTATION
+#ifdef _WIN32
 #include <Volk/volk.h>
+#else
+#include <volk.h>
+#endif
 
 #ifdef NDEBUG
 const bool enableValidationLayers = false;
