@@ -207,9 +207,13 @@ namespace RHI::Vulkan
 
         if (desc.pushConstants.fragConstSize > 0)
             pso->pushConstantsVisibility |= VK_SHADER_STAGE_FRAGMENT_BIT;
-        
-        BindingLayout* bindingLayout = dynamic_cast<BindingLayout*>(desc.bindingLayouts[0].get());
-        std::vector<VkDescriptorSetLayout> descriptorSetLayouts = { bindingLayout->descriptorSetLayout };
+
+        std::vector<VkDescriptorSetLayout> descriptorSetLayouts;
+        descriptorSetLayouts.reserve(desc.bindingLayouts.size());
+        for (auto &bindingLayoutHandle : desc.bindingLayouts) {
+            BindingLayout *bindingLayout = dynamic_cast<BindingLayout *>(bindingLayoutHandle.get());
+            descriptorSetLayouts.push_back(bindingLayout->descriptorSetLayout);
+        }
         createPipelineLayout(descriptorSetLayouts, desc.pushConstants, &pso->pipelineLayout);
 
         VkGraphicsPipelineCreateInfo pipelineInfo{};
