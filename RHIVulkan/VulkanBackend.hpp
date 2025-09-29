@@ -264,9 +264,11 @@ namespace RHI::Vulkan
 
 		virtual uint32_t GetBackBufferCount() override;
 		virtual uint32_t GetCurrentBackBufferIndex() override;
-		virtual TextureHandle GetBackBuffer(uint32_t index) override;
-		virtual TextureHandle GetDepthBuffer() override;
-		virtual FramebufferHandle GetFramebuffer(uint32_t index) override;
+		virtual RHI::ITexture *GetCurrentBackBuffer() override;
+		virtual RHI::ITexture *GetBackBuffer(uint32_t index) override;
+		virtual RHI::ITexture *GetDepthBuffer() override;
+		virtual RHI::IFramebuffer *GetCurrentFramebuffer() override;
+		virtual RHI::IFramebuffer *GetFramebuffer(uint32_t index) override;
 
 		static void setErrorHandler(VkErrorHandler handler);
 		static VulkanContextFeatures initializeContextFeatures();

@@ -431,7 +431,7 @@ namespace
 
     uint32_t VulkanDynamicRHI::GetBackBufferCount()
     {
-        return uint32_t(m_SwapchainImages.size());
+        return static_cast<uint32_t>(m_SwapchainImages.size());
     }
 
     uint32_t VulkanDynamicRHI::GetCurrentBackBufferIndex()
@@ -439,19 +439,32 @@ namespace
         return m_SwapChainIndex;
     }
 
-    TextureHandle VulkanDynamicRHI::GetBackBuffer(uint32_t index)
+    RHI::ITexture *VulkanDynamicRHI::GetCurrentBackBuffer()
     {
-        return m_SwapchainTextures[index];
+        return m_SwapchainTextures[GetCurrentBackBufferIndex()].get();
     }
 
-    TextureHandle VulkanDynamicRHI::GetDepthBuffer()
+    RHI::ITexture *VulkanDynamicRHI::GetBackBuffer(uint32_t index)
     {
-        return m_DepthSwapChainTexture;
+        return m_SwapchainTextures[index].get();
     }
 
-    FramebufferHandle VulkanDynamicRHI::GetFramebuffer(uint32_t index)
+    RHI::ITexture *VulkanDynamicRHI::GetDepthBuffer()
     {
-        return m_SwapChainFramebuffers[index];
+        return m_DepthSwapChainTexture.get();
+    }
+
+    RHI::IFramebuffer *VulkanDynamicRHI::GetCurrentFramebuffer()
+    {
+        return GetFramebuffer(GetCurrentBackBufferIndex());
+    }
+
+    RHI::IFramebuffer *VulkanDynamicRHI::GetFramebuffer(uint32_t index)
+    {
+        if (index < m_SwapChainFramebuffers.size())
+            return m_SwapChainFramebuffers[index].get();
+
+        return nullptr;
     }
 
     void VulkanDynamicRHI::setErrorHandler(VkErrorHandler handler)

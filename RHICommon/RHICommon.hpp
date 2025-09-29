@@ -588,11 +588,13 @@ namespace RHI
         virtual bool BeginFrame() = 0;
         virtual bool Present() = 0;
         virtual void BackBufferResized();
-        virtual TextureHandle GetBackBuffer(uint32_t index) = 0;
-        virtual TextureHandle GetDepthBuffer() = 0;
+        virtual RHI::ITexture *GetCurrentBackBuffer() = 0;
+        virtual RHI::ITexture *GetBackBuffer(uint32_t index) = 0;
+        virtual RHI::ITexture *GetDepthBuffer() = 0;
         virtual uint32_t GetCurrentBackBufferIndex() = 0;
         virtual uint32_t GetBackBufferCount() = 0;
-        virtual FramebufferHandle GetFramebuffer(uint32_t index) = 0;
+        virtual RHI::IFramebuffer *GetCurrentFramebuffer() = 0;
+        virtual RHI::IFramebuffer *GetFramebuffer(uint32_t index) = 0;
         virtual DeviceHandle getDevice() const = 0;
         virtual GraphicsAPI getGraphicsAPI() const = 0;
 
