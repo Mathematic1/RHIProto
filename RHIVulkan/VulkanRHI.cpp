@@ -777,7 +777,9 @@ namespace
             {
                 resizeSwapchain();
                 BackBufferResized();
-            }
+            } else {
+				break;
+			}
         }
 
         m_AcquireSemaphoreIndex = (m_AcquireSemaphoreIndex + 1) % m_AcquireSemaphores.size();
