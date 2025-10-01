@@ -564,9 +564,13 @@ namespace
 
     void VulkanDynamicRHI::resizeSwapchain()
     {
-        if (m_VulkanDevice)
-        {
-            destroySwapChain();
+        if (m_VulkanDevice) {
+            VkSurfaceCapabilitiesKHR surfaceCaps;
+            vkGetPhysicalDeviceSurfaceCapabilitiesKHR(m_VulkanPhysicalDevice, m_VulkanInstance.surface, &surfaceCaps);
+
+            m_DeviceParams.backBufferWidth = surfaceCaps.currentExtent.width;
+            m_DeviceParams.backBufferHeight = surfaceCaps.currentExtent.height;
+
             createSwapchain();
         }
     }
@@ -769,20 +773,11 @@ namespace
         {
             result = vkAcquireNextImageKHR(m_VulkanDevice, m_SwapChain, 0, semaphore, VK_NULL_HANDLE, &m_SwapChainIndex);
 
-            if (result == VkResult::VK_ERROR_OUT_OF_DATE_KHR && attempt < maxAttempts)
+            if (result == VkResult::VK_ERROR_OUT_OF_DATE_KHR)
             {
-                //BackBufferResizing();
-                VkSurfaceCapabilitiesKHR surfaceCaps;
-                vkGetPhysicalDeviceSurfaceCapabilitiesKHR(m_VulkanPhysicalDevice, m_VulkanInstance.surface, &surfaceCaps);
-
-                m_DeviceParams.backBufferWidth = surfaceCaps.currentExtent.width;
-                m_DeviceParams.backBufferHeight = surfaceCaps.currentExtent.height;
-
                 resizeSwapchain();
                 BackBufferResized();
             }
-            else
-                break;
         }
 
         m_AcquireSemaphoreIndex = (m_AcquireSemaphoreIndex + 1) % m_AcquireSemaphores.size();
@@ -818,7 +813,14 @@ namespace
         m_PresentSemaphoreIndex = (m_PresentSemaphoreIndex + 1) % m_PresentSemaphores.size();
 
         //checkSuccess(vkQueuePresentKHR(m_PresentQueue, &pi));
-        checkSuccess(vkQueuePresentKHR(m_PresentQueue, &pi));
+        VkResult result = vkQueuePresentKHR(m_PresentQueue, &pi);
+        if (result == VK_ERROR_OUT_OF_DATE_KHR) {
+            resizeSwapchain();
+            BackBufferResized();
+            result = vkQueuePresentKHR(m_PresentQueue, &pi);
+        }
+
+        checkSuccess(result);
         //checkSuccess(vkDeviceWaitIdle(m_VulkanDevice));
         checkSuccess(vkQueueWaitIdle(m_PresentQueue));
 
