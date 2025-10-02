@@ -264,9 +264,7 @@ namespace
 
         m_Device = Vulkan::DeviceHandle(new RHI::Vulkan::Device(DeviceDesc));
 
-        createSwapchain();
-        const size_t imageCount = createSwapchainImages();
-        m_SwapChainIndex = 0;
+        createSwapChain();
 
         m_PresentSemaphores.reserve(m_DeviceParams.maxFramesInFlight + 1);
         m_AcquireSemaphores.reserve(m_DeviceParams.maxFramesInFlight + 1);
@@ -472,7 +470,7 @@ namespace
         vkErrorHandler = handler;
     }
 
-    bool VulkanDynamicRHI::createSwapchain()
+    bool VulkanDynamicRHI::createSwapChain()
     {
         destroySwapChain();
 
@@ -501,6 +499,9 @@ namespace
                 VK_NULL_HANDLE };
 
         checkSuccess(vkCreateSwapchainKHR(m_VulkanDevice, &ci, nullptr, &m_SwapChain));
+
+        createSwapchainImages();
+        m_SwapChainIndex = 0;
 
         return true;
     }
@@ -562,12 +563,12 @@ namespace
         m_Device->executeCommandLists(commandLists, 1);
     }
 
-    void VulkanDynamicRHI::resizeSwapchain()
+    void VulkanDynamicRHI::ResizeSwapChain()
     {
         if (m_VulkanDevice)
         {
             destroySwapChain();
-            createSwapchain();
+            createSwapChain();
         }
     }
 
@@ -762,34 +763,36 @@ namespace
     {
         const VkSemaphore& semaphore = m_AcquireSemaphores[m_AcquireSemaphoreIndex];
 
-        VkResult result;
+        VkResult result = VK_SUCCESS;
 
-        int const maxAttempts = 3;
-        for(int attempt = 0; attempt < maxAttempts; ++attempt)
-        {
-            result = vkAcquireNextImageKHR(m_VulkanDevice, m_SwapChain, 0, semaphore, VK_NULL_HANDLE, &m_SwapChainIndex);
+        constexpr int maxAttempts = 3;
+        int attempt = 0;
+        while (attempt < maxAttempts) {
+            result = vkAcquireNextImageKHR(m_VulkanDevice, m_SwapChain, 0, semaphore, VkFence(), &m_SwapChainIndex);
 
-            if (result == VkResult::VK_ERROR_OUT_OF_DATE_KHR && attempt < maxAttempts)
-            {
-                //BackBufferResizing();
+            if (result == VK_ERROR_OUT_OF_DATE_KHR) {
+                BackBufferResizing();
                 VkSurfaceCapabilitiesKHR surfaceCaps;
-                vkGetPhysicalDeviceSurfaceCapabilitiesKHR(m_VulkanPhysicalDevice, m_VulkanInstance.surface, &surfaceCaps);
+                vkGetPhysicalDeviceSurfaceCapabilitiesKHR(m_VulkanPhysicalDevice, m_VulkanInstance.surface,
+                                                          &surfaceCaps);
 
                 m_DeviceParams.backBufferWidth = surfaceCaps.currentExtent.width;
                 m_DeviceParams.backBufferHeight = surfaceCaps.currentExtent.height;
 
-                resizeSwapchain();
+                ResizeSwapChain();
                 BackBufferResized();
-            }
-            else
+            } else {
                 break;
+            }
+
+            ++attempt;
         }
 
         m_AcquireSemaphoreIndex = (m_AcquireSemaphoreIndex + 1) % m_AcquireSemaphores.size();
 
-        if (result == VkResult::VK_SUCCESS)
+        if (result == VK_SUCCESS)
         {
-            // Schedule the wait. The actual wait operation will be submitted when the app executes any command list.
+            // The wait is scheduled and will be executed once any command list is submitted.
             m_Device->queueWaitForSemaphore(RHI::CommandQueue::Graphics, semaphore, 0);
             return true;
         }
@@ -799,11 +802,11 @@ namespace
 
     bool VulkanDynamicRHI::Present()
     {
-        const VkSemaphore& semaphore = m_PresentSemaphores[m_PresentSemaphoreIndex];
+        const VkSemaphore &semaphore = m_PresentSemaphores[m_PresentSemaphoreIndex];
 
         m_Device->queueSignalSemaphore(RHI::CommandQueue::Graphics, semaphore, 0);
 
-        std::vector<IRHICommandList*> commandLists;
+        std::vector<IRHICommandList *> commandLists;
         m_Device->executeCommandLists(commandLists, 0, CommandQueue::Graphics);
 
         VkPresentInfoKHR pi{};
@@ -815,11 +818,14 @@ namespace
         pi.pSwapchains = &m_SwapChain;
         pi.pImageIndices = &m_SwapChainIndex;
 
+        VkResult result = vkQueuePresentKHR(m_PresentQueue, &pi);
+        if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR && result != VK_ERROR_OUT_OF_DATE_KHR) {
+            return false;
+        }
+
         m_PresentSemaphoreIndex = (m_PresentSemaphoreIndex + 1) % m_PresentSemaphores.size();
 
-        //checkSuccess(vkQueuePresentKHR(m_PresentQueue, &pi));
-        checkSuccess(vkQueuePresentKHR(m_PresentQueue, &pi));
-        //checkSuccess(vkDeviceWaitIdle(m_VulkanDevice));
+        // checkSuccess(vkDeviceWaitIdle(m_VulkanDevice));
         checkSuccess(vkQueueWaitIdle(m_PresentQueue));
 
         return true;

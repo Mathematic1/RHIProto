@@ -584,10 +584,16 @@ namespace RHI
         virtual ~IDynamicRHI() = default;
 
         bool CreateDevice();
-        virtual void createDeviceInternal() = 0;
         virtual bool BeginFrame() = 0;
         virtual bool Present() = 0;
-        virtual void BackBufferResized();
+
+    protected:
+        virtual void createDeviceInternal() = 0;
+        virtual void ResizeSwapChain() = 0;
+
+    public:
+        void BackBufferResizing();
+        void BackBufferResized();
         virtual RHI::ITexture *GetCurrentBackBuffer() = 0;
         virtual RHI::ITexture *GetBackBuffer(uint32_t index) = 0;
         virtual RHI::ITexture *GetDepthBuffer() = 0;

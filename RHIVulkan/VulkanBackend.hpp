@@ -253,34 +253,35 @@ namespace RHI::Vulkan
 		~VulkanDynamicRHI() override;
 
 		void setWindowSurface(VkSurfaceKHR surface);
-		virtual GraphicsAPI getGraphicsAPI() const override;
-		virtual void createDeviceInternal() override;
+		GraphicsAPI getGraphicsAPI() const override;
 		VkResult createDevice(std::unordered_set<uint32_t> &uniqueQueueFamilies);
-		virtual RHI::DeviceHandle getDevice() const override;
+		RHI::DeviceHandle getDevice() const override;
 		const VulkanInstance& getVulkanInstance() const;
-		bool CreateSwapchain();
-		virtual bool BeginFrame() override;
-		virtual bool Present() override;
+		bool BeginFrame() override;
+		bool Present() override;
 
-		virtual uint32_t GetBackBufferCount() override;
-		virtual uint32_t GetCurrentBackBufferIndex() override;
-		virtual RHI::ITexture *GetCurrentBackBuffer() override;
-		virtual RHI::ITexture *GetBackBuffer(uint32_t index) override;
-		virtual RHI::ITexture *GetDepthBuffer() override;
-		virtual RHI::IFramebuffer *GetCurrentFramebuffer() override;
-		virtual RHI::IFramebuffer *GetFramebuffer(uint32_t index) override;
+		uint32_t GetBackBufferCount() override;
+		uint32_t GetCurrentBackBufferIndex() override;
+		RHI::ITexture *GetCurrentBackBuffer() override;
+		RHI::ITexture *GetBackBuffer(uint32_t index) override;
+		RHI::ITexture *GetDepthBuffer() override;
+		RHI::IFramebuffer *GetCurrentFramebuffer() override;
+		RHI::IFramebuffer *GetFramebuffer(uint32_t index) override;
 
 		static void setErrorHandler(VkErrorHandler handler);
 		static VulkanContextFeatures initializeContextFeatures();
 		static VulkanContextExtensions initializeContextExtensions();
 
+	protected:
+		void createDeviceInternal() override;
+		void ResizeSwapChain() override;
+
 	private:
 		void createInstance();
 		void destroyDevice();
 		void destroyVulkanInstance();
-		bool createSwapchain();
+		bool createSwapChain();
 		void destroySwapChain();
-		void resizeSwapchain();
 		size_t createSwapchainImages();
 		void createDepthSwapchainImage();
 

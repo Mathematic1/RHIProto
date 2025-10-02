@@ -9,6 +9,11 @@ namespace RHI
 		return true;
 	}
 
+	void IDynamicRHI::BackBufferResizing()
+	{
+		m_SwapChainFramebuffers.clear();
+	}
+
 	void IDynamicRHI::BackBufferResized()
 	{
 		uint32_t backBufferCount = GetBackBufferCount();
