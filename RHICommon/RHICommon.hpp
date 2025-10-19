@@ -819,6 +819,13 @@ namespace RHI
         PatchList
     };
 
+    enum class RasterizerCullMode : uint8_t
+    {
+        None,
+        Back,
+        Front
+    };
+
     /* A structure with pipeline parameters */
     struct GraphicsPipelineInfo
     {
