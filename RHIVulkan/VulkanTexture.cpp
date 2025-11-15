@@ -556,7 +556,7 @@ namespace RHI::Vulkan
         clearDepthStencilValue.stencil = stencilValue;
 
         VkImageSubresourceRange imageSubresourceRange{};
-        imageSubresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        imageSubresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
         imageSubresourceRange.baseMipLevel = subresource.mipLevel;
         imageSubresourceRange.levelCount = subresource.mipLevelCount;
         imageSubresourceRange.baseArrayLayer = subresource.baseArrayLayer;
