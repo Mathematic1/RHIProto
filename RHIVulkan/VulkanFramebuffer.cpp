@@ -58,11 +58,13 @@ namespace RHI::Vulkan
         {
             Texture* texture = dynamic_cast<Texture*>(desc.colorAttachments[i].texture);
             attachments[i] = texture->imageView;
+            fb->textures.push_back(texture);
         }
         if(desc.depthAttachment.texture)
         {
             Texture* texture = dynamic_cast<Texture*>(desc.depthAttachment.texture);
             attachments.push_back(texture->imageView);
+            fb->textures.push_back(texture);
         }
 
         VkFramebufferCreateInfo fbInfo{};

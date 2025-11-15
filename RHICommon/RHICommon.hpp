@@ -489,10 +489,12 @@ namespace RHI
         IndexBufferBinding indexBufferBinding;
 
         ViewportState viewport;
+        Color blendColorFactor;
 
         GraphicsState& setPipeline(IGraphicsPipeline* value) { pipeline = value; return *this; }
         GraphicsState& setFramebuffer(IFramebuffer* value) { framebuffer = value; return *this; }
         GraphicsState& setViewport(const ViewportState& value) { viewport = value; return *this; }
+        GraphicsState& setBlendColorFactor(const Color &value) { blendColorFactor = value; return *this; }
         GraphicsState& setBindingSets(const std::vector<IBindingSet*>& value) { bindingSets = value; return *this; }
         GraphicsState& setVertexBufferBindings(const std::vector<VertexBufferBinding>& value) { vertexBufferBindings = value; return *this; }
         GraphicsState& addBindingSet(IBindingSet* value) { bindingSets.push_back(value); return *this; }
@@ -797,6 +799,7 @@ namespace RHI
     class IFramebuffer : public IResource
     {
     public:
+        std::vector<RHI::ITexture *> textures;
         uint32_t framebufferWidth = -1;
         uint32_t framebufferHeight = -1;
         uint32_t sampleCount = 1;
