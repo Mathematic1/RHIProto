@@ -23,15 +23,11 @@ namespace RHI::Vulkan
             exit(EXIT_FAILURE);
         }
 
-        if(!framebufferDesc.colorAttachments.empty() && framebufferDesc.depthAttachment.texture)
-        {
-            printf("Creating color/depth render pass\n");
-            // TODO: update create...RenderPass to support multiple color attachments
-            if (!createColorAndDepthRenderPass(&renderPass, ci, framebufferDesc))
-            {
-                printf("Unable to create offscreen render pass\n");
-                exit(EXIT_FAILURE);
-            }
+        printf("Creating color/depth render pass\n");
+        // TODO: update create...RenderPass to support multiple color attachments
+        if (!createColorAndDepthRenderPass(&renderPass, ci, framebufferDesc)) {
+            printf("Unable to create offscreen render pass\n");
+            exit(EXIT_FAILURE);
         }
 
         //m_Resources.allRenderPasses.push_back(renderPass);

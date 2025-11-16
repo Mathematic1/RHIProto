@@ -776,12 +776,11 @@ namespace RHI
         FramebufferDesc& setDepthAttachment(const FramebufferAttachment& value) { depthAttachment = value; return *this; }
     };
 
-    enum eRenderPassBit : uint8_t
-    {
-        eRenderPassBit_First = 0x01, // clear the attachment
-        eRenderPassBit_Last = 0x02, // transition to VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
-        eRenderPassBit_Offscreen = 0x04, // transition to VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
-        eRenderPassBit_OffscreenInternal = 0x08, // keepVK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL
+    enum eRenderPassBit : uint8_t {
+        eRenderPassBit_First = 0x01,             // clear the attachment
+        eRenderPassBit_Last = 0x02,              // transition to VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
+        eRenderPassBit_Offscreen = 0x04,         // transition to VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+        eRenderPassBit_OffscreenInternal = 0x08, // keep VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL
     };
 
     struct RenderPassCreateInfo final
