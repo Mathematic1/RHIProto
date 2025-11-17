@@ -18,7 +18,7 @@
 namespace RHI
 {
     class IBuffer;
-	class ITexture;
+    class ITexture;
     class ISampler;
     class IShader;
     class IInputLayout;
@@ -27,7 +27,7 @@ namespace RHI
     class IGraphicsPipeline;
     class IFramebuffer;
     class IRHICommandList;
-	class IDevice;
+    class IDevice;
 
     typedef std::shared_ptr<IBuffer> BufferHandle;
     typedef std::shared_ptr<ITexture> TextureHandle;
@@ -41,7 +41,7 @@ namespace RHI
     typedef std::shared_ptr<IRHICommandList> CommandListHandle;
     typedef std::shared_ptr<IDevice> DeviceHandle;
 
-	enum class GraphicsAPI : uint8_t
+    enum class GraphicsAPI : uint8_t
     {
         OGL,
         D3D12,
@@ -549,82 +549,13 @@ namespace RHI
 
     class IInstance : public IResource
     {
-	    
+
     };
 
     struct Resolution
     {
         uint32_t width = 0;
         uint32_t height = 0;
-    };
-
-    struct DeviceParams
-    {
-        bool useGraphicsQueue = true;
-        bool useComputeQueue = false;
-        bool useTransferQueue = false;
-        bool usePresentQueue = false;
-
-        bool enableDebugRuntime = false;
-
-        uint32_t backBufferWidth = 0;
-        uint32_t backBufferHeight = 0;
-        uint32_t maxFramesInFlight = 2;
-
-        bool vSyncEnabled = false;
-        bool supportScreenshots = false;
-
-        std::vector<const char*> requiredVulkanInstanceExtensions;
-    };
-
-    class IDynamicRHI
-    {
-    public:
-        IDynamicRHI(const DeviceParams& deviceParams)
-            : m_DeviceParams(deviceParams)
-        {}
-        virtual ~IDynamicRHI() = default;
-
-        bool CreateDevice();
-        virtual bool BeginFrame() = 0;
-        virtual bool Present() = 0;
-
-    protected:
-        virtual void createDeviceInternal() = 0;
-        virtual void ResizeSwapChain() = 0;
-
-    public:
-        void BackBufferResizing();
-        void BackBufferResized();
-        virtual RHI::ITexture *GetCurrentBackBuffer() = 0;
-        virtual RHI::ITexture *GetBackBuffer(uint32_t index) = 0;
-        virtual RHI::ITexture *GetDepthBuffer() = 0;
-        virtual uint32_t GetCurrentBackBufferIndex() = 0;
-        virtual uint32_t GetBackBufferCount() = 0;
-        virtual RHI::IFramebuffer *GetCurrentFramebuffer() = 0;
-        virtual RHI::IFramebuffer *GetFramebuffer(uint32_t index) = 0;
-        virtual DeviceHandle getDevice() const = 0;
-        virtual GraphicsAPI getGraphicsAPI() const = 0;
-
-        virtual DeviceParams& getDeviceParams()
-        {
-            return m_DeviceParams;
-        }
-
-    protected:
-        DeviceParams m_DeviceParams;
-        std::vector<FramebufferHandle> m_SwapChainFramebuffers;
-    };
-
-    class IRHIModule
-    {
-    public:
-        IRHIModule() = default;
-        virtual ~IRHIModule() = default;
-
-    public:
-        virtual IDynamicRHI* createRHI(const DeviceParams& deviceParams) = 0;
-        virtual void* getWindowInterface() = 0;
     };
 
     enum class SamplerFilter
@@ -641,7 +572,7 @@ namespace RHI
         CLAMP_TO_EDGE = 2,
         CLAMP_TO_BORDER = 3,
         MIRROR_CLAMP_TO_EDGE = 4,
-    	MODE_MAX_ENUM = 0x7FFFFFFF
+        MODE_MAX_ENUM = 0x7FFFFFFF
     };
 
     struct SamplerDesc
@@ -759,12 +690,12 @@ namespace RHI
 
     struct ShaderDesc
     {
-	    
+
     };
 
     class IShader : public IResource
     {
-	    
+
     };
 
     struct FramebufferDesc
@@ -792,7 +723,7 @@ namespace RHI
 
     class IRenderPass : public IResource
     {
-	    
+
     };
 
     class IFramebuffer : public IResource
@@ -1002,4 +933,74 @@ namespace RHI
             return executeCommandLists(commandLists, 1, executionQueue);
         }
     };
+
+    struct DeviceParams {
+        bool useGraphicsQueue = true;
+        bool useComputeQueue = false;
+        bool useTransferQueue = false;
+        bool usePresentQueue = false;
+
+        bool enableDebugRuntime = false;
+
+        uint32_t backBufferWidth = 0;
+        uint32_t backBufferHeight = 0;
+        uint32_t maxFramesInFlight = 2;
+
+        bool backBufferUseDepth = false;
+        RenderPassCreateInfo renderPassCreateInfo = {};
+
+        bool vSyncEnabled = false;
+        bool supportScreenshots = false;
+
+        std::vector<const char *> requiredVulkanInstanceExtensions;
+    };
+
+    class IDynamicRHI
+    {
+    public:
+        IDynamicRHI(const DeviceParams &deviceParams)
+            : m_DeviceParams(deviceParams) {
+        }
+
+        virtual ~IDynamicRHI() = default;
+
+        bool CreateDevice();
+        virtual bool BeginFrame() = 0;
+        virtual bool Present() = 0;
+
+    protected:
+        virtual void createDeviceInternal() = 0;
+        virtual void ResizeSwapChain() = 0;
+
+    public:
+        void BackBufferResizing();
+        void BackBufferResized();
+        virtual RHI::ITexture *GetCurrentBackBuffer() = 0;
+        virtual RHI::ITexture *GetBackBuffer(uint32_t index) = 0;
+        virtual RHI::ITexture *GetDepthBuffer() = 0;
+        virtual uint32_t GetCurrentBackBufferIndex() = 0;
+        virtual uint32_t GetBackBufferCount() = 0;
+        virtual RHI::IFramebuffer *GetCurrentFramebuffer() = 0;
+        virtual RHI::IFramebuffer *GetFramebuffer(uint32_t index) = 0;
+        virtual DeviceHandle getDevice() const = 0;
+        virtual GraphicsAPI getGraphicsAPI() const = 0;
+
+        virtual DeviceParams &getDeviceParams() {
+            return m_DeviceParams;
+        }
+
+    protected:
+        DeviceParams m_DeviceParams;
+        std::vector<FramebufferHandle> m_SwapChainFramebuffers;
+    };
+
+    class IRHIModule {
+    public:
+        IRHIModule() = default;
+        virtual ~IRHIModule() = default;
+
+        virtual IDynamicRHI *createRHI(const DeviceParams &deviceParams) = 0;
+        virtual void *getWindowInterface() = 0;
+    };
+
 }

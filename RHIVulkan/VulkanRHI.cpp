@@ -524,7 +524,7 @@ namespace
                 .setHeight(m_DeviceParams.backBufferHeight)
                 .setFormat(Format::BGRA8_UNORM);
 
-        	m_SwapchainTextures.push_back(device->createTextureForNative(m_SwapchainImages[i], m_SwapchainImageViews[i], ImageAspectFlagBits::COLOR_BIT, desc));
+            m_SwapchainTextures.push_back(device->createTextureForNative(m_SwapchainImages[i], m_SwapchainImageViews[i], ImageAspectFlagBits::COLOR_BIT, desc));
         }
 
         createDepthSwapchainImage();
@@ -543,7 +543,8 @@ namespace
                 .setHeight(m_DeviceParams.backBufferHeight)
                 .setFormat(m_Device->findDepthFormat())
                 .setIsShaderResource(true)
-                .setIsRenderTarget(true);
+                .setIsRenderTarget(true)
+                .setIsTransferDst(true);
 
             m_DepthSwapChainTexture = m_Device->createImage(desc);
 
