@@ -421,6 +421,8 @@ namespace RHI::Vulkan
 
     void CommandList::copyTexture(ITexture* srcTexture, const TextureSubresourse& srcSubresource, ITexture* dstTexture, const TextureSubresourse dstSubresource)
     {
+        endRenderPass();
+
         Texture* srcTex = dynamic_cast<Texture*>(srcTexture);
         Texture* dstTex = dynamic_cast<Texture*>(dstTexture);
 
@@ -452,6 +454,8 @@ namespace RHI::Vulkan
 
     void CommandList::blitTexture(ITexture* srcTexture, const TextureSubresourse& srcSubresource, ITexture* dstTexture, const TextureSubresourse dstSubresource)
     {
+        endRenderPass();
+
         Texture* srcTex = dynamic_cast<Texture*>(srcTexture);
         Texture* dstTex = dynamic_cast<Texture*>(dstTexture);
 
@@ -488,6 +492,8 @@ namespace RHI::Vulkan
 
     void CommandList::resolveTexture(ITexture* srcTexture, const TextureSubresourse& srcSubresource, ITexture* dstTexture, const TextureSubresourse dstSubresource)
     {
+        endRenderPass();
+
         Texture* srcTex = dynamic_cast<Texture*>(srcTexture);
         Texture* dstTex = dynamic_cast<Texture*>(dstTexture);
 
