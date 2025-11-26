@@ -452,32 +452,43 @@ namespace RHI::Vulkan
             &imageCopyRegion);
     }
 
-    void CommandList::blitTexture(ITexture* srcTexture, const TextureSubresourse& srcSubresource, ITexture* dstTexture, const TextureSubresourse dstSubresource)
-    {
+    void CommandList::blitTexture(
+        ITexture *srcTexture, const TextureSubresourse &srcSubresource, const TextureRegion &srcRegion,
+        ITexture *dstTexture, const TextureSubresourse dstSubresource, const TextureRegion &dstRegion,
+        RHI::SamplerFilter filter
+    ) {
         endRenderPass();
 
-        Texture* srcTex = dynamic_cast<Texture*>(srcTexture);
-        Texture* dstTex = dynamic_cast<Texture*>(dstTexture);
+        Texture *srcTex = dynamic_cast<Texture *>(srcTexture);
+        Texture *dstTex = dynamic_cast<Texture *>(dstTexture);
+
+        auto resolvedSrcRegion = srcRegion.resolveRegion(srcTex->desc);
+        auto resolvedDstRegion = dstRegion.resolveRegion(dstTex->desc);
 
         m_CurrentCommandBuffer->referencedResources.push_back(srcTex);
         m_CurrentCommandBuffer->referencedResources.push_back(dstTex);
 
-        // Define the region to blit (we will blit the whole source image)
-        VkOffset3D blitSize;
-        blitSize.x = static_cast<int32_t>(srcTex->getDesc().width);
-        blitSize.y = static_cast<int32_t>(srcTex->getDesc().height);
-        blitSize.z = 1;
         VkImageBlit imageBlitRegion{};
         imageBlitRegion.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
         imageBlitRegion.srcSubresource.mipLevel = srcSubresource.mipLevel;
         imageBlitRegion.srcSubresource.baseArrayLayer = srcSubresource.baseArrayLayer;
         imageBlitRegion.srcSubresource.layerCount = srcSubresource.layerCount;
-        imageBlitRegion.srcOffsets[1] = blitSize;
+        imageBlitRegion.srcOffsets[0] = VkOffset3D( resolvedSrcRegion.x, resolvedSrcRegion.y, resolvedSrcRegion.z );
+        imageBlitRegion.srcOffsets[1] = VkOffset3D(
+            resolvedSrcRegion.x + resolvedSrcRegion.width,
+            resolvedSrcRegion.y + resolvedSrcRegion.height,
+            resolvedSrcRegion.z + resolvedSrcRegion.depth
+        );
         imageBlitRegion.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
         imageBlitRegion.dstSubresource.mipLevel = dstSubresource.mipLevel;
         imageBlitRegion.dstSubresource.baseArrayLayer = dstSubresource.baseArrayLayer;
         imageBlitRegion.dstSubresource.layerCount = dstSubresource.layerCount;
-        imageBlitRegion.dstOffsets[1] = blitSize;
+        imageBlitRegion.dstOffsets[0] = VkOffset3D( resolvedDstRegion.x, resolvedDstRegion.y, resolvedDstRegion.z );
+        imageBlitRegion.dstOffsets[1] = VkOffset3D(
+            resolvedDstRegion.x + resolvedDstRegion.width,
+            resolvedDstRegion.y + resolvedDstRegion.height,
+            resolvedDstRegion.z + resolvedDstRegion.depth
+        );
 
         vkCmdBlitImage(
             m_CurrentCommandBuffer->commandBuffer,
@@ -486,8 +497,9 @@ namespace RHI::Vulkan
             dstTex->image,
             VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
             1,
-            &imageBlitRegion, 
-            VK_FILTER_NEAREST);
+            &imageBlitRegion,
+            filter == SamplerFilter::LINEAR ? VK_FILTER_LINEAR : VK_FILTER_NEAREST
+        );
     }
 
     void CommandList::resolveTexture(ITexture* srcTexture, const TextureSubresourse& srcSubresource, ITexture* dstTexture, const TextureSubresourse dstSubresource)

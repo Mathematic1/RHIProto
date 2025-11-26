@@ -517,36 +517,6 @@ namespace RHI
         DrawArguments& setStartInstanceLocation(uint32_t value) { startInstanceLocation = value; return *this; }
     };
 
-    class IRHICommandList : public IResource
-    {
-    public:
-        virtual void beginSingleTimeCommands() = 0;
-        virtual void endSingleTimeCommands() = 0;
-
-        // Clears the graphics state of the underlying command list object and resets the state cache.
-        virtual void clearState() = 0;
-
-        virtual void queueWaitIdle() = 0;
-        virtual void draw(const DrawArguments& args) = 0;
-        virtual void drawIndexed(const DrawArguments& args) = 0;
-        virtual void setGraphicsState(const GraphicsState& state) = 0;
-        virtual void transitionImageLayout(ITexture* texture, ImageLayout oldLayout, ImageLayout newLayout) = 0;
-        virtual void transitionBufferLayout(IBuffer* texture, ImageLayout oldLayout, ImageLayout newLayout) = 0;
-        virtual bool updateTextureImage(ITexture* texture, uint32_t mipLevel, uint32_t baseArrayLayer, const void* imageData,
-            size_t rowPitch = 0, size_t depthPitch = 0, ImageLayout sourceImageLayout = ImageLayout::UNDEFINED) = 0;
-        virtual void copyBufferToImage(IBuffer* buffer, ITexture* texture, uint32_t mipLevel = 0, uint32_t baseArrayLayer = 0) = 0;
-        virtual void copyTexture(ITexture* srcTexture, const TextureSubresourse& srcSubresource, ITexture* dstTexture, const TextureSubresourse dstSubresource) = 0;
-        virtual void blitTexture(ITexture* srcTexture, const TextureSubresourse& srcSubresource, ITexture* dstTexture, const TextureSubresourse dstSubresource) = 0;
-        virtual void resolveTexture(ITexture* srcTexture, const TextureSubresourse& srcSubresource, ITexture* dstTexture, const TextureSubresourse dstSubresource) = 0;
-        virtual void clearColorTexture(ITexture* texture, const TextureSubresourse& subresource, const Color& color) = 0;
-        virtual void clearDepthTexture(ITexture* texture, const TextureSubresourse& subresource, float depthValue, uint32_t stencilValue) = 0;
-        virtual void clearAttachments(std::vector<ITexture*> colorAttachments, ITexture* depthAttachment, const std::vector<Rect>& rects) = 0;
-        virtual void copyMIPBufferToImage(IBuffer* buffer, ITexture* texture) = 0;
-        virtual void copyBuffer(IBuffer* srcBuffer, IBuffer* dstBuffer, size_t size) = 0;
-        virtual void writeBuffer(IBuffer* srcBuffer, size_t size, const void* data) = 0;
-        virtual void setPushConstants(const void* data, size_t byteSize) = 0;
-    };
-
     class IInstance : public IResource
     {
 
@@ -642,6 +612,77 @@ namespace RHI
         TextureDesc& setIsRenderTarget(bool value) { usage.isRenderTarget = value; return *this; }
         TextureDesc& setIsUAV(bool value) { usage.isUAV = value; return *this; }
         TextureDesc& setDebugName(const std::string& value) { debugName = value; return *this; }
+    };
+
+    struct TextureRegion {
+        // Origin
+        uint32_t x = 0;
+        uint32_t y = 0;
+        uint32_t z = 0;
+
+        // Dimensions, where -1 means the entire mip level or texture.
+        uint32_t width = std::numeric_limits<uint32_t>::max();
+        uint32_t height = std::numeric_limits<uint32_t>::max();
+        uint32_t depth = std::numeric_limits<uint32_t>::max();
+
+        uint32_t mipLevel = 0;
+        uint32_t arrayLayer = 0;
+
+        [[nodiscard]]
+        TextureRegion resolveRegion(const TextureDesc &desc) const {
+            TextureRegion result = *this;
+
+            result.width =
+                (width == std::numeric_limits<uint32_t>::max()) ? std::max(1u, desc.width >> mipLevel) : width;
+            result.height =
+                (height == std::numeric_limits<uint32_t>::max()) ? std::max(1u, desc.height >> mipLevel) : height;
+            result.depth =
+                (depth == std::numeric_limits<uint32_t>::max()) ? std::max(1u, desc.depth >> mipLevel) : depth;
+
+            return result;
+        }
+
+        constexpr TextureRegion &setOrigin(uint32_t vx = 0, uint32_t vy = 0, uint32_t vz = 0) {
+            x = vx;
+            y = vy;
+            z = vz;
+            return *this;
+        }
+
+        constexpr TextureRegion &setSize(
+            uint32_t vx = std::numeric_limits<uint32_t>::max(), uint32_t vy = std::numeric_limits<uint32_t>::max(),
+            uint32_t vz = std::numeric_limits<uint32_t>::max()
+        ) {
+            width = vx;
+            height = vy;
+            depth = vz;
+            return *this;
+        }
+
+        constexpr TextureRegion &setWidth(uint32_t value) {
+            width = value;
+            return *this;
+        }
+
+        constexpr TextureRegion &setHeight(uint32_t value) {
+            height = value;
+            return *this;
+        }
+
+        constexpr TextureRegion &setDepth(uint32_t value) {
+            depth = value;
+            return *this;
+        }
+
+        constexpr TextureRegion &setMipLevel(uint32_t value) {
+            mipLevel = value;
+            return *this;
+        }
+
+        constexpr TextureRegion &setArrayLayer(uint32_t value) {
+            arrayLayer = value;
+            return *this;
+        }
     };
 
     class ITexture : public IResource
@@ -887,6 +928,53 @@ namespace RHI
     class IGraphicsPipeline : public IResource
     {
         virtual const GraphicsPipelineDesc& getDesc() const = 0;
+    };
+
+    class IRHICommandList : public IResource {
+      public:
+        virtual void beginSingleTimeCommands() = 0;
+        virtual void endSingleTimeCommands() = 0;
+
+        // Clears the graphics state of the underlying command list object and resets the state cache.
+        virtual void clearState() = 0;
+
+        virtual void queueWaitIdle() = 0;
+        virtual void draw(const DrawArguments &args) = 0;
+        virtual void drawIndexed(const DrawArguments &args) = 0;
+        virtual void setGraphicsState(const GraphicsState &state) = 0;
+        virtual void transitionImageLayout(ITexture *texture, ImageLayout oldLayout, ImageLayout newLayout) = 0;
+        virtual void transitionBufferLayout(IBuffer *texture, ImageLayout oldLayout, ImageLayout newLayout) = 0;
+        virtual bool updateTextureImage(
+            ITexture *texture, uint32_t mipLevel, uint32_t baseArrayLayer, const void *imageData, size_t rowPitch = 0,
+            size_t depthPitch = 0, ImageLayout sourceImageLayout = ImageLayout::UNDEFINED
+        ) = 0;
+        virtual void
+        copyBufferToImage(IBuffer *buffer, ITexture *texture, uint32_t mipLevel = 0, uint32_t baseArrayLayer = 0) = 0;
+        virtual void copyTexture(
+            ITexture *srcTexture, const TextureSubresourse &srcSubresource, ITexture *dstTexture,
+            const TextureSubresourse dstSubresource
+        ) = 0;
+        virtual void blitTexture(
+            ITexture *srcTexture, const TextureSubresourse &srcSubresource, const TextureRegion &srcRegion,
+            ITexture *dstTexture, const TextureSubresourse dstSubresource, const TextureRegion &dstRegion,
+            RHI::SamplerFilter filter
+        ) = 0;
+        virtual void resolveTexture(
+            ITexture *srcTexture, const TextureSubresourse &srcSubresource, ITexture *dstTexture,
+            const TextureSubresourse dstSubresource
+        ) = 0;
+        virtual void
+        clearColorTexture(ITexture *texture, const TextureSubresourse &subresource, const Color &color) = 0;
+        virtual void clearDepthTexture(
+            ITexture *texture, const TextureSubresourse &subresource, float depthValue, uint32_t stencilValue
+        ) = 0;
+        virtual void clearAttachments(
+            std::vector<ITexture *> colorAttachments, ITexture *depthAttachment, const std::vector<Rect> &rects
+        ) = 0;
+        virtual void copyMIPBufferToImage(IBuffer *buffer, ITexture *texture) = 0;
+        virtual void copyBuffer(IBuffer *srcBuffer, IBuffer *dstBuffer, size_t size) = 0;
+        virtual void writeBuffer(IBuffer *srcBuffer, size_t size, const void *data) = 0;
+        virtual void setPushConstants(const void *data, size_t byteSize) = 0;
     };
 
     class IDevice : public IResource

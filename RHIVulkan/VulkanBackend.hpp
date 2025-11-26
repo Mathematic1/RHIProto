@@ -891,7 +891,8 @@ namespace RHI::Vulkan
 		virtual void copyMIPBufferToImage(IBuffer* buffer, ITexture* texture) override;
 		void copyImageToBuffer(VkImage image, VkBuffer buffer, uint32_t width, uint32_t height, uint32_t layerCount = 1);
 		virtual void copyTexture(ITexture* srcTexture, const TextureSubresourse& srcSubresource, ITexture* dstTexture, const TextureSubresourse dstSubresource) override;
-		virtual void blitTexture(ITexture* srcTexture, const TextureSubresourse& srcSubresource, ITexture* dstTexture, const TextureSubresourse dstSubresource) override;
+		virtual void blitTexture(ITexture *srcTexture, const TextureSubresourse &srcSubresource, const TextureRegion &srcRegion,
+			ITexture *dstTexture, const TextureSubresourse dstSubresource, const TextureRegion &dstRegion, RHI::SamplerFilter filter) override;
 		virtual void resolveTexture(ITexture* srcTexture, const TextureSubresourse& srcSubresource, ITexture* dstTexture, const TextureSubresourse dstSubresource) override;
 		virtual void clearColorTexture(ITexture* texture, const TextureSubresourse& subresource, const Color& color) override;
 		virtual void clearDepthTexture(ITexture* texture, const TextureSubresourse& subresource, float depthValue, uint32_t stencilValue) override;
