@@ -951,8 +951,8 @@ namespace RHI
         virtual void
         copyBufferToImage(IBuffer *buffer, ITexture *texture, uint32_t mipLevel = 0, uint32_t baseArrayLayer = 0) = 0;
         virtual void copyTexture(
-            ITexture *srcTexture, const TextureSubresourse &srcSubresource, ITexture *dstTexture,
-            const TextureSubresourse dstSubresource
+            ITexture *srcTexture, const TextureSubresourse &srcSubresource, const TextureRegion &srcRegion,
+            ITexture *dstTexture, const TextureSubresourse dstSubresource, const TextureRegion &dstRegion
         ) = 0;
         virtual void blitTexture(
             ITexture *srcTexture, const TextureSubresourse &srcSubresource, const TextureRegion &srcRegion,

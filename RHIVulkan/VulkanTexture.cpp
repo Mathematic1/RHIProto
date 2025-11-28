@@ -419,12 +419,18 @@ namespace RHI::Vulkan
         return TextureHandle(tex);
     }
 
-    void CommandList::copyTexture(ITexture* srcTexture, const TextureSubresourse& srcSubresource, ITexture* dstTexture, const TextureSubresourse dstSubresource)
+    void CommandList::copyTexture(
+        ITexture *srcTexture, const TextureSubresourse &srcSubresource, const TextureRegion &srcRegion,
+        ITexture *dstTexture, const TextureSubresourse dstSubresource, const TextureRegion &dstRegion
+    )
     {
         endRenderPass();
 
         Texture* srcTex = dynamic_cast<Texture*>(srcTexture);
         Texture* dstTex = dynamic_cast<Texture*>(dstTexture);
+
+        auto resolvedSrcRegion = srcRegion.resolveRegion(srcTex->desc);
+        auto resolvedDstRegion = dstRegion.resolveRegion(dstTex->desc);
 
         m_CurrentCommandBuffer->referencedResources.push_back(srcTex);
         m_CurrentCommandBuffer->referencedResources.push_back(dstTex);
@@ -434,13 +440,15 @@ namespace RHI::Vulkan
         imageCopyRegion.srcSubresource.mipLevel = srcSubresource.mipLevel;
         imageCopyRegion.srcSubresource.baseArrayLayer = srcSubresource.baseArrayLayer;
         imageCopyRegion.srcSubresource.layerCount = srcSubresource.layerCount;
+        imageCopyRegion.srcOffset = VkOffset3D(resolvedSrcRegion.x, resolvedSrcRegion.y, resolvedSrcRegion.z);
         imageCopyRegion.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
         imageCopyRegion.dstSubresource.mipLevel = dstSubresource.mipLevel;
         imageCopyRegion.dstSubresource.baseArrayLayer = dstSubresource.baseArrayLayer;
         imageCopyRegion.dstSubresource.layerCount = dstSubresource.layerCount;
-        imageCopyRegion.extent.width = srcTex->getDesc().width;
-        imageCopyRegion.extent.height = srcTex->getDesc().height;
-        imageCopyRegion.extent.depth = srcTex->getDesc().depth;
+        imageCopyRegion.dstOffset = VkOffset3D(resolvedDstRegion.x, resolvedDstRegion.y, resolvedDstRegion.z);
+        imageCopyRegion.extent.width = std::min<uint32_t>(resolvedSrcRegion.width, resolvedDstRegion.width);
+        imageCopyRegion.extent.height = std::min<uint32_t>(resolvedSrcRegion.height, resolvedDstRegion.height);
+        imageCopyRegion.extent.depth = std::min<uint32_t>(resolvedSrcRegion.depth, resolvedDstRegion.depth);
 
         vkCmdCopyImage(
             m_CurrentCommandBuffer->commandBuffer,
