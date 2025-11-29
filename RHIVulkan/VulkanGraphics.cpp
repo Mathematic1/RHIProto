@@ -183,15 +183,21 @@ namespace RHI::Vulkan
         depthStencil.depthBoundsTestEnable = VK_FALSE;
         depthStencil.minDepthBounds = 0.0f;
         depthStencil.maxDepthBounds = 1.0f;
+        depthStencil.stencilTestEnable = depthStencilState.stencilTestEnable;
+        depthStencil.front = convertStencilState(depthStencilState, depthStencilState.front);
+        depthStencil.back = convertStencilState(depthStencilState, depthStencilState.back);
 
-        VkDynamicState dynamicStateElt = VK_DYNAMIC_STATE_SCISSOR;
+        std::vector<VkDynamicState> dynamicStates = { VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR };
+        if (depthStencilState.dynamicStencilReferenceEnable) {
+            dynamicStates.push_back(VK_DYNAMIC_STATE_STENCIL_REFERENCE);
+        }
 
         VkPipelineDynamicStateCreateInfo dynamicState{};
         dynamicState.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
         dynamicState.pNext = nullptr;
         dynamicState.flags = 0;
-        dynamicState.dynamicStateCount = 1;
-        dynamicState.pDynamicStates = &dynamicStateElt;
+        dynamicState.dynamicStateCount = static_cast<uint32_t>(dynamicStates.size());
+        dynamicState.pDynamicStates = dynamicStates.data();
 
         VkPipelineTessellationStateCreateInfo tessellationState{};
         tessellationState.sType = VK_STRUCTURE_TYPE_PIPELINE_TESSELLATION_STATE_CREATE_INFO;
@@ -361,6 +367,10 @@ namespace RHI::Vulkan
             vkCmdSetScissor(m_CurrentCommandBuffer->commandBuffer, 0, 1, &scissor);
         }
 
+        if (pipeline->desc.renderState.depthStencilState.dynamicStencilReferenceEnable) {
+            vkCmdSetStencilReference(m_CurrentCommandBuffer->commandBuffer, VK_STENCIL_FRONT_AND_BACK, state.dynamicStencilReference);
+        }
+
         std::vector<VkBuffer> vertexBuffers;
         std::vector<VkDeviceSize> vertexBuffersOffsets{};
         vertexBuffers.reserve(state.vertexBufferBindings.size());
@@ -368,12 +378,11 @@ namespace RHI::Vulkan
         uint32_t maxVertexBufferIndex = 0;
         for(auto& vertexBinding : state.vertexBufferBindings)
         {
-	        if(Buffer* vertexBuffer = dynamic_cast<Buffer*>(vertexBinding.buffer))
-	        {
+            if(Buffer* vertexBuffer = dynamic_cast<Buffer*>(vertexBinding.buffer)){
                 vertexBuffers.push_back(vertexBuffer->buffer);
                 vertexBuffersOffsets.push_back(vertexBinding.offset);
                 maxVertexBufferIndex = std::max(vertexBinding.bindingSlot, maxVertexBufferIndex);
-	        }
+            }
         }
 
         if (state.indexBufferBinding.buffer && m_CurrentGraphicsState.indexBufferBinding.buffer != state.indexBufferBinding.buffer) {

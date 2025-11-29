@@ -490,11 +490,13 @@ namespace RHI
 
         ViewportState viewport;
         Color blendColorFactor;
+        uint8_t dynamicStencilReference = 0;
 
         GraphicsState& setPipeline(IGraphicsPipeline* value) { pipeline = value; return *this; }
         GraphicsState& setFramebuffer(IFramebuffer* value) { framebuffer = value; return *this; }
         GraphicsState& setViewport(const ViewportState& value) { viewport = value; return *this; }
-        GraphicsState& setBlendColorFactor(const Color &value) { blendColorFactor = value; return *this; }
+        GraphicsState& setBlendColorFactor(const Color& value) { blendColorFactor = value; return *this; }
+        GraphicsState& setDynamicStencilReference(const uint8_t &value) { dynamicStencilReference = value; return *this; }
         GraphicsState& setBindingSets(const std::vector<IBindingSet*>& value) { bindingSets = value; return *this; }
         GraphicsState& setVertexBufferBindings(const std::vector<VertexBufferBinding>& value) { vertexBufferBindings = value; return *this; }
         GraphicsState& addBindingSet(IBindingSet* value) { bindingSets.push_back(value); return *this; }
@@ -863,11 +865,36 @@ namespace RHI
         MAX_ENUM = 0x7FFFFFFF
     };
 
+    enum class StencilOp {
+        KEEP,
+        ZERO,
+        REPLACE,
+        INCR_CLAMP,
+        DECR_CLAMP,
+        INVERT,
+        INCR_WRAP,
+        DECR_WRAP
+    };
+
     struct DepthStencilState
     {
+        struct StencilFaceState {
+            StencilOp failOp = StencilOp::KEEP;
+            StencilOp passOp = StencilOp::KEEP;
+            StencilOp depthFailOp = StencilOp::KEEP;
+            CompareOp compareOp = CompareOp::ALWAYS;
+        };
+
         bool depthTestEnable = true;
         bool depthWriteEnable = true;
         CompareOp depthCompareOp = CompareOp::LESS_OR_EQUAL;
+        bool stencilTestEnable = false;
+        uint32_t compareMask = 0xFF;
+        uint32_t writeMask = 0xFF;
+        uint32_t reference = 0;
+        bool dynamicStencilReferenceEnable = false;
+        StencilFaceState front; // front face ops
+        StencilFaceState back;  // back face ops
     };
 
     struct RenderState

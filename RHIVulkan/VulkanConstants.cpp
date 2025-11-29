@@ -234,74 +234,134 @@ namespace RHI::Vulkan
         return ret;
     }
 
-    VkBlendFactor convertBlendFactor(const BlendState& blendState)
-    {
-	    switch (blendState)
-	    {
-        case BlendState::ZERO: return VK_BLEND_FACTOR_ZERO;
-        case BlendState::ONE: return VK_BLEND_FACTOR_ONE;
-        case BlendState::SRC_COLOR: return VK_BLEND_FACTOR_SRC_COLOR;
-        case BlendState::ONE_MINUS_SRC_COLOR: return VK_BLEND_FACTOR_ONE_MINUS_SRC_COLOR;
-        case BlendState::DST_COLOR: return VK_BLEND_FACTOR_DST_COLOR;
-        case BlendState::ONE_MINUS_DST_COLOR: return VK_BLEND_FACTOR_ONE_MINUS_DST_COLOR;
-        case BlendState::SRC_ALPHA: return VK_BLEND_FACTOR_SRC_ALPHA;
-        case BlendState::ONE_MINUS_SRC_ALPHA: return VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
-        case BlendState::DST_ALPHA: return VK_BLEND_FACTOR_DST_ALPHA;
-        case BlendState::ONE_MINUS_DST_ALPHA: return VK_BLEND_FACTOR_ONE_MINUS_DST_ALPHA;
-        case BlendState::CONSTANT_COLOR: return VK_BLEND_FACTOR_CONSTANT_COLOR;
-        case BlendState::ONE_MINUS_CONSTANT_COLOR: return VK_BLEND_FACTOR_ONE_MINUS_CONSTANT_COLOR;
-        case BlendState::CONSTANT_ALPHA: return VK_BLEND_FACTOR_CONSTANT_ALPHA;
-        case BlendState::ONE_MINUS_CONSTANT_ALPHA: return VK_BLEND_FACTOR_ONE_MINUS_CONSTANT_ALPHA;
-        case BlendState::SRC_ALPHA_SATURATE: return VK_BLEND_FACTOR_SRC_ALPHA_SATURATE;
-        case BlendState::SRC1_COLOR: return VK_BLEND_FACTOR_SRC1_COLOR;
-        case BlendState::ONE_MINUS_SRC1_COLOR: return VK_BLEND_FACTOR_ONE_MINUS_SRC1_COLOR;
-        case BlendState::SRC1_ALPHA: return VK_BLEND_FACTOR_SRC1_ALPHA;
-        case BlendState::ONE_MINUS_SRC1_ALPHA: return VK_BLEND_FACTOR_ONE_MINUS_SRC1_ALPHA;
-	    default:
-	    	return VK_BLEND_FACTOR_ZERO;
-	    }
+    VkBlendFactor convertBlendFactor(const BlendState &blendState) {
+        switch (blendState) {
+        case BlendState::ZERO:
+            return VK_BLEND_FACTOR_ZERO;
+        case BlendState::ONE:
+            return VK_BLEND_FACTOR_ONE;
+        case BlendState::SRC_COLOR:
+            return VK_BLEND_FACTOR_SRC_COLOR;
+        case BlendState::ONE_MINUS_SRC_COLOR:
+            return VK_BLEND_FACTOR_ONE_MINUS_SRC_COLOR;
+        case BlendState::DST_COLOR:
+            return VK_BLEND_FACTOR_DST_COLOR;
+        case BlendState::ONE_MINUS_DST_COLOR:
+            return VK_BLEND_FACTOR_ONE_MINUS_DST_COLOR;
+        case BlendState::SRC_ALPHA:
+            return VK_BLEND_FACTOR_SRC_ALPHA;
+        case BlendState::ONE_MINUS_SRC_ALPHA:
+            return VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+        case BlendState::DST_ALPHA:
+            return VK_BLEND_FACTOR_DST_ALPHA;
+        case BlendState::ONE_MINUS_DST_ALPHA:
+            return VK_BLEND_FACTOR_ONE_MINUS_DST_ALPHA;
+        case BlendState::CONSTANT_COLOR:
+            return VK_BLEND_FACTOR_CONSTANT_COLOR;
+        case BlendState::ONE_MINUS_CONSTANT_COLOR:
+            return VK_BLEND_FACTOR_ONE_MINUS_CONSTANT_COLOR;
+        case BlendState::CONSTANT_ALPHA:
+            return VK_BLEND_FACTOR_CONSTANT_ALPHA;
+        case BlendState::ONE_MINUS_CONSTANT_ALPHA:
+            return VK_BLEND_FACTOR_ONE_MINUS_CONSTANT_ALPHA;
+        case BlendState::SRC_ALPHA_SATURATE:
+            return VK_BLEND_FACTOR_SRC_ALPHA_SATURATE;
+        case BlendState::SRC1_COLOR:
+            return VK_BLEND_FACTOR_SRC1_COLOR;
+        case BlendState::ONE_MINUS_SRC1_COLOR:
+            return VK_BLEND_FACTOR_ONE_MINUS_SRC1_COLOR;
+        case BlendState::SRC1_ALPHA:
+            return VK_BLEND_FACTOR_SRC1_ALPHA;
+        case BlendState::ONE_MINUS_SRC1_ALPHA:
+            return VK_BLEND_FACTOR_ONE_MINUS_SRC1_ALPHA;
+        default:
+            return VK_BLEND_FACTOR_ZERO;
+        }
     }
 
-    VkBlendOp convertBlendOp(const BlendOp& blendOp)
-    {
-	    switch (blendOp)
-	    {
-        case BlendOp::ADD: return VK_BLEND_OP_ADD;
-        case BlendOp::SUBTRACT: return VK_BLEND_OP_SUBTRACT;
-        case BlendOp::REVERSE_SUBTRACT: return VK_BLEND_OP_REVERSE_SUBTRACT;
-        case BlendOp::MIN: return VK_BLEND_OP_MIN;
-        case BlendOp::MAX: return VK_BLEND_OP_MAX;
-	    default:
-	    	return VK_BLEND_OP_ADD;
-	    }
+    VkBlendOp convertBlendOp(const BlendOp &blendOp) {
+        switch (blendOp) {
+        case BlendOp::ADD:
+            return VK_BLEND_OP_ADD;
+        case BlendOp::SUBTRACT:
+            return VK_BLEND_OP_SUBTRACT;
+        case BlendOp::REVERSE_SUBTRACT:
+            return VK_BLEND_OP_REVERSE_SUBTRACT;
+        case BlendOp::MIN:
+            return VK_BLEND_OP_MIN;
+        case BlendOp::MAX:
+            return VK_BLEND_OP_MAX;
+        default:
+            return VK_BLEND_OP_ADD;
+        }
     }
 
-    VkPolygonMode convertFillMode(const FillMode& mode)
-    {
-	    switch (mode)
-	    {
-        case FillMode::FILL: return VK_POLYGON_MODE_FILL;
-        case FillMode::LINE: return VK_POLYGON_MODE_LINE;
-        case FillMode::POINT: return VK_POLYGON_MODE_POINT;
+    VkPolygonMode convertFillMode(const FillMode &mode) {
+        switch (mode) {
+        case FillMode::FILL:
+            return VK_POLYGON_MODE_FILL;
+        case FillMode::LINE:
+            return VK_POLYGON_MODE_LINE;
+        case FillMode::POINT:
+            return VK_POLYGON_MODE_POINT;
         default:
             return VK_POLYGON_MODE_FILL;
-	    }
+        }
     }
 
-    VkCompareOp convertCompareOp(const CompareOp& op)
-    {
-	    switch (op)
-	    {
-        case NEVER: return VK_COMPARE_OP_NEVER;
-        case LESS: return VK_COMPARE_OP_LESS;
-        case EQUAL: return VK_COMPARE_OP_EQUAL;
-        case LESS_OR_EQUAL: return VK_COMPARE_OP_LESS_OR_EQUAL;
-        case GREATER: return VK_COMPARE_OP_GREATER;
-        case NOT_EQUAL: return VK_COMPARE_OP_NOT_EQUAL;
-        case GREATER_OR_EQUAL: return VK_COMPARE_OP_GREATER_OR_EQUAL;
-        case ALWAYS: return VK_COMPARE_OP_ALWAYS;
-	    default:
-	    	return VK_COMPARE_OP_ALWAYS;
-	    }
+    VkCompareOp convertCompareOp(const CompareOp &op) {
+        switch (op) {
+        case NEVER:
+            return VK_COMPARE_OP_NEVER;
+        case LESS:
+            return VK_COMPARE_OP_LESS;
+        case EQUAL:
+            return VK_COMPARE_OP_EQUAL;
+        case LESS_OR_EQUAL:
+            return VK_COMPARE_OP_LESS_OR_EQUAL;
+        case GREATER:
+            return VK_COMPARE_OP_GREATER;
+        case NOT_EQUAL:
+            return VK_COMPARE_OP_NOT_EQUAL;
+        case GREATER_OR_EQUAL:
+            return VK_COMPARE_OP_GREATER_OR_EQUAL;
+        case ALWAYS:
+            return VK_COMPARE_OP_ALWAYS;
+        default:
+            return VK_COMPARE_OP_ALWAYS;
+        }
     }
+
+    VkStencilOp convertStencilOp(const StencilOp &op) {
+        switch (op) {
+        case StencilOp::KEEP:
+            return VK_STENCIL_OP_KEEP;
+        case StencilOp::ZERO:
+            return VK_STENCIL_OP_ZERO;
+        case StencilOp::REPLACE:
+            return VK_STENCIL_OP_REPLACE;
+        case StencilOp::INCR_CLAMP:
+            return VK_STENCIL_OP_INCREMENT_AND_CLAMP;
+        case StencilOp::DECR_CLAMP:
+            return VK_STENCIL_OP_DECREMENT_AND_CLAMP;
+        case StencilOp::INVERT:
+            return VK_STENCIL_OP_INVERT;
+        case StencilOp::INCR_WRAP:
+            return VK_STENCIL_OP_INCREMENT_AND_WRAP;
+        case StencilOp::DECR_WRAP:
+            return VK_STENCIL_OP_DECREMENT_AND_WRAP;
+        }
+        return VK_STENCIL_OP_KEEP;
+    }
+
+    VkStencilOpState convertStencilState(const DepthStencilState &depthStencilState, const DepthStencilState::StencilFaceState &stencilFaceState) {
+        return VkStencilOpState{ convertStencilOp(stencilFaceState.failOp),
+                                 convertStencilOp(stencilFaceState.passOp),
+                                 convertStencilOp(stencilFaceState.depthFailOp),
+                                 convertCompareOp(stencilFaceState.compareOp),
+                                 depthStencilState.compareMask,
+                                 depthStencilState.writeMask,
+                                 depthStencilState.reference };
+    }
+
 }
