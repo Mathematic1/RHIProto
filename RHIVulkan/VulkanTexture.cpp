@@ -571,8 +571,15 @@ namespace RHI::Vulkan
             &imageSubresourceRange);
     }
 
-    void CommandList::clearDepthTexture(ITexture* texture, const TextureSubresourse& subresource, float depthValue, uint32_t stencilValue)
+    void CommandList::clearDepthStencilTexture(
+        ITexture *texture, const TextureSubresourse &subresource, bool clearDepth, bool clearStencil, float depthValue,
+        uint32_t stencilValue
+    )
     {
+        if (!clearDepth && !clearStencil) {
+            return;
+        }
+
         Texture* tex = dynamic_cast<Texture*>(texture);
 
         m_CurrentCommandBuffer->referencedResources.push_back(tex);
@@ -581,8 +588,16 @@ namespace RHI::Vulkan
         clearDepthStencilValue.depth = depthValue;
         clearDepthStencilValue.stencil = stencilValue;
 
+        VkImageAspectFlags aspectFlags = {};
+
+        if (clearDepth)
+            aspectFlags |= VK_IMAGE_ASPECT_DEPTH_BIT;
+
+        if (clearStencil)
+            aspectFlags |= VK_IMAGE_ASPECT_STENCIL_BIT;
+
         VkImageSubresourceRange imageSubresourceRange{};
-        imageSubresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+        imageSubresourceRange.aspectMask = aspectFlags;
         imageSubresourceRange.baseMipLevel = subresource.mipLevel;
         imageSubresourceRange.levelCount = subresource.mipLevelCount;
         imageSubresourceRange.baseArrayLayer = subresource.baseArrayLayer;

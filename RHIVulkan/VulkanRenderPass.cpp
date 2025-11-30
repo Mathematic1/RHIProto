@@ -100,15 +100,26 @@ namespace RHI::Vulkan
         {
             useDepth = true;
 
+            bool hasStencil = hasStencilComponent(convertFormat(depthTex->getDesc().format));
+
             VkAttachmentDescription depthAttachment{};
             depthAttachment.flags = 0;
-            depthAttachment.format = convertFormat(findDepthFormat());
+            depthAttachment.format = convertFormat(depthTex->getDesc().format);
             depthAttachment.samples = (VkSampleCountFlagBits)depthTex->getDesc().sampleCount;
-            depthAttachment.loadOp = offscreenInt ? VK_ATTACHMENT_LOAD_OP_LOAD : (ci.clearDepth ? VK_ATTACHMENT_LOAD_OP_CLEAR : VK_ATTACHMENT_LOAD_OP_LOAD);
+            depthAttachment.loadOp = offscreenInt
+                                         ? VK_ATTACHMENT_LOAD_OP_LOAD
+                                         : (ci.clearDepth ? VK_ATTACHMENT_LOAD_OP_CLEAR : VK_ATTACHMENT_LOAD_OP_LOAD);
             depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-            depthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-            depthAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-            depthAttachment.initialLayout = ci.clearDepth ? VK_IMAGE_LAYOUT_UNDEFINED : (offscreenInt ? VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL : VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
+            depthAttachment.stencilLoadOp =
+                hasStencil
+                    ? (offscreenInt ? VK_ATTACHMENT_LOAD_OP_LOAD
+                                    : (ci.clearStencil ? VK_ATTACHMENT_LOAD_OP_CLEAR : VK_ATTACHMENT_LOAD_OP_LOAD))
+                    : VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+            depthAttachment.stencilStoreOp = hasStencil ? VK_ATTACHMENT_STORE_OP_STORE : VK_ATTACHMENT_STORE_OP_DONT_CARE;
+            depthAttachment.initialLayout = ci.clearDepth
+                                                ? VK_IMAGE_LAYOUT_UNDEFINED
+                                                : (offscreenInt ? VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+                                                                : VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
             depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
             if (ci.flags & eRenderPassBit_Offscreen)

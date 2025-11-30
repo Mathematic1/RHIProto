@@ -802,10 +802,10 @@ namespace RHI::Vulkan
 		IRenderPass* addFullScreenPass(const RenderPassCreateInfo ci = RenderPassCreateInfo());
 
 		IRenderPass* createRenderPass(const FramebufferDesc& framebufferDesc, const RenderPassCreateInfo& ci = {
-			true, true, eRenderPassBit_Offscreen | eRenderPassBit_First }) override;
+			true, true, true, eRenderPassBit_Offscreen | eRenderPassBit_First }) override;
 
 		IRenderPass* addDepthRenderPass(const RenderPassCreateInfo ci = {
-			false, true, eRenderPassBit_Offscreen | eRenderPassBit_First });
+			false, true, true, eRenderPassBit_Offscreen | eRenderPassBit_First });
 
 		bool createPipelineLayout(std::vector<VkDescriptorSetLayout>& dsLayouts, const PushConstantsDesc& constantsDesc, VkPipelineLayout* pipelineLayout);
 
@@ -890,15 +890,14 @@ namespace RHI::Vulkan
 		virtual void copyBufferToImage(IBuffer* buffer, ITexture* texture, uint32_t mipLevel = 0, uint32_t baseArrayLayer = 0) override;
 		virtual void copyMIPBufferToImage(IBuffer* buffer, ITexture* texture) override;
 		void copyImageToBuffer(VkImage image, VkBuffer buffer, uint32_t width, uint32_t height, uint32_t layerCount = 1);
-                virtual void copyTexture(
-                    ITexture *srcTexture, const TextureSubresourse &srcSubresource, const TextureRegion &srcRegion,
-                    ITexture *dstTexture, const TextureSubresourse dstSubresource, const TextureRegion &dstRegion
-                ) override;
+		virtual void copyTexture(ITexture *srcTexture, const TextureSubresourse &srcSubresource, const TextureRegion &srcRegion,
+			ITexture *dstTexture, const TextureSubresourse dstSubresource, const TextureRegion &dstRegion) override;
 		virtual void blitTexture(ITexture *srcTexture, const TextureSubresourse &srcSubresource, const TextureRegion &srcRegion,
 			ITexture *dstTexture, const TextureSubresourse dstSubresource, const TextureRegion &dstRegion, RHI::SamplerFilter filter) override;
 		virtual void resolveTexture(ITexture* srcTexture, const TextureSubresourse& srcSubresource, ITexture* dstTexture, const TextureSubresourse dstSubresource) override;
 		virtual void clearColorTexture(ITexture* texture, const TextureSubresourse& subresource, const Color& color) override;
-		virtual void clearDepthTexture(ITexture* texture, const TextureSubresourse& subresource, float depthValue, uint32_t stencilValue) override;
+		virtual void clearDepthStencilTexture(ITexture *texture, const TextureSubresourse &subresource, bool clearDepth, bool clearStencil,
+			float depthValue, uint32_t stencilValue) override;
 		virtual void clearAttachments(std::vector<ITexture*> colorAttachments, ITexture* depthAttachment, const std::vector<Rect>& rects) override;
 
 		void beginRenderPass(Framebuffer* framebuffer);

@@ -50,6 +50,7 @@ namespace RHI::Vulkan
     GraphicsPipelineHandle Device::createGraphicsPipeline(const GraphicsPipelineDesc& desc, IFramebuffer* framebuffer)
     {
         GraphicsPipeline* pso = new GraphicsPipeline(m_Context);
+        pso->desc = desc;
         const GraphicsPipelineInfo& pipeInfo = desc.pipelineInfo;
 
         Framebuffer* fb = dynamic_cast<Framebuffer*>(framebuffer);
@@ -161,7 +162,7 @@ namespace RHI::Vulkan
         colorBlendAttachment.srcAlphaBlendFactor = convertBlendFactor(desc.renderState.srcAlphaBlendFactor);
         colorBlendAttachment.dstAlphaBlendFactor = convertBlendFactor(desc.renderState.dstAlphaBlendFactor);
         colorBlendAttachment.alphaBlendOp = convertBlendOp(desc.renderState.alphaBlendOp);
-        colorBlendAttachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+        colorBlendAttachment.colorWriteMask = static_cast<VkColorComponentFlags>(desc.renderState.colorWriteMask);
 
         VkPipelineColorBlendStateCreateInfo colorBlending{};
         colorBlending.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;

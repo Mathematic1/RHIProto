@@ -761,6 +761,7 @@ namespace RHI
     {
         bool clearColor = false;
         bool clearDepth = false;
+        bool clearStencil = false;
         uint8_t flags = 0;
     };
 
@@ -876,6 +877,18 @@ namespace RHI
         DECR_WRAP
     };
 
+    enum class ColorMask : uint8_t {
+        NONE = 0,
+        R = 1 << 0,
+        G = 1 << 1,
+        B = 1 << 2,
+        A = 1 << 3,
+
+        RGB = R | G | B,
+        RGBA = R | G | B | A,
+    };
+    ENUM_CLASS_FLAG_OPERATORS(ColorMask);
+
     struct DepthStencilState
     {
         struct StencilFaceState {
@@ -915,6 +928,7 @@ namespace RHI
         BlendState srcAlphaBlendFactor = BlendState::ONE; //VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA
         BlendState dstAlphaBlendFactor = BlendState::ZERO;
         BlendOp alphaBlendOp = BlendOp::ADD;
+        ColorMask colorWriteMask = ColorMask::RGBA;
 
         // multisampling
         bool multisampleAA = false;
@@ -992,8 +1006,9 @@ namespace RHI
         ) = 0;
         virtual void
         clearColorTexture(ITexture *texture, const TextureSubresourse &subresource, const Color &color) = 0;
-        virtual void clearDepthTexture(
-            ITexture *texture, const TextureSubresourse &subresource, float depthValue, uint32_t stencilValue
+        virtual void clearDepthStencilTexture(
+            ITexture *texture, const TextureSubresourse &subresource, bool clearDepth, bool clearStencil,
+            float depthValue, uint32_t stencilValue
         ) = 0;
         virtual void clearAttachments(
             std::vector<ITexture *> colorAttachments, ITexture *depthAttachment, const std::vector<Rect> &rects
