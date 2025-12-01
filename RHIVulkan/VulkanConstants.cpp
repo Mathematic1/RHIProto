@@ -234,45 +234,45 @@ namespace RHI::Vulkan
         return ret;
     }
 
-    VkBlendFactor convertBlendFactor(const BlendState &blendState) {
+    VkBlendFactor convertBlendFactor(const BlendFactor &blendState) {
         switch (blendState) {
-        case BlendState::ZERO:
+        case BlendFactor::ZERO:
             return VK_BLEND_FACTOR_ZERO;
-        case BlendState::ONE:
+        case BlendFactor::ONE:
             return VK_BLEND_FACTOR_ONE;
-        case BlendState::SRC_COLOR:
+        case BlendFactor::SRC_COLOR:
             return VK_BLEND_FACTOR_SRC_COLOR;
-        case BlendState::ONE_MINUS_SRC_COLOR:
+        case BlendFactor::ONE_MINUS_SRC_COLOR:
             return VK_BLEND_FACTOR_ONE_MINUS_SRC_COLOR;
-        case BlendState::DST_COLOR:
+        case BlendFactor::DST_COLOR:
             return VK_BLEND_FACTOR_DST_COLOR;
-        case BlendState::ONE_MINUS_DST_COLOR:
+        case BlendFactor::ONE_MINUS_DST_COLOR:
             return VK_BLEND_FACTOR_ONE_MINUS_DST_COLOR;
-        case BlendState::SRC_ALPHA:
+        case BlendFactor::SRC_ALPHA:
             return VK_BLEND_FACTOR_SRC_ALPHA;
-        case BlendState::ONE_MINUS_SRC_ALPHA:
+        case BlendFactor::ONE_MINUS_SRC_ALPHA:
             return VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
-        case BlendState::DST_ALPHA:
+        case BlendFactor::DST_ALPHA:
             return VK_BLEND_FACTOR_DST_ALPHA;
-        case BlendState::ONE_MINUS_DST_ALPHA:
+        case BlendFactor::ONE_MINUS_DST_ALPHA:
             return VK_BLEND_FACTOR_ONE_MINUS_DST_ALPHA;
-        case BlendState::CONSTANT_COLOR:
+        case BlendFactor::CONSTANT_COLOR:
             return VK_BLEND_FACTOR_CONSTANT_COLOR;
-        case BlendState::ONE_MINUS_CONSTANT_COLOR:
+        case BlendFactor::ONE_MINUS_CONSTANT_COLOR:
             return VK_BLEND_FACTOR_ONE_MINUS_CONSTANT_COLOR;
-        case BlendState::CONSTANT_ALPHA:
+        case BlendFactor::CONSTANT_ALPHA:
             return VK_BLEND_FACTOR_CONSTANT_ALPHA;
-        case BlendState::ONE_MINUS_CONSTANT_ALPHA:
+        case BlendFactor::ONE_MINUS_CONSTANT_ALPHA:
             return VK_BLEND_FACTOR_ONE_MINUS_CONSTANT_ALPHA;
-        case BlendState::SRC_ALPHA_SATURATE:
+        case BlendFactor::SRC_ALPHA_SATURATE:
             return VK_BLEND_FACTOR_SRC_ALPHA_SATURATE;
-        case BlendState::SRC1_COLOR:
+        case BlendFactor::SRC1_COLOR:
             return VK_BLEND_FACTOR_SRC1_COLOR;
-        case BlendState::ONE_MINUS_SRC1_COLOR:
+        case BlendFactor::ONE_MINUS_SRC1_COLOR:
             return VK_BLEND_FACTOR_ONE_MINUS_SRC1_COLOR;
-        case BlendState::SRC1_ALPHA:
+        case BlendFactor::SRC1_ALPHA:
             return VK_BLEND_FACTOR_SRC1_ALPHA;
-        case BlendState::ONE_MINUS_SRC1_ALPHA:
+        case BlendFactor::ONE_MINUS_SRC1_ALPHA:
             return VK_BLEND_FACTOR_ONE_MINUS_SRC1_ALPHA;
         default:
             return VK_BLEND_FACTOR_ZERO;
@@ -355,13 +355,26 @@ namespace RHI::Vulkan
     }
 
     VkStencilOpState convertStencilState(const DepthStencilState &depthStencilState, const DepthStencilState::StencilFaceState &stencilFaceState) {
-        return VkStencilOpState{ convertStencilOp(stencilFaceState.failOp),
-                                 convertStencilOp(stencilFaceState.passOp),
-                                 convertStencilOp(stencilFaceState.depthFailOp),
-                                 convertCompareOp(stencilFaceState.compareOp),
-                                 depthStencilState.compareMask,
-                                 depthStencilState.writeMask,
-                                 depthStencilState.reference };
+        return VkStencilOpState{ .failOp = convertStencilOp(stencilFaceState.failOp),
+                                 .passOp = convertStencilOp(stencilFaceState.passOp),
+                                 .depthFailOp = convertStencilOp(stencilFaceState.depthFailOp),
+                                 .compareOp = convertCompareOp(stencilFaceState.compareOp),
+                                 .compareMask = depthStencilState.compareMask,
+                                 .writeMask = depthStencilState.writeMask,
+                                 .reference = depthStencilState.reference };
+    }
+
+    VkPipelineColorBlendAttachmentState convertBlendState(const ColorBlendState::RenderTargetBlendState &blendState) {
+        return VkPipelineColorBlendAttachmentState{
+            .blendEnable = blendState.blendEnable ? VK_TRUE : VK_FALSE,
+            .srcColorBlendFactor = convertBlendFactor(blendState.srcColorBlendFactor),
+            .dstColorBlendFactor = convertBlendFactor(blendState.dstColorBlendFactor),
+            .colorBlendOp = convertBlendOp(blendState.colorBlendOp),
+            .srcAlphaBlendFactor = convertBlendFactor(blendState.srcAlphaBlendFactor),
+            .dstAlphaBlendFactor = convertBlendFactor(blendState.dstAlphaBlendFactor),
+            .alphaBlendOp = convertBlendOp(blendState.alphaBlendOp),
+            .colorWriteMask = static_cast<VkColorComponentFlags>(blendState.colorWriteMask)
+        };
     }
 
 }

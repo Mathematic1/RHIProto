@@ -140,6 +140,15 @@ namespace RHI
 
         Color() : r(0.0f), g(0.0f), b(0.0f), a(0.0f){}
         Color(float red, float green, float blue, float alpha) : r(red), g(green), b(blue), a(alpha) {}
+
+        bool operator==(const Color &other) const {
+            constexpr float eps = 1e-5f;
+            return std::fabs(r - other.r) < eps && std::fabs(b - other.b) && std::fabs(g - other.g) &&
+                   std::fabs(a - other.a);
+        }
+        bool operator!=(const Color &other) const {
+            return !(*this == other);
+        }
     };
 
     struct Viewport
@@ -815,7 +824,7 @@ namespace RHI
         uint32_t patchControlPoints = 0;
     };
 
-    enum BlendState
+    enum BlendFactor
     {
         ZERO = 0,
         ONE = 1,
@@ -910,6 +919,62 @@ namespace RHI
         StencilFaceState back;  // back face ops
     };
 
+    struct ColorBlendState {
+        struct RenderTargetBlendState {
+            bool blendEnable = false;
+
+            BlendFactor srcColorBlendFactor = BlendFactor::SRC_ALPHA;
+            BlendFactor dstColorBlendFactor = BlendFactor::ONE_MINUS_SRC_ALPHA;
+            BlendOp colorBlendOp = BlendOp::ADD;
+
+            BlendFactor srcAlphaBlendFactor = BlendFactor::ONE;
+            BlendFactor dstAlphaBlendFactor = BlendFactor::ZERO;
+            BlendOp alphaBlendOp = BlendOp::ADD;
+
+            ColorMask colorWriteMask = ColorMask::RGBA;
+
+            bool usesConstantColor(BlendFactor state) const {
+                return state == BlendFactor::CONSTANT_COLOR || state == BlendFactor::ONE_MINUS_CONSTANT_COLOR ||
+                       state == BlendFactor::CONSTANT_ALPHA || state == BlendFactor::ONE_MINUS_CONSTANT_ALPHA;
+            }
+
+            constexpr RenderTargetBlendState &setBlendEnable(bool value) { blendEnable = value; return *this; }
+            constexpr RenderTargetBlendState &setSrcColorBlendFactor(BlendFactor value) { srcColorBlendFactor = value; return *this; }
+            constexpr RenderTargetBlendState &setDstColorBlendFactor(BlendFactor value) { dstColorBlendFactor = value; return *this; }
+            constexpr RenderTargetBlendState &setColorBlendOp(BlendOp value) { colorBlendOp = value; return *this; }
+            constexpr RenderTargetBlendState &setSrcAlphaBlendFactor(BlendFactor value) { srcAlphaBlendFactor = value; return *this; }
+            constexpr RenderTargetBlendState &setDstAlphaBlendFactor(BlendFactor value) { dstAlphaBlendFactor = value; return *this; }
+            constexpr RenderTargetBlendState &setAlphaBlendOp(BlendOp value) { alphaBlendOp = value; return *this; }
+            constexpr RenderTargetBlendState &setColorWriteMask(ColorMask value) { colorWriteMask = value; return *this; }
+        };
+
+        static constexpr uint32_t MaxRenderTargets = 8;
+
+        uint32_t renderTargetCount = 1;
+        RenderTargetBlendState renderTargets[MaxRenderTargets];
+
+        constexpr ColorBlendState &setRenderTarget(int32_t index, const RenderTargetBlendState &renderTarget) {
+            renderTargets[index] = renderTarget; return *this;
+        }
+
+        bool usesConstantColor() const {
+            for (uint32_t i = 0; i < renderTargetCount; i++) {
+                const auto &rt = renderTargets[i];
+
+                if (!rt.blendEnable) {
+                    continue;
+                }
+
+                if (rt.usesConstantColor(rt.srcColorBlendFactor) || rt.usesConstantColor(rt.dstColorBlendFactor) ||
+                    rt.usesConstantColor(rt.srcAlphaBlendFactor) || rt.usesConstantColor(rt.dstAlphaBlendFactor)) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+    };
+
     struct RenderState
     {
         // rasterization
@@ -919,16 +984,8 @@ namespace RHI
         // depth stencil state
         DepthStencilState depthStencilState = {};
 
-        // blend state
-        bool alphaBlend = false;
-        bool blendEnable = false;
-        BlendState srcColorBlendFactor = BlendState::SRC_ALPHA;
-        BlendState dstColorBlendFactor = BlendState::ONE_MINUS_SRC_ALPHA;
-        BlendOp colorBlendOp = BlendOp::ADD;
-        BlendState srcAlphaBlendFactor = BlendState::ONE; //VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA
-        BlendState dstAlphaBlendFactor = BlendState::ZERO;
-        BlendOp alphaBlendOp = BlendOp::ADD;
-        ColorMask colorWriteMask = ColorMask::RGBA;
+        // color blend state
+        ColorBlendState colorBlendState = {};
 
         // multisampling
         bool multisampleAA = false;

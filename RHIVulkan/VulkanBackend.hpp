@@ -690,6 +690,7 @@ namespace RHI::Vulkan
 		VkPipeline pipeline;
 		VkPipelineLayout pipelineLayout;
 		VkShaderStageFlags pushConstantsVisibility;
+		bool usesBlendConstants = false;
 
 		explicit GraphicsPipeline(const VulkanContext& context)
 			: m_Context(context)

@@ -37,7 +37,7 @@ namespace RHI::Vulkan
 
     VkShaderStageFlags pickShaderStage(ShaderStageFlagBits stages);
 
-    VkBlendFactor convertBlendFactor(const BlendState& blendState);
+    VkBlendFactor convertBlendFactor(const BlendFactor& blendState);
 
     VkBlendOp convertBlendOp(const BlendOp& blendOp);
 
@@ -50,5 +50,7 @@ namespace RHI::Vulkan
     VkStencilOpState convertStencilState(
             const DepthStencilState &depthStencilState, const DepthStencilState::StencilFaceState &stencilFaceState
         );
+
+    VkPipelineColorBlendAttachmentState convertBlendState(const ColorBlendState::RenderTargetBlendState &blendState);
 
 }

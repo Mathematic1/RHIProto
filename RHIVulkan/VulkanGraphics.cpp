@@ -154,22 +154,19 @@ namespace RHI::Vulkan
         multisampling.alphaToCoverageEnable = VK_FALSE; // optional
         multisampling.alphaToOneEnable = VK_FALSE; // optional
 
-        VkPipelineColorBlendAttachmentState colorBlendAttachment{};
-        colorBlendAttachment.blendEnable = desc.renderState.blendEnable ? VK_TRUE : VK_FALSE;
-        colorBlendAttachment.srcColorBlendFactor = convertBlendFactor(desc.renderState.srcColorBlendFactor);
-        colorBlendAttachment.dstColorBlendFactor = convertBlendFactor(desc.renderState.dstColorBlendFactor);
-        colorBlendAttachment.colorBlendOp = convertBlendOp(desc.renderState.colorBlendOp);
-        colorBlendAttachment.srcAlphaBlendFactor = convertBlendFactor(desc.renderState.srcAlphaBlendFactor);
-        colorBlendAttachment.dstAlphaBlendFactor = convertBlendFactor(desc.renderState.dstAlphaBlendFactor);
-        colorBlendAttachment.alphaBlendOp = convertBlendOp(desc.renderState.alphaBlendOp);
-        colorBlendAttachment.colorWriteMask = static_cast<VkColorComponentFlags>(desc.renderState.colorWriteMask);
+        std::vector<VkPipelineColorBlendAttachmentState> colorBlendAttachments(fb->desc.colorAttachments.size());
+        for (uint32_t i = 0; i < uint32_t(fb->desc.colorAttachments.size()); i++) {
+            colorBlendAttachments[i] = convertBlendState(desc.renderState.colorBlendState.renderTargets[i]);
+        }
+
+        pso->usesBlendConstants = desc.renderState.colorBlendState.usesConstantColor();
 
         VkPipelineColorBlendStateCreateInfo colorBlending{};
         colorBlending.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
         colorBlending.logicOpEnable = VK_FALSE;
         colorBlending.logicOp = VK_LOGIC_OP_COPY;
-        colorBlending.attachmentCount = 1;
-        colorBlending.pAttachments = &colorBlendAttachment;
+        colorBlending.attachmentCount = static_cast<uint32_t>(colorBlendAttachments.size());
+        colorBlending.pAttachments = colorBlendAttachments.data();
         colorBlending.blendConstants[0] = 0.0f;
         colorBlending.blendConstants[1] = 0.0f;
         colorBlending.blendConstants[2] = 0.0f;
@@ -353,7 +350,13 @@ namespace RHI::Vulkan
             beginRenderPass(fb);
         }
 
-        vkCmdBindPipeline(m_CurrentCommandBuffer->commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->pipeline);
+        bool updatePipeline = false;
+        if (m_CurrentGraphicsState.pipeline != state.pipeline) {
+            updatePipeline = true;
+            vkCmdBindPipeline(
+                m_CurrentCommandBuffer->commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->pipeline
+            );
+        }
 
         if (m_CurrentGraphicsState.viewport.viewport != state.viewport.viewport) {
             const Viewport &vp = state.viewport.viewport;
@@ -368,8 +371,13 @@ namespace RHI::Vulkan
             vkCmdSetScissor(m_CurrentCommandBuffer->commandBuffer, 0, 1, &scissor);
         }
 
-        if (pipeline->desc.renderState.depthStencilState.dynamicStencilReferenceEnable) {
+        if (pipeline->desc.renderState.depthStencilState.dynamicStencilReferenceEnable &&
+            (updatePipeline || m_CurrentGraphicsState.dynamicStencilReference != state.dynamicStencilReference)) {
             vkCmdSetStencilReference(m_CurrentCommandBuffer->commandBuffer, VK_STENCIL_FRONT_AND_BACK, state.dynamicStencilReference);
+        }
+
+        if (pipeline->usesBlendConstants && (updatePipeline || m_CurrentGraphicsState.blendColorFactor != state.blendColorFactor)) {
+            vkCmdSetBlendConstants(m_CurrentCommandBuffer->commandBuffer, &state.blendColorFactor.r);
         }
 
         std::vector<VkBuffer> vertexBuffers;
