@@ -186,6 +186,9 @@ namespace RHI::Vulkan
         depthStencil.back = convertStencilState(depthStencilState, depthStencilState.back);
 
         std::vector<VkDynamicState> dynamicStates = { VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR };
+        if (pso->usesBlendConstants) {
+            dynamicStates.push_back(VK_DYNAMIC_STATE_BLEND_CONSTANTS);
+        }
         if (depthStencilState.dynamicStencilReferenceEnable) {
             dynamicStates.push_back(VK_DYNAMIC_STATE_STENCIL_REFERENCE);
         }
