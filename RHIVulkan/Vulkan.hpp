@@ -37,19 +37,21 @@ namespace RHI::Vulkan
 
     VkShaderStageFlags pickShaderStage(ShaderStageFlagBits stages);
 
-    VkBlendFactor convertBlendFactor(const BlendFactor& blendState);
+    VkBlendFactor convertBlendFactor(const BlendFactor &blendState);
 
-    VkBlendOp convertBlendOp(const BlendOp& blendOp);
+    VkBlendOp convertBlendOp(const BlendOp &blendOp);
 
-    VkPolygonMode convertFillMode(const FillMode& mode);
+    VkPolygonMode convertFillMode(const RasterizerFillMode &mode);
 
-    VkCompareOp convertCompareOp(const CompareOp& op);
+    VkCullModeFlags convertCullMode(const RasterizerCullMode &mode);
+
+    VkCompareOp convertCompareOp(const CompareOp &op);
 
     VkStencilOp convertStencilOp(const StencilOp &op);
 
     VkStencilOpState convertStencilState(
-            const DepthStencilState &depthStencilState, const DepthStencilState::StencilFaceState &stencilFaceState
-        );
+        const DepthStencilState &depthStencilState, const DepthStencilState::StencilFaceState &stencilFaceState
+    );
 
     VkPipelineColorBlendAttachmentState convertBlendState(const ColorBlendState::RenderTargetBlendState &blendState);
 

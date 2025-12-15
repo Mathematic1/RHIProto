@@ -856,7 +856,7 @@ namespace RHI
         MAX = 4,
     };
 
-    enum FillMode
+    enum class RasterizerFillMode : uint8_t
     {
         FILL = 0,
         LINE = 1,
@@ -978,7 +978,8 @@ namespace RHI
     struct RenderState
     {
         // rasterization
-        FillMode polygonFillMode = FillMode::FILL;
+        RasterizerFillMode fillMode = RasterizerFillMode::FILL;
+        RasterizerCullMode cullMode = RasterizerCullMode::Back;
         bool CCWCullMode = false;
 
         // depth stencil state

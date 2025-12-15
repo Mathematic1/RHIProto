@@ -296,16 +296,29 @@ namespace RHI::Vulkan
         }
     }
 
-    VkPolygonMode convertFillMode(const FillMode &mode) {
+    VkPolygonMode convertFillMode(const RasterizerFillMode &mode) {
         switch (mode) {
-        case FillMode::FILL:
+        case RasterizerFillMode::FILL:
             return VK_POLYGON_MODE_FILL;
-        case FillMode::LINE:
+        case RasterizerFillMode::LINE:
             return VK_POLYGON_MODE_LINE;
-        case FillMode::POINT:
+        case RasterizerFillMode::POINT:
             return VK_POLYGON_MODE_POINT;
         default:
             return VK_POLYGON_MODE_FILL;
+        }
+    }
+
+    VkCullModeFlags convertCullMode(const RasterizerCullMode &mode) {
+        switch (mode) {
+        case RasterizerCullMode::None:
+            return VK_CULL_MODE_NONE;
+        case RasterizerCullMode::Back:
+            return VK_CULL_MODE_BACK_BIT;
+        case RasterizerCullMode::Front:
+            return VK_CULL_MODE_FRONT_BIT;
+        default:
+            return VK_CULL_MODE_NONE;
         }
     }
 

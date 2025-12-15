@@ -140,8 +140,8 @@ namespace RHI::Vulkan
 
         VkPipelineRasterizationStateCreateInfo rasterizer{};
         rasterizer.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
-        rasterizer.polygonMode = convertFillMode(desc.renderState.polygonFillMode);
-        rasterizer.cullMode = VK_CULL_MODE_NONE;
+        rasterizer.polygonMode = convertFillMode(desc.renderState.fillMode);
+        rasterizer.cullMode = convertCullMode(desc.renderState.cullMode);
         rasterizer.frontFace = desc.renderState.CCWCullMode ? VK_FRONT_FACE_COUNTER_CLOCKWISE : VK_FRONT_FACE_CLOCKWISE;
         rasterizer.lineWidth = 1.0f;
 
