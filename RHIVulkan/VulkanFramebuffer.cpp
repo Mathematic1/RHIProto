@@ -1,5 +1,7 @@
 #include "VulkanBackend.hpp"
+
 #include <array>
+#include <assert.h>
 
 namespace RHI::Vulkan
 {
@@ -40,6 +42,8 @@ namespace RHI::Vulkan
 
         fb->renderPass = rp->handle;
 
+        uint32_t numLayers = 0u;
+
         if(desc.depthAttachment.texture)
         {
             fb->framebufferWidth = desc.depthAttachment.texture->getDesc().width >> desc.depthAttachment.subresource.mipLevel;
@@ -59,12 +63,24 @@ namespace RHI::Vulkan
             Texture* texture = dynamic_cast<Texture*>(desc.colorAttachments[i].texture);
             attachments[i] = texture->imageView;
             fb->textures.push_back(texture);
+
+            if (numLayers) {
+                assert(numLayers == texture->getDesc().layerCount);
+            }else {
+                numLayers = texture->getDesc().layerCount;
+            }
         }
         if(desc.depthAttachment.texture)
         {
             Texture* texture = dynamic_cast<Texture*>(desc.depthAttachment.texture);
             attachments.push_back(texture->imageView);
             fb->textures.push_back(texture);
+
+            if (numLayers) {
+                assert(numLayers == texture->getDesc().layerCount);
+            } else {
+                numLayers = texture->getDesc().layerCount;
+            }
         }
 
         VkFramebufferCreateInfo fbInfo{};

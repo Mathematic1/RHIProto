@@ -420,8 +420,8 @@ namespace RHI::Vulkan
     }
 
     void CommandList::copyTexture(
-        ITexture *srcTexture, const TextureSubresourse &srcSubresource, const TextureRegion &srcRegion,
-        ITexture *dstTexture, const TextureSubresourse dstSubresource, const TextureRegion &dstRegion
+        ITexture *srcTexture, const TextureSubresource &srcSubresource, const TextureRegion &srcRegion,
+        ITexture *dstTexture, const TextureSubresource &dstSubresource, const TextureRegion &dstRegion
     )
     {
         endRenderPass();
@@ -461,8 +461,8 @@ namespace RHI::Vulkan
     }
 
     void CommandList::blitTexture(
-        ITexture *srcTexture, const TextureSubresourse &srcSubresource, const TextureRegion &srcRegion,
-        ITexture *dstTexture, const TextureSubresourse dstSubresource, const TextureRegion &dstRegion,
+        ITexture *srcTexture, const TextureSubresource &srcSubresource, const TextureRegion &srcRegion,
+        ITexture *dstTexture, const TextureSubresource &dstSubresource, const TextureRegion &dstRegion,
         RHI::SamplerFilter filter
     ) {
         endRenderPass();
@@ -510,12 +510,14 @@ namespace RHI::Vulkan
         );
     }
 
-    void CommandList::resolveTexture(ITexture* srcTexture, const TextureSubresourse& srcSubresource, ITexture* dstTexture, const TextureSubresourse dstSubresource)
-    {
+    void CommandList::resolveTexture(
+        ITexture *srcTexture, const TextureSubresource &srcSubresource, ITexture *dstTexture,
+        const TextureSubresource dstSubresource
+    ) {
         endRenderPass();
 
-        Texture* srcTex = dynamic_cast<Texture*>(srcTexture);
-        Texture* dstTex = dynamic_cast<Texture*>(dstTexture);
+        Texture *srcTex = dynamic_cast<Texture *>(srcTexture);
+        Texture *dstTex = dynamic_cast<Texture *>(dstTexture);
 
         m_CurrentCommandBuffer->referencedResources.push_back(srcTex);
         m_CurrentCommandBuffer->referencedResources.push_back(dstTex);
@@ -540,12 +542,12 @@ namespace RHI::Vulkan
             dstTex->image,
             VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
             1,
-            &imageResolveRegion);
+            &imageResolveRegion
+        );
     }
 
-    void CommandList::clearColorTexture(ITexture* texture, const TextureSubresourse& subresource, const Color& color)
-    {
-        Texture* tex = dynamic_cast<Texture*>(texture);
+    void CommandList::clearColorTexture(ITexture *texture, const TextureSubresource &subresource, const Color &color) {
+        Texture *tex = dynamic_cast<Texture *>(texture);
 
         m_CurrentCommandBuffer->referencedResources.push_back(tex);
 
@@ -568,19 +570,19 @@ namespace RHI::Vulkan
             VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
             &clearColorValue,
             1,
-            &imageSubresourceRange);
+            &imageSubresourceRange
+        );
     }
 
     void CommandList::clearDepthStencilTexture(
-        ITexture *texture, const TextureSubresourse &subresource, bool clearDepth, bool clearStencil, float depthValue,
+        ITexture *texture, const TextureSubresource &subresource, bool clearDepth, bool clearStencil, float depthValue,
         uint32_t stencilValue
-    )
-    {
+    ) {
         if (!clearDepth && !clearStencil) {
             return;
         }
 
-        Texture* tex = dynamic_cast<Texture*>(texture);
+        Texture *tex = dynamic_cast<Texture *>(texture);
 
         m_CurrentCommandBuffer->referencedResources.push_back(tex);
 
@@ -590,11 +592,13 @@ namespace RHI::Vulkan
 
         VkImageAspectFlags aspectFlags = {};
 
-        if (clearDepth)
+        if (clearDepth) {
             aspectFlags |= VK_IMAGE_ASPECT_DEPTH_BIT;
+        }
 
-        if (clearStencil)
+        if (clearStencil) {
             aspectFlags |= VK_IMAGE_ASPECT_STENCIL_BIT;
+        }
 
         VkImageSubresourceRange imageSubresourceRange{};
         imageSubresourceRange.aspectMask = aspectFlags;
@@ -609,11 +613,13 @@ namespace RHI::Vulkan
             VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
             &clearDepthStencilValue,
             1,
-            &imageSubresourceRange);
+            &imageSubresourceRange
+        );
     }
 
-    void CommandList::clearAttachments(std::vector<ITexture*> colorAttachments, ITexture* depthAttachment, const std::vector<Rect>& rects)
-    {
+    void CommandList::clearAttachments(
+        std::vector<ITexture *> colorAttachments, ITexture *depthAttachment, const std::vector<Rect> &rects
+    ) {
         std::vector<VkClearAttachment> clearAttachments = {};
 
         VkClearColorValue clearColorValue{};
@@ -622,20 +628,17 @@ namespace RHI::Vulkan
         clearColorValue.float32[2] = 0.0f;
         clearColorValue.float32[3] = 1.0f;
 
-        for(ITexture* attachment : colorAttachments)
-        {
-	        if(attachment)
-	        {
+        for (ITexture *attachment : colorAttachments) {
+            if (attachment) {
                 VkClearAttachment clearAttachment = {};
                 clearAttachment.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
                 clearAttachment.colorAttachment = 0;
                 clearAttachment.clearValue.color = clearColorValue;
                 clearAttachments.push_back(clearAttachment);
-	        }
+            }
         }
 
-        if(depthAttachment)
-        {
+        if (depthAttachment) {
             VkClearDepthStencilValue clearDepthStencilValue{};
             clearDepthStencilValue.depth = 0.0f;
             clearDepthStencilValue.stencil = 0x00;
@@ -649,8 +652,7 @@ namespace RHI::Vulkan
         const size_t rectsCount = rects.size();
         std::vector<VkClearRect> clearRects = {};
         clearRects.reserve(rectsCount);
-        for(auto& rect : rects)
-        {
+        for (auto &rect : rects) {
             VkClearRect clearRect = {};
             clearRect.layerCount = 1;
             clearRect.rect.offset = { 0, 0 };
@@ -663,7 +665,8 @@ namespace RHI::Vulkan
             clearAttachments.size(),
             clearAttachments.data(),
             rectsCount,
-            clearRects.data());
+            clearRects.data()
+        );
     }
 
 }

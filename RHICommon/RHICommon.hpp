@@ -337,7 +337,7 @@ namespace RHI
         ShaderStageFlagBits shaderStageFlags = ShaderStageFlagBits::VERTEX_BIT;
     };
 
-    struct TextureSubresourse
+    struct TextureSubresource
     {
         uint32_t mipLevel = 0;
         uint32_t mipLevelCount = 1;
@@ -391,11 +391,11 @@ namespace RHI
     struct FramebufferAttachment
     {
         ITexture* texture = nullptr;
-        TextureSubresourse subresource = TextureSubresourse{ 0, 1, 0, 1 };
+        TextureSubresource subresource = TextureSubresource{ 0, 1, 0, 1 };
         Format format = Format::UNKNOWN;
 
         FramebufferAttachment& setTexture(ITexture* value) { texture = value; return *this; }
-        FramebufferAttachment& setTextureSubresourse(const TextureSubresourse& value) { subresource = value; return *this; }
+        FramebufferAttachment& setTextureSubresourse(const TextureSubresource& value) { subresource = value; return *this; }
         FramebufferAttachment& setFormat(Format value) { format = value; return *this; }
     };
 
@@ -1050,22 +1050,22 @@ namespace RHI
         virtual void
         copyBufferToImage(IBuffer *buffer, ITexture *texture, uint32_t mipLevel = 0, uint32_t baseArrayLayer = 0) = 0;
         virtual void copyTexture(
-            ITexture *srcTexture, const TextureSubresourse &srcSubresource, const TextureRegion &srcRegion,
-            ITexture *dstTexture, const TextureSubresourse dstSubresource, const TextureRegion &dstRegion
+            ITexture *srcTexture, const TextureSubresource &srcSubresource, const TextureRegion &srcRegion,
+            ITexture *dstTexture, const TextureSubresource &dstSubresource, const TextureRegion &dstRegion
         ) = 0;
         virtual void blitTexture(
-            ITexture *srcTexture, const TextureSubresourse &srcSubresource, const TextureRegion &srcRegion,
-            ITexture *dstTexture, const TextureSubresourse dstSubresource, const TextureRegion &dstRegion,
+            ITexture *srcTexture, const TextureSubresource &srcSubresource, const TextureRegion &srcRegion,
+            ITexture *dstTexture, const TextureSubresource &dstSubresource, const TextureRegion &dstRegion,
             RHI::SamplerFilter filter
         ) = 0;
         virtual void resolveTexture(
-            ITexture *srcTexture, const TextureSubresourse &srcSubresource, ITexture *dstTexture,
-            const TextureSubresourse dstSubresource
+            ITexture *srcTexture, const TextureSubresource &srcSubresource, ITexture *dstTexture,
+            const TextureSubresource dstSubresource
         ) = 0;
         virtual void
-        clearColorTexture(ITexture *texture, const TextureSubresourse &subresource, const Color &color) = 0;
+        clearColorTexture(ITexture *texture, const TextureSubresource &subresource, const Color &color) = 0;
         virtual void clearDepthStencilTexture(
-            ITexture *texture, const TextureSubresourse &subresource, bool clearDepth, bool clearStencil,
+            ITexture *texture, const TextureSubresource &subresource, bool clearDepth, bool clearStencil,
             float depthValue, uint32_t stencilValue
         ) = 0;
         virtual void clearAttachments(
