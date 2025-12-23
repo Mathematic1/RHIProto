@@ -399,10 +399,40 @@ namespace RHI::Vulkan
 		const VulkanContext& m_Context;
 	};
 
+        inline bool operator==(const VkImageSubresourceRange &a, const VkImageSubresourceRange &b) noexcept {
+            return a.aspectMask == b.aspectMask && a.baseMipLevel == b.baseMipLevel && a.levelCount == b.levelCount &&
+                   a.baseArrayLayer == b.baseArrayLayer && a.layerCount == b.layerCount;
+        }
+
+        struct TextureView {
+            Texture &texture;
+            TextureSubresource subresource;
+
+            VkImageView imageView = nullptr;
+            VkImageSubresourceRange subresourceRange;
+
+            TextureView(Texture &texture)
+                : texture(texture) {
+            }
+
+            TextureView(const TextureView &) = delete;
+
+            bool operator==(const TextureView &other) const {
+                return &texture == &other.texture && subresource == other.subresource && imageView == other.imageView &&
+                       subresourceRange == other.subresourceRange;
+            }
+        };
+
 	// Aggregate structure for passing around the texture data
 	class Texture : public ITexture, public MemoryResource
 	{
 	public:
+            struct TextureSubresourceHash {
+                size_t operator()(const TextureSubresource &s) const noexcept {
+                    return (s.mipLevel << 0) | (s.mipLevelCount << 8) | (s.baseArrayLayer << 16) | (s.layerCount << 24);
+                }
+            };
+
 		Texture(const VulkanContext& context)
 			: m_Context(context)
 		{}
@@ -413,7 +443,7 @@ namespace RHI::Vulkan
 		VkFormat format;
 
 		VkImage image = nullptr;
-		VkImageView imageView = nullptr;
+                std::unordered_map<TextureSubresource, TextureView, TextureSubresourceHash> subresourceViews;
 
 		// Offscreen buffers require VK_IMAGE_LAYOUT_GENERAL && static textures have VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
 		VkImageLayout desiredLayout;
@@ -422,6 +452,8 @@ namespace RHI::Vulkan
 		{
 			return desc;
 		}
+
+	        TextureView *GetOrCreateSubresourceView(const TextureSubresource &subresource);
 
 	private:
 		const VulkanContext& m_Context;
@@ -715,13 +747,11 @@ namespace RHI::Vulkan
 
 		virtual TextureHandle createImage(const TextureDesc& desc) override;
 
-		virtual bool createImageView(ITexture* texture, ImageAspectFlagBits aspectFlags) override;
-
 		virtual SamplerHandle createTextureSampler(const SamplerDesc& desc = SamplerDesc()) override;
 
 		virtual SamplerHandle createDepthSampler() override;
 
-		virtual TextureHandle createTextureForNative(VkImage image, VkImageView imageView, ImageAspectFlagBits aspectFlags, const TextureDesc& desc) override;
+		virtual TextureHandle createTextureForNative(VkImage image, VkImageView imageView, const TextureDesc& desc) override;
 
 		VkFormat findSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features);
 

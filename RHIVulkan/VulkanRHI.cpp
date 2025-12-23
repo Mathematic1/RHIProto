@@ -524,7 +524,7 @@ namespace
                 .setHeight(m_DeviceParams.backBufferHeight)
                 .setFormat(Format::BGRA8_UNORM);
 
-            m_SwapchainTextures.push_back(device->createTextureForNative(m_SwapchainImages[i], m_SwapchainImageViews[i], ImageAspectFlagBits::COLOR_BIT, desc));
+            m_SwapchainTextures.push_back(device->createTextureForNative(m_SwapchainImages[i], m_SwapchainImageViews[i], desc));
         }
 
         createDepthSwapchainImage();
@@ -554,7 +554,6 @@ namespace
                 exit(EXIT_FAILURE);
             }
 
-            m_Device->createImageView(m_DepthSwapChainTexture.get(), ImageAspectFlagBits::DEPTH_BIT);
             commandList->transitionImageLayout(m_DepthSwapChainTexture.get(), ImageLayout::UNDEFINED, ImageLayout::DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
         }
 

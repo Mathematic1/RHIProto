@@ -61,7 +61,11 @@ namespace RHI::Vulkan
         for (uint32_t i = 0; i < desc.colorAttachments.size(); i++)
         {
             Texture* texture = dynamic_cast<Texture*>(desc.colorAttachments[i].texture);
-            attachments[i] = texture->imageView;
+
+            TextureSubresource subresource = desc.colorAttachments[i].subresource;
+            subresource = subresource.ResolveTextureSubresource(texture->getDesc());
+            const auto &view = texture->GetOrCreateSubresourceView(subresource);
+            attachments[i] = view->imageView;
             fb->textures.push_back(texture);
 
             if (numLayers) {
@@ -73,7 +77,11 @@ namespace RHI::Vulkan
         if(desc.depthAttachment.texture)
         {
             Texture* texture = dynamic_cast<Texture*>(desc.depthAttachment.texture);
-            attachments.push_back(texture->imageView);
+
+            TextureSubresource subresource = desc.depthAttachment.subresource;
+            subresource = subresource.ResolveTextureSubresource(texture->getDesc());
+            const auto &view = texture->GetOrCreateSubresourceView(subresource);
+            attachments.push_back(view->imageView);
             fb->textures.push_back(texture);
 
             if (numLayers) {
@@ -92,7 +100,7 @@ namespace RHI::Vulkan
         fbInfo.pAttachments = attachments.data();
         fbInfo.width = fb->framebufferWidth;
         fbInfo.height = fb->framebufferHeight;
-        fbInfo.layers = 1;
+        fbInfo.layers = numLayers;
 
         if (vkCreateFramebuffer(m_Context.device, &fbInfo, nullptr, &fb->framebuffer) != VK_SUCCESS)
         {

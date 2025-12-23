@@ -189,12 +189,13 @@ namespace RHI::Vulkan
         {
             Texture* tex = dynamic_cast<Texture*>(dsInfo.textures[i].texture);
             Sampler* sampler = dynamic_cast<Sampler*>(dsInfo.textures[i].sampler);
+            TextureSubresource subresource = dsInfo.textures[i].subresource.ResolveTextureSubresource(tex->getDesc());
+            TextureView *subresourceView = tex->GetOrCreateSubresourceView(subresource);
 
-            imageDescriptors[i] = VkDescriptorImageInfo{
-                sampler->sampler,
-                tex->imageView,
-                /* t.texture.layout */ VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
-            };
+            imageDescriptors[i] =
+                VkDescriptorImageInfo{ sampler->sampler,
+                                       subresourceView->imageView,
+                                       /* t.texture.layout */ VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL };
 
             descriptorWrites.push_back(
                 imageWriteDescriptorSet(bindingSet->descriptorSet, &imageDescriptors[i], bindingIdx++));
@@ -210,10 +211,13 @@ namespace RHI::Vulkan
             {
                 Texture* tex = dynamic_cast<Texture*>(dsInfo.textureArrays[ta].textures[j]);
                 Sampler *sampler = dynamic_cast<Sampler *>(dsInfo.textureArrays[ta].sampler);
+                TextureSubresource subresource =
+                    dsInfo.textureArrays[ta].subresource.ResolveTextureSubresource(tex->getDesc());
+                TextureView *subresourceView = tex->GetOrCreateSubresourceView(subresource);
 
                 VkDescriptorImageInfo imageInfo = {
                     sampler->sampler,
-                    tex ? tex->imageView : nullptr,
+                    subresourceView->imageView,
                     VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
                 };
 

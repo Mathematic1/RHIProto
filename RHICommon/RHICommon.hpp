@@ -17,6 +17,8 @@
 
 namespace RHI
 {
+    static constexpr uint32_t kMaxRenderTargets = 8;
+
     class IBuffer;
     class ITexture;
     class ISampler;
@@ -279,15 +281,6 @@ namespace RHI
         COUNT = 18
     };
 
-    enum class ImageAspectFlagBits {
-        NONE = 0,
-        COLOR_BIT = 0x00000001,
-        DEPTH_BIT = 0x00000002,
-        STENCIL_BIT = 0x00000004,
-        MAX_ENUM = 0x7FFFFFFF
-    };
-    ENUM_CLASS_FLAG_OPERATORS(ImageAspectFlagBits)
-
     enum class TextureDimension : uint8_t
     {
         Unknown,
@@ -331,19 +324,269 @@ namespace RHI
 
     ENUM_CLASS_FLAG_OPERATORS(ShaderStageFlagBits)
 
-    struct DescriptorInfo
-    {
-        DescriptorType type = DescriptorType::MAX_ENUM;
-        ShaderStageFlagBits shaderStageFlags = ShaderStageFlagBits::VERTEX_BIT;
+    struct Resolution {
+        uint32_t width = 0;
+        uint32_t height = 0;
     };
 
-    struct TextureSubresource
-    {
+    enum class SamplerFilter {
+        NEAREST = 0,
+        LINEAR = 1,
+        MAX_ENUM = 0x7FFFFFFF
+    };
+
+    enum class SamplerAddressMode {
+        REPEAT = 0,
+        MIRRORED_REPEAT = 1,
+        CLAMP_TO_EDGE = 2,
+        CLAMP_TO_BORDER = 3,
+        MIRROR_CLAMP_TO_EDGE = 4,
+        MODE_MAX_ENUM = 0x7FFFFFFF
+    };
+
+    struct SamplerDesc {
+        SamplerAddressMode addressU = SamplerAddressMode::REPEAT;
+        SamplerAddressMode addressV = SamplerAddressMode::REPEAT;
+        SamplerAddressMode addressW = SamplerAddressMode::REPEAT;
+        SamplerFilter minFilter = SamplerFilter::LINEAR;
+        SamplerFilter magFilter = SamplerFilter::LINEAR;
+        SamplerFilter mipFilter = SamplerFilter::LINEAR;
+        bool anisotropyEnable = false;
+        float maxAnisotropy = 1.0f;
+
+        constexpr SamplerDesc &setAddressU(SamplerAddressMode value) {
+            addressU = value;
+            return *this;
+        }
+
+        constexpr SamplerDesc &setAddressV(SamplerAddressMode value) {
+            addressV = value;
+            return *this;
+        }
+
+        constexpr SamplerDesc &setAddressW(SamplerAddressMode value) {
+            addressW = value;
+            return *this;
+        }
+
+        constexpr SamplerDesc &setAddressAll(SamplerAddressMode value) {
+            addressU = addressV = addressW = value;
+            return *this;
+        }
+
+        constexpr SamplerDesc &setMinFilter(SamplerFilter value) {
+            minFilter = value;
+            return *this;
+        }
+
+        constexpr SamplerDesc &setMagFilter(SamplerFilter value) {
+            magFilter = value;
+            return *this;
+        }
+
+        constexpr SamplerDesc &setAnisotropyEnable(bool value) {
+            anisotropyEnable = value;
+            return *this;
+        }
+
+        constexpr SamplerDesc &setMaxAnisotropy(float value) {
+            maxAnisotropy = value;
+            return *this;
+        }
+    };
+
+    class ISampler : public IResource {
+      public:
+        virtual const SamplerDesc &getDesc() const = 0;
+    };
+
+    struct ImageUsage {
+        bool isTransferSrc = false;
+        bool isTransferDst = false;
+        bool isShaderResource = false;
+        bool isRenderTarget = false;
+        bool isUAV = false;
+    };
+
+    struct TextureDesc {
+        uint32_t width = 1;
+        uint32_t height = 1;
+        uint32_t depth = 1;
+        uint32_t mipLevels = 1;
+        uint32_t layerCount = 1;
+        uint32_t sampleCount = 1;
+        Format format = Format::UNKNOWN;
+        MemoryPropertiesBits memoryProperties = MemoryPropertiesBits::DEVICE_LOCAL_BIT;
+        bool isLinearTiling = false;
+        CreateFlagBits flags = CreateFlagBits::NONE_BIT;
+        TextureDimension dimension = TextureDimension::Texture2D;
+        ImageUsage usage = {};
+        std::string debugName;
+
+        TextureDesc &setWidth(uint32_t value) {
+            width = value;
+            return *this;
+        }
+
+        TextureDesc &setHeight(uint32_t value) {
+            height = value;
+            return *this;
+        }
+
+        TextureDesc &setDepth(uint32_t value) {
+            depth = value;
+            return *this;
+        }
+
+        TextureDesc &setMipLevels(uint32_t value) {
+            mipLevels = value;
+            return *this;
+        }
+
+        TextureDesc &setLayerCount(uint32_t value) {
+            layerCount = value;
+            return *this;
+        }
+
+        TextureDesc &setSampleCount(uint32_t value) {
+            sampleCount = value;
+            return *this;
+        }
+
+        TextureDesc &setFormat(Format value) {
+            format = value;
+            return *this;
+        }
+
+        TextureDesc &setDimension(TextureDimension value) {
+            dimension = value;
+            return *this;
+        }
+
+        TextureDesc &setMemoryProperties(MemoryPropertiesBits value) {
+            memoryProperties = value;
+            return *this;
+        }
+
+        TextureDesc &setIsTransferSrc(bool value) {
+            usage.isTransferSrc = value;
+            return *this;
+        }
+
+        TextureDesc &setIsTransferDst(bool value) {
+            usage.isTransferDst = value;
+            return *this;
+        }
+
+        TextureDesc &setIsShaderResource(bool value) {
+            usage.isShaderResource = value;
+            return *this;
+        }
+
+        TextureDesc &setIsRenderTarget(bool value) {
+            usage.isRenderTarget = value;
+            return *this;
+        }
+
+        TextureDesc &setIsUAV(bool value) {
+            usage.isUAV = value;
+            return *this;
+        }
+
+        TextureDesc &setDebugName(const std::string &value) {
+            debugName = value;
+            return *this;
+        }
+    };
+
+    struct TextureRegion {
+        // Origin
+        uint32_t x = 0;
+        uint32_t y = 0;
+        uint32_t z = 0;
+
+        // Dimensions, where -1 means the entire mip level or texture.
+        uint32_t width = std::numeric_limits<uint32_t>::max();
+        uint32_t height = std::numeric_limits<uint32_t>::max();
+        uint32_t depth = std::numeric_limits<uint32_t>::max();
+
+        uint32_t mipLevel = 0;
+        uint32_t arrayLayer = 0;
+
+        [[nodiscard]]
+        TextureRegion resolveRegion(const TextureDesc &desc) const {
+            TextureRegion result = *this;
+
+            result.width =
+                (width == std::numeric_limits<uint32_t>::max()) ? std::max(1u, desc.width >> mipLevel) : width;
+            result.height =
+                (height == std::numeric_limits<uint32_t>::max()) ? std::max(1u, desc.height >> mipLevel) : height;
+            result.depth =
+                (depth == std::numeric_limits<uint32_t>::max()) ? std::max(1u, desc.depth >> mipLevel) : depth;
+
+            return result;
+        }
+
+        constexpr TextureRegion &setOrigin(uint32_t vx = 0, uint32_t vy = 0, uint32_t vz = 0) {
+            x = vx;
+            y = vy;
+            z = vz;
+            return *this;
+        }
+
+        constexpr TextureRegion &setSize(
+            uint32_t vx = std::numeric_limits<uint32_t>::max(), uint32_t vy = std::numeric_limits<uint32_t>::max(),
+            uint32_t vz = std::numeric_limits<uint32_t>::max()
+        ) {
+            width = vx;
+            height = vy;
+            depth = vz;
+            return *this;
+        }
+
+        constexpr TextureRegion &setWidth(uint32_t value) {
+            width = value;
+            return *this;
+        }
+
+        constexpr TextureRegion &setHeight(uint32_t value) {
+            height = value;
+            return *this;
+        }
+
+        constexpr TextureRegion &setDepth(uint32_t value) {
+            depth = value;
+            return *this;
+        }
+
+        constexpr TextureRegion &setMipLevel(uint32_t value) {
+            mipLevel = value;
+            return *this;
+        }
+
+        constexpr TextureRegion &setArrayLayer(uint32_t value) {
+            arrayLayer = value;
+            return *this;
+        }
+    };
+
+    struct TextureSubresource {
         uint32_t mipLevel = 0;
         uint32_t mipLevelCount = 1;
         uint32_t baseArrayLayer = 0;
         uint32_t layerCount = 1;
-        ImageAspectFlagBits aspectMask = ImageAspectFlagBits::COLOR_BIT;
+
+        bool operator==(const TextureSubresource &other) const noexcept {
+            return mipLevel == other.mipLevel && mipLevelCount == other.mipLevelCount &&
+                   baseArrayLayer == other.baseArrayLayer && layerCount == other.layerCount;
+        }
+
+        TextureSubresource ResolveTextureSubresource(const TextureDesc &desc) const;
+    };
+
+    class ITexture : public IResource {
+      public:
+        virtual const TextureDesc &getDesc() const = 0;
     };
 
     enum class ResourceAttachmentType : uint8_t {
@@ -353,6 +596,11 @@ namespace RHI
         TextureArray,
 
         Count
+    };
+
+    struct DescriptorInfo {
+        DescriptorType type = DescriptorType::MAX_ENUM;
+        ShaderStageFlagBits shaderStageFlags = ShaderStageFlagBits::VERTEX_BIT;
     };
 
     struct BufferAttachment
@@ -371,12 +619,14 @@ namespace RHI
     struct TextureAttachment
     {
         DescriptorInfo dInfo;
-        ITexture* texture = nullptr;
-        ISampler* sampler = nullptr;
+        ITexture *texture = nullptr;
+        ISampler *sampler = nullptr;
+        TextureSubresource subresource;
 
-        TextureAttachment& setDescriptorInfo(const DescriptorInfo& value) { dInfo = value; return *this; }
-        TextureAttachment& setTexture(ITexture* value) { texture = value; return *this; }
-        TextureAttachment& setSampler(ISampler* value) { sampler = value; return *this; }
+        TextureAttachment &setDescriptorInfo(const DescriptorInfo &value) { dInfo = value; return *this; }
+        TextureAttachment &setTexture(ITexture *value) { texture = value; return *this; }
+        TextureAttachment &setSampler(ISampler *value) { sampler = value; return *this; }
+        TextureAttachment &setTextureSubresource(const TextureSubresource &value) { subresource = value; return *this; }
     };
 
     struct TextureArrayAttachment
@@ -384,8 +634,11 @@ namespace RHI
         DescriptorInfo dInfo;
         std::vector<ITexture*> textures;
         ISampler *sampler = nullptr;
+        TextureSubresource subresource;
 
         TextureArrayAttachment &setTextures(const std::vector<ITexture *> &value) { textures = value; return *this; }
+        TextureArrayAttachment &setSampler(ISampler *value) { sampler = value; return *this; }
+        TextureArrayAttachment &setTextureSubresource(const TextureSubresource &value) { subresource = value; return *this; }
     };
 
     struct FramebufferAttachment
@@ -531,175 +784,6 @@ namespace RHI
     class IInstance : public IResource
     {
 
-    };
-
-    struct Resolution
-    {
-        uint32_t width = 0;
-        uint32_t height = 0;
-    };
-
-    enum class SamplerFilter
-    {
-        NEAREST = 0,
-        LINEAR = 1,
-        MAX_ENUM = 0x7FFFFFFF
-    };
-
-    enum class SamplerAddressMode
-    {
-        REPEAT = 0,
-        MIRRORED_REPEAT = 1,
-        CLAMP_TO_EDGE = 2,
-        CLAMP_TO_BORDER = 3,
-        MIRROR_CLAMP_TO_EDGE = 4,
-        MODE_MAX_ENUM = 0x7FFFFFFF
-    };
-
-    struct SamplerDesc
-    {
-        SamplerAddressMode addressU = SamplerAddressMode::REPEAT;
-        SamplerAddressMode addressV = SamplerAddressMode::REPEAT;
-        SamplerAddressMode addressW = SamplerAddressMode::REPEAT;
-        SamplerFilter minFilter = SamplerFilter::LINEAR;
-        SamplerFilter magFilter = SamplerFilter::LINEAR;
-        SamplerFilter mipFilter = SamplerFilter::LINEAR;
-        bool anisotropyEnable = false;
-        float maxAnisotropy = 1.0f;
-
-        constexpr SamplerDesc& setAddressU(SamplerAddressMode value) { addressU = value; return *this; }
-        constexpr SamplerDesc& setAddressV(SamplerAddressMode value) { addressV = value; return *this; }
-        constexpr SamplerDesc& setAddressW(SamplerAddressMode value) { addressW = value; return *this; }
-        constexpr SamplerDesc& setAddressAll(SamplerAddressMode value) { addressU = addressV = addressW = value; return *this; }
-        constexpr SamplerDesc& setMinFilter(SamplerFilter value) { minFilter = value; return *this; }
-        constexpr SamplerDesc& setMagFilter(SamplerFilter value) { magFilter = value; return *this; }
-        constexpr SamplerDesc& setAnisotropyEnable(bool value) { anisotropyEnable = value; return *this; }
-        constexpr SamplerDesc& setMaxAnisotropy(float value) { maxAnisotropy = value; return *this; }
-    };
-
-    class ISampler : public IResource
-    {
-    public:
-        virtual const SamplerDesc& getDesc() const = 0;
-    };
-
-    struct ImageUsage
-    {
-        bool isTransferSrc = false;
-        bool isTransferDst = false;
-        bool isShaderResource = false;
-        bool isRenderTarget = false;
-        bool isUAV = false;
-    };
-
-    struct TextureDesc
-    {
-        uint32_t width = 1;
-        uint32_t height = 1;
-        uint32_t depth = 1;
-        uint32_t mipLevels = 1;
-        uint32_t layerCount = 1;
-        uint32_t sampleCount = 1;
-        Format format = Format::UNKNOWN;
-        MemoryPropertiesBits memoryProperties = MemoryPropertiesBits::DEVICE_LOCAL_BIT;
-        bool isLinearTiling = false;
-        CreateFlagBits flags = CreateFlagBits::NONE_BIT;
-        TextureDimension dimension = TextureDimension::Texture2D;
-        ImageUsage usage = {};
-        std::string debugName;
-
-        TextureDesc& setWidth(uint32_t value) { width = value; return *this; }
-        TextureDesc& setHeight(uint32_t value) { height = value; return *this; }
-        TextureDesc& setDepth(uint32_t value) { depth = value; return *this; }
-        TextureDesc& setMipLevels(uint32_t value) { mipLevels = value; return *this; }
-        TextureDesc& setLayerCount(uint32_t value) { layerCount = value; return *this; }
-        TextureDesc& setSampleCount(uint32_t value) { sampleCount = value; return *this; }
-        TextureDesc& setFormat(Format value) { format = value; return *this; }
-        TextureDesc& setDimension(TextureDimension value) { dimension = value; return *this; }
-        TextureDesc& setMemoryProperties(MemoryPropertiesBits value) { memoryProperties = value; return *this; }
-        TextureDesc& setIsTransferSrc(bool value) { usage.isTransferSrc = value; return *this; }
-        TextureDesc& setIsTransferDst(bool value) { usage.isTransferDst = value; return *this; }
-        TextureDesc& setIsShaderResource(bool value) { usage.isShaderResource = value; return *this; }
-        TextureDesc& setIsRenderTarget(bool value) { usage.isRenderTarget = value; return *this; }
-        TextureDesc& setIsUAV(bool value) { usage.isUAV = value; return *this; }
-        TextureDesc& setDebugName(const std::string& value) { debugName = value; return *this; }
-    };
-
-    struct TextureRegion {
-        // Origin
-        uint32_t x = 0;
-        uint32_t y = 0;
-        uint32_t z = 0;
-
-        // Dimensions, where -1 means the entire mip level or texture.
-        uint32_t width = std::numeric_limits<uint32_t>::max();
-        uint32_t height = std::numeric_limits<uint32_t>::max();
-        uint32_t depth = std::numeric_limits<uint32_t>::max();
-
-        uint32_t mipLevel = 0;
-        uint32_t arrayLayer = 0;
-
-        [[nodiscard]]
-        TextureRegion resolveRegion(const TextureDesc &desc) const {
-            TextureRegion result = *this;
-
-            result.width =
-                (width == std::numeric_limits<uint32_t>::max()) ? std::max(1u, desc.width >> mipLevel) : width;
-            result.height =
-                (height == std::numeric_limits<uint32_t>::max()) ? std::max(1u, desc.height >> mipLevel) : height;
-            result.depth =
-                (depth == std::numeric_limits<uint32_t>::max()) ? std::max(1u, desc.depth >> mipLevel) : depth;
-
-            return result;
-        }
-
-        constexpr TextureRegion &setOrigin(uint32_t vx = 0, uint32_t vy = 0, uint32_t vz = 0) {
-            x = vx;
-            y = vy;
-            z = vz;
-            return *this;
-        }
-
-        constexpr TextureRegion &setSize(
-            uint32_t vx = std::numeric_limits<uint32_t>::max(), uint32_t vy = std::numeric_limits<uint32_t>::max(),
-            uint32_t vz = std::numeric_limits<uint32_t>::max()
-        ) {
-            width = vx;
-            height = vy;
-            depth = vz;
-            return *this;
-        }
-
-        constexpr TextureRegion &setWidth(uint32_t value) {
-            width = value;
-            return *this;
-        }
-
-        constexpr TextureRegion &setHeight(uint32_t value) {
-            height = value;
-            return *this;
-        }
-
-        constexpr TextureRegion &setDepth(uint32_t value) {
-            depth = value;
-            return *this;
-        }
-
-        constexpr TextureRegion &setMipLevel(uint32_t value) {
-            mipLevel = value;
-            return *this;
-        }
-
-        constexpr TextureRegion &setArrayLayer(uint32_t value) {
-            arrayLayer = value;
-            return *this;
-        }
-    };
-
-    class ITexture : public IResource
-    {
-    public:
-        virtual const TextureDesc& getDesc() const = 0;
     };
 
     struct BufferUsage
@@ -948,10 +1032,8 @@ namespace RHI
             constexpr RenderTargetBlendState &setColorWriteMask(ColorMask value) { colorWriteMask = value; return *this; }
         };
 
-        static constexpr uint32_t MaxRenderTargets = 8;
-
         uint32_t renderTargetCount = 1;
-        RenderTargetBlendState renderTargets[MaxRenderTargets];
+        RenderTargetBlendState renderTargets[kMaxRenderTargets];
 
         constexpr ColorBlendState &setRenderTarget(int32_t index, const RenderTargetBlendState &renderTarget) {
             renderTargets[index] = renderTarget; return *this;
@@ -1094,7 +1176,6 @@ namespace RHI
         virtual void updateDescriptorSet(IBindingSet *ds, const DescriptorSetInfo &dsInfo) = 0;
         virtual InputLayoutHandle createInputLayout(const VertexInputAttributeDesc* attributes, uint32_t attributeCount, const VertexInputBindingDesc* bindings, uint32_t bindingCount) = 0;
         virtual TextureHandle createImage(const TextureDesc& desc) = 0;
-        virtual bool createImageView(ITexture* texture, ImageAspectFlagBits aspectFlags = ImageAspectFlagBits::COLOR_BIT) = 0;
         virtual SamplerHandle createTextureSampler(const SamplerDesc& desc = SamplerDesc()) = 0;
         virtual SamplerHandle createDepthSampler() = 0;
         virtual BufferHandle createBuffer(const BufferDesc& desc) = 0;

@@ -1,12 +1,15 @@
 #include <VulkanBackend.hpp>
 
+#include <assert.h>
+
 namespace RHI::Vulkan
 {
     Texture::~Texture()
     {
-        if (imageView)
-        {
-            vkDestroyImageView(m_Context.device, imageView, nullptr);
+        for (auto &viewPair : subresourceViews) {
+            VkImageView &view = viewPair.second.imageView;
+            vkDestroyImageView(m_Context.device, view, nullptr);
+            view = VkImageView();
         }
 
         if (managed)
@@ -147,24 +150,19 @@ namespace RHI::Vulkan
         return ret;
     }
 
-    static VkImageAspectFlags pickImageAspect(const ImageAspectFlagBits& imageAspect)
-    {
-        VkImageAspectFlags ret = VK_IMAGE_ASPECT_NONE;
+    inline VkImageAspectFlags pickImageAspect(Format format) {
+        switch (format) {
+        case Format::D16:
+        case Format::D32:
+            return VkImageAspectFlagBits::VK_IMAGE_ASPECT_DEPTH_BIT;
 
-        if((imageAspect & ImageAspectFlagBits::COLOR_BIT) != 0)
-        {
-            ret |= VK_IMAGE_ASPECT_COLOR_BIT;
-        }
-        if ((imageAspect & ImageAspectFlagBits::DEPTH_BIT) != 0)
-        {
-            ret |= VK_IMAGE_ASPECT_DEPTH_BIT;
-        }
-        if ((imageAspect & ImageAspectFlagBits::STENCIL_BIT) != 0)
-        {
-            ret |= VK_IMAGE_ASPECT_STENCIL_BIT;
-        }
+        case Format::D24S8:
+        case Format::D32S8:
+            return VkImageAspectFlagBits::VK_IMAGE_ASPECT_DEPTH_BIT | VkImageAspectFlagBits::VK_IMAGE_ASPECT_STENCIL_BIT;
 
-        return ret;
+        default:
+            return VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT;
+        }
     }
 
     static VkImageType textureDimensionToImageType(TextureDimension dimension)
@@ -266,24 +264,37 @@ namespace RHI::Vulkan
         return TextureHandle(tex);
     }
 
-    bool Device::createImageView(ITexture* texture, ImageAspectFlagBits aspectFlags)
-    {
-        Texture* tex = dynamic_cast<Texture*>(texture);
+    TextureView *Texture::GetOrCreateSubresourceView(const TextureSubresource &subresource) {
+        auto it = subresourceViews.find(subresource);
+        if (it != subresourceViews.end()) {
+            return &it->second;
+        }
+        
+        auto [insertIt, inserted] = subresourceViews.emplace(subresource, *this);
 
-        VkImageViewCreateInfo viewInfo{};
-        viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-        viewInfo.pNext = nullptr;
-        viewInfo.flags = 0;
-        viewInfo.image = tex->image;
-        viewInfo.viewType = textureDimensionToImageViewType(tex->desc.dimension);
-        viewInfo.format = convertFormat(tex->desc.format);
-        viewInfo.subresourceRange.aspectMask = pickImageAspect(aspectFlags);
-        viewInfo.subresourceRange.baseMipLevel = 0;
-        viewInfo.subresourceRange.levelCount = tex->desc.mipLevels;
-        viewInfo.subresourceRange.baseArrayLayer = 0;
-        viewInfo.subresourceRange.layerCount = tex->desc.layerCount;
+        auto &view = insertIt->second;
 
-        return (vkCreateImageView(m_Context.device, &viewInfo, nullptr, &tex->imageView) == VK_SUCCESS);
+        view.subresource = subresource;
+
+        view.subresourceRange.aspectMask = pickImageAspect(desc.format);
+        view.subresourceRange.baseMipLevel = subresource.mipLevel;
+        view.subresourceRange.levelCount = subresource.mipLevelCount;
+        view.subresourceRange.baseArrayLayer = subresource.baseArrayLayer;
+        view.subresourceRange.layerCount = subresource.layerCount;
+
+        VkImageViewCreateInfo ci{};
+        ci.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+        ci.pNext = nullptr;
+        ci.flags = 0;
+        ci.image = image;
+        ci.viewType = textureDimensionToImageViewType(desc.dimension);
+        ci.format = convertFormat(desc.format);
+        ci.subresourceRange = view.subresourceRange;
+
+        VkResult res = vkCreateImageView(m_Context.device, &ci, nullptr, &view.imageView);
+        assert(res == VK_SUCCESS);
+
+        return &insertIt->second;
     }
 
     SamplerHandle Device::createTextureSampler(const SamplerDesc& desc)
@@ -408,13 +419,12 @@ namespace RHI::Vulkan
         vkUnmapMemory(m_Context.device, tex->memory);
     }
 
-    TextureHandle Device::createTextureForNative(VkImage image, VkImageView imageView, ImageAspectFlagBits aspectFlags, const TextureDesc& desc)
+    TextureHandle Device::createTextureForNative(VkImage image, VkImageView imageView, const TextureDesc& desc)
     {
         Texture* tex = new Texture(m_Context);
         tex->desc = desc;
         tex->image = image;
         tex->managed = false;
-        createImageView(tex, aspectFlags);
 
         return TextureHandle(tex);
     }
