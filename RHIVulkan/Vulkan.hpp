@@ -26,33 +26,4 @@ namespace RHI::Vulkan
     typedef std::shared_ptr<IDevice> DeviceHandle;
 
     VkFormat convertFormat(RHI::Format format);
-
-    VkSamplerAddressMode convertSamplerAddressMode(SamplerAddressMode mode);
-
-    VkImageLayout convertImageLayout(ImageLayout imageLayout);
-
-    VkMemoryPropertyFlags pickMemoryProperties(const MemoryPropertiesBits& memoryProperties);
-
-    VkDescriptorType convertDescriptorType(DescriptorType type);
-
-    VkShaderStageFlags pickShaderStage(ShaderStageFlagBits stages);
-
-    VkBlendFactor convertBlendFactor(const BlendFactor &blendState);
-
-    VkBlendOp convertBlendOp(const BlendOp &blendOp);
-
-    VkPolygonMode convertFillMode(const RasterizerFillMode &mode);
-
-    VkCullModeFlags convertCullMode(const RasterizerCullMode &mode);
-
-    VkCompareOp convertCompareOp(const CompareOp &op);
-
-    VkStencilOp convertStencilOp(const StencilOp &op);
-
-    VkStencilOpState convertStencilState(
-        const DepthStencilState &depthStencilState, const DepthStencilState::StencilFaceState &stencilFaceState
-    );
-
-    VkPipelineColorBlendAttachmentState convertBlendState(const ColorBlendState::RenderTargetBlendState &blendState);
-
 }

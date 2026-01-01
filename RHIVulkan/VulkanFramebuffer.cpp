@@ -63,7 +63,7 @@ namespace RHI::Vulkan
             Texture* texture = dynamic_cast<Texture*>(desc.colorAttachments[i].texture);
 
             TextureSubresource subresource = desc.colorAttachments[i].subresource;
-            subresource = subresource.ResolveTextureSubresource(texture->getDesc());
+            subresource = subresource.resolveTextureSubresource(texture->getDesc());
             const auto &view = texture->GetOrCreateSubresourceView(subresource);
             attachments[i] = view->imageView;
             fb->textures.push_back(texture);
@@ -79,7 +79,7 @@ namespace RHI::Vulkan
             Texture* texture = dynamic_cast<Texture*>(desc.depthAttachment.texture);
 
             TextureSubresource subresource = desc.depthAttachment.subresource;
-            subresource = subresource.ResolveTextureSubresource(texture->getDesc());
+            subresource = subresource.resolveTextureSubresource(texture->getDesc());
             const auto &view = texture->GetOrCreateSubresourceView(subresource);
             attachments.push_back(view->imageView);
             fb->textures.push_back(texture);

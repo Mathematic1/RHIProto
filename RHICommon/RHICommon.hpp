@@ -9,11 +9,12 @@
 #include <cmath>
 
 #define ENUM_CLASS_FLAG_OPERATORS(T) \
-    inline T operator & (T a, T b) { return T(uint8_t(a) & uint8_t(b)); } \
+    inline T operator & (T a, T b) { return T(uint32_t(a) & uint32_t(b)); } \
     inline T& operator &= (T &a, const T &b) { a = a & b; return a; } \
-    inline T operator | (T a, T b) { return T(uint8_t(a) | uint8_t(b)); } \
+    inline T operator | (T a, T b) { return T(uint32_t(a) | uint32_t(b)); } \
     inline T& operator |= (T &a, const T &b) { a = a | b; return a; } \
-    inline bool operator != (T a, uint8_t b) { return uint8_t(a) != b; }
+    inline bool operator ! (T a) { return uint32_t(a) == 0; } \
+    inline bool operator != (T a, uint32_t b) { return uint32_t(a) != b; }
 
 namespace RHI
 {
@@ -259,6 +260,29 @@ namespace RHI
         FLAG_BITS_MAX_ENUM
     };
 
+    enum class ResourceStates : uint32_t {
+        Unknown = 0,
+        Common = 1 << 0,
+
+        VertexBuffer = 1 << 1,
+        IndexBuffer = 1 << 2,
+        ConstantBuffer = 1 << 3,
+
+        ShaderResource = 1 << 4,
+        UnorderedAccess = 1 << 5,
+
+        RenderTarget = 1 << 6,
+        DepthWrite = 1 << 7,
+        DepthRead = 1 << 8,
+
+        CopySource = 1 << 9,
+        CopyDestination = 1 << 10,
+
+        Present = 1 << 11
+    };
+
+    ENUM_CLASS_FLAG_OPERATORS(ResourceStates)
+
     enum class ImageLayout {
         UNDEFINED = 0,
         GENERAL = 1,
@@ -423,6 +447,9 @@ namespace RHI
         ImageUsage usage = {};
         std::string debugName;
 
+        ResourceStates initialState = ResourceStates::Unknown;
+        bool keepInitialState = false;
+
         TextureDesc &setWidth(uint32_t value) {
             width = value;
             return *this;
@@ -571,18 +598,33 @@ namespace RHI
     };
 
     struct TextureSubresource {
+        static constexpr uint32_t kMaxMipLevel = std::numeric_limits<uint32_t>::max();
+        static constexpr uint32_t kMaxArrayLayer = std::numeric_limits<uint32_t>::max();
+
         uint32_t mipLevel = 0;
         uint32_t mipLevelCount = 1;
         uint32_t baseArrayLayer = 0;
         uint32_t layerCount = 1;
+
+        TextureSubresource() = default;
+
+        TextureSubresource(uint32_t _mipLevel, uint32_t _mipLevelCount, uint32_t _baseArrayLayer, uint32_t _layerCount)
+            : mipLevel(_mipLevel),
+              mipLevelCount(_mipLevelCount),
+              baseArrayLayer(_baseArrayLayer),
+              layerCount(_layerCount) {
+        }
 
         bool operator==(const TextureSubresource &other) const noexcept {
             return mipLevel == other.mipLevel && mipLevelCount == other.mipLevelCount &&
                    baseArrayLayer == other.baseArrayLayer && layerCount == other.layerCount;
         }
 
-        TextureSubresource ResolveTextureSubresource(const TextureDesc &desc) const;
+        TextureSubresource resolveTextureSubresource(const TextureDesc &desc) const;
     };
+
+    static const TextureSubresource kAllSubresources =
+        TextureSubresource(0, TextureSubresource::kMaxMipLevel, 0, TextureSubresource::kMaxArrayLayer);
 
     class ITexture : public IResource {
       public:
@@ -599,8 +641,18 @@ namespace RHI
     };
 
     struct DescriptorInfo {
+        DescriptorInfo() {}
+
+        DescriptorInfo(DescriptorType _type, ShaderStageFlagBits _shaderStageFlags)
+            : type(_type),
+              shaderStageFlags(_shaderStageFlags) {
+        }
+
         DescriptorType type = DescriptorType::MAX_ENUM;
         ShaderStageFlagBits shaderStageFlags = ShaderStageFlagBits::VERTEX_BIT;
+        union {
+            TextureSubresource subresource;
+        };
     };
 
     struct BufferAttachment
@@ -621,12 +673,18 @@ namespace RHI
         DescriptorInfo dInfo;
         ITexture *texture = nullptr;
         ISampler *sampler = nullptr;
-        TextureSubresource subresource;
 
-        TextureAttachment &setDescriptorInfo(const DescriptorInfo &value) { dInfo = value; return *this; }
+        TextureAttachment()
+            : dInfo() {
+            dInfo.subresource =
+                TextureSubresource{ 0, TextureSubresource::kMaxMipLevel, 0, TextureSubresource::kMaxArrayLayer };
+        }
+
+        TextureAttachment &setDescriptorType(const DescriptorType &value) { dInfo.type = value; return *this; }
+        TextureAttachment &setShaderStages(const ShaderStageFlagBits &value) { dInfo.shaderStageFlags = value; return *this; }
+        TextureAttachment &setTextureSubresource(const TextureSubresource &value) { dInfo.subresource = value; return *this; }
         TextureAttachment &setTexture(ITexture *value) { texture = value; return *this; }
         TextureAttachment &setSampler(ISampler *value) { sampler = value; return *this; }
-        TextureAttachment &setTextureSubresource(const TextureSubresource &value) { subresource = value; return *this; }
     };
 
     struct TextureArrayAttachment
@@ -713,7 +771,7 @@ namespace RHI
 
     class IBindingSet : public IResource
     {
-	    
+        virtual const DescriptorSetInfo &getDesc() const = 0;
     };
 
     enum CommandQueue : uint8_t
@@ -874,7 +932,7 @@ namespace RHI
         virtual const FramebufferDesc& getDesc() const = 0;
 
     private:
-        IRenderPass* m_RenderPass;
+        IRenderPass* m_RenderPass = nullptr;
     };
 
     enum class PrimitiveType : uint8_t
@@ -1123,11 +1181,10 @@ namespace RHI
         virtual void draw(const DrawArguments &args) = 0;
         virtual void drawIndexed(const DrawArguments &args) = 0;
         virtual void setGraphicsState(const GraphicsState &state) = 0;
-        virtual void transitionImageLayout(ITexture *texture, ImageLayout oldLayout, ImageLayout newLayout) = 0;
         virtual void transitionBufferLayout(IBuffer *texture, ImageLayout oldLayout, ImageLayout newLayout) = 0;
         virtual bool updateTextureImage(
             ITexture *texture, uint32_t mipLevel, uint32_t baseArrayLayer, const void *imageData, size_t rowPitch = 0,
-            size_t depthPitch = 0, ImageLayout sourceImageLayout = ImageLayout::UNDEFINED
+            size_t depthPitch = 0
         ) = 0;
         virtual void
         copyBufferToImage(IBuffer *buffer, ITexture *texture, uint32_t mipLevel = 0, uint32_t baseArrayLayer = 0) = 0;
@@ -1157,6 +1214,13 @@ namespace RHI
         virtual void copyBuffer(IBuffer *srcBuffer, IBuffer *dstBuffer, size_t size) = 0;
         virtual void writeBuffer(IBuffer *srcBuffer, size_t size, const void *data) = 0;
         virtual void setPushConstants(const void *data, size_t byteSize) = 0;
+
+        virtual void
+        beginTrackingTextureState(ITexture *texture, TextureSubresource subresource, ResourceStates states) = 0;
+        virtual void setTextureState(ITexture *texture, TextureSubresource subresource, ResourceStates states) = 0;
+        virtual void setPermanentTextureState(ITexture *texture, ResourceStates states) = 0;
+
+        virtual void commitBarriers() = 0;
     };
 
     class IDevice : public IResource

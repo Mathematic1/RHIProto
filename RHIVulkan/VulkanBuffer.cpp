@@ -204,7 +204,7 @@ namespace RHI::Vulkan
 
     BufferHandle Device::addBuffer(const BufferDesc& desc, bool createMapping)
     {
-		Buffer* buffer = dynamic_cast<Buffer*>(createSharedBuffer(desc).get());
+        Buffer *buffer = dynamic_cast<Buffer*>(createSharedBuffer(desc).get());
         if (!buffer)
         {
             printf("Cannot allocate buffer\n");
@@ -224,7 +224,7 @@ namespace RHI::Vulkan
 
     void CommandList::writeBuffer(IBuffer* srcBuffer, size_t size, const void* data)
     {
-        //endRenderPass();
+        endRenderPass();
 
         BufferDesc stagingDesc = BufferDesc{}
             .setSize(size)
@@ -241,7 +241,7 @@ namespace RHI::Vulkan
     }
 
     Buffer::~Buffer()
-	{
+    {
         if (managed)
         {
             if (buffer)
@@ -253,5 +253,5 @@ namespace RHI::Vulkan
                 vkFreeMemory(m_Context.device, memory, nullptr);
             }
         }
-	}
+    }
 }

@@ -358,14 +358,17 @@ namespace RHI::Vulkan
         return SamplerHandle(sampler);
     }
 
-    bool CommandList::updateTextureImage(ITexture *texture, uint32_t mipLevel, uint32_t baseArrayLayer,
-        const void *imageData, size_t rowPitch, size_t depthPitch, ImageLayout sourceImageLayout)
-    {
-    	Texture* tex = dynamic_cast<Texture*>(texture);
+    bool CommandList::updateTextureImage(
+        ITexture *texture, uint32_t mipLevel, uint32_t baseArrayLayer, const void *imageData, size_t rowPitch,
+        size_t depthPitch
+    ) {
+        endRenderPass();
 
-        FormatInfo formatInfo = getFormatInfo(tex->desc.format);
+        Texture *tex = dynamic_cast<Texture *>(texture);
 
-        const uint32_t mipWidth = std::max(tex->desc.width >> mipLevel, uint32_t (1));
+        const FormatInfo formatInfo = getFormatInfo(tex->desc.format);
+
+        const uint32_t mipWidth = std::max(tex->desc.width >> mipLevel, uint32_t(1));
         const uint32_t mipHeight = std::max(tex->desc.height >> mipLevel, uint32_t(1));
         const uint32_t mipDepth = std::max(tex->desc.depth >> mipLevel, uint32_t(1));
 
@@ -375,29 +378,43 @@ namespace RHI::Vulkan
         VkDeviceSize layerSize = deviceRowSize * deviceNumRows * mipDepth;
         VkDeviceSize imageSize = layerSize * tex->desc.layerCount;
 
-        if (rowPitch == 0)
+        if (rowPitch == 0) {
             rowPitch = deviceRowSize;
+        }
 
-        if (depthPitch == 0)
+        if (depthPitch == 0) {
             depthPitch = rowPitch * deviceNumRows;
+        }
 
-        BufferDesc stagingDesc = BufferDesc{}
-            .setSize(imageSize)
-            .setIsTransferSrc(true)
-            .setMemoryProperties(MemoryPropertiesBits::HOST_VISIBLE_BIT | MemoryPropertiesBits::HOST_COHERENT_BIT);
+        BufferDesc stagingDesc = BufferDesc{}.setSize(imageSize).setIsTransferSrc(true).setMemoryProperties(
+            MemoryPropertiesBits::HOST_VISIBLE_BIT | MemoryPropertiesBits::HOST_COHERENT_BIT
+        );
         BufferHandle stagingBuffer = m_Device->createBuffer(stagingDesc);
         m_CurrentCommandBuffer->referencedStagingBuffers.push_back(stagingBuffer);
 
-        //m_Device->uploadBufferData(stagingBuffer.get(), 0, imageData, imageSize);
-        m_Device->uploadMipLevelToStagingBuffer(stagingBuffer.get(), 0, imageData, imageSize, deviceNumRows,
-                                                deviceNumColumns, mipDepth, tex->desc.layerCount, rowPitch, depthPitch, deviceRowSize);
+        // m_Device->uploadBufferData(stagingBuffer.get(), 0, imageData, imageSize);
+        m_Device->uploadMipLevelToStagingBuffer(
+            stagingBuffer.get(),
+            0,
+            imageData,
+            imageSize,
+            deviceNumRows,
+            deviceNumColumns,
+            mipDepth,
+            tex->desc.layerCount,
+            rowPitch,
+            depthPitch,
+            deviceRowSize
+        );
 
-        transitionImageLayout(tex, sourceImageLayout, ImageLayout::TRANSFER_DST_OPTIMAL);
+        if (m_EnableAutoBarriers) {
+            m_StateTracker.requireTextureState(
+                tex, { mipLevel, 1, baseArrayLayer, 1 }, ResourceStates::CopyDestination
+            );
+        }
+        commitBarriers();
+
         copyBufferToImage(stagingBuffer.get(), tex, mipLevel, baseArrayLayer);
-        transitionImageLayout(tex, ImageLayout::TRANSFER_DST_OPTIMAL, ImageLayout::SHADER_READ_ONLY_OPTIMAL);
-
-        // TODO: fixup memory cleanup
-        //delete stagingBuffer;
 
         return true;
     }
@@ -460,6 +477,20 @@ namespace RHI::Vulkan
         imageCopyRegion.extent.height = std::min<uint32_t>(resolvedSrcRegion.height, resolvedDstRegion.height);
         imageCopyRegion.extent.depth = std::min<uint32_t>(resolvedSrcRegion.depth, resolvedDstRegion.depth);
 
+        if (m_EnableAutoBarriers) {
+            m_StateTracker.requireTextureState(
+                srcTex,
+                { srcSubresource.mipLevel, 1, srcSubresource.baseArrayLayer, 1 },
+                ResourceStates::CopySource
+            );
+            m_StateTracker.requireTextureState(
+                dstTex,
+                { dstSubresource.mipLevel, 1, dstSubresource.baseArrayLayer, 1 },
+                ResourceStates::CopyDestination
+            );
+        }
+        commitBarriers();
+
         vkCmdCopyImage(
             m_CurrentCommandBuffer->commandBuffer,
             srcTex->image,
@@ -508,6 +539,18 @@ namespace RHI::Vulkan
             resolvedDstRegion.z + resolvedDstRegion.depth
         );
 
+        if (m_EnableAutoBarriers) {
+            m_StateTracker.requireTextureState(
+                srcTex, { srcSubresource.mipLevel, 1, srcSubresource.baseArrayLayer, 1 }, ResourceStates::CopySource
+            );
+            m_StateTracker.requireTextureState(
+                dstTex,
+                { dstSubresource.mipLevel, 1, dstSubresource.baseArrayLayer, 1 },
+                ResourceStates::CopyDestination
+            );
+        }
+        commitBarriers();
+
         vkCmdBlitImage(
             m_CurrentCommandBuffer->commandBuffer,
             srcTex->image,
@@ -545,6 +588,18 @@ namespace RHI::Vulkan
         imageResolveRegion.extent.height = srcTex->getDesc().height;
         imageResolveRegion.extent.depth = srcTex->getDesc().depth;
 
+        if (m_EnableAutoBarriers) {
+            m_StateTracker.requireTextureState(
+                srcTex, { srcSubresource.mipLevel, 1, srcSubresource.baseArrayLayer, 1 }, ResourceStates::CopySource
+            );
+            m_StateTracker.requireTextureState(
+                dstTex,
+                { dstSubresource.mipLevel, 1, dstSubresource.baseArrayLayer, 1 },
+                ResourceStates::CopyDestination
+            );
+        }
+        commitBarriers();
+
         vkCmdResolveImage(
             m_CurrentCommandBuffer->commandBuffer,
             srcTex->image,
@@ -573,6 +628,13 @@ namespace RHI::Vulkan
         imageSubresourceRange.levelCount = subresource.mipLevelCount;
         imageSubresourceRange.baseArrayLayer = subresource.baseArrayLayer;
         imageSubresourceRange.layerCount = subresource.layerCount;
+
+        if (m_EnableAutoBarriers) {
+            m_StateTracker.requireTextureState(
+                tex, { subresource.mipLevel, 1, subresource.baseArrayLayer, 1 }, ResourceStates::CopyDestination
+            );
+        }
+        commitBarriers();
 
         vkCmdClearColorImage(
             m_CurrentCommandBuffer->commandBuffer,
@@ -616,6 +678,13 @@ namespace RHI::Vulkan
         imageSubresourceRange.levelCount = subresource.mipLevelCount;
         imageSubresourceRange.baseArrayLayer = subresource.baseArrayLayer;
         imageSubresourceRange.layerCount = subresource.layerCount;
+
+        if (m_EnableAutoBarriers) {
+            m_StateTracker.requireTextureState(
+                tex, { subresource.mipLevel, 1, subresource.baseArrayLayer, 1 }, ResourceStates::CopyDestination
+            );
+        }
+        commitBarriers();
 
         vkCmdClearDepthStencilImage(
             m_CurrentCommandBuffer->commandBuffer,

@@ -2,6 +2,8 @@
 
 #include <Vulkan.hpp>
 
+#include <Common/ResourcesStateTracking.hpp>
+
 #include <vector>
 #include <functional>
 
@@ -19,6 +21,42 @@ namespace RHI::Vulkan
 	class Device;
 	class CommandList;
 	class Texture;
+
+        struct ResourceStateMapping {
+            ResourceStates state;
+            VkImageLayout layout;
+            VkAccessFlags accessMask;
+            VkPipelineStageFlags stages;
+        };
+
+        VkSamplerAddressMode convertSamplerAddressMode(SamplerAddressMode mode);
+
+        ResourceStateMapping convertResourceState(ResourceStates state);
+
+        VkMemoryPropertyFlags pickMemoryProperties(const MemoryPropertiesBits &memoryProperties);
+
+        VkDescriptorType convertDescriptorType(DescriptorType type);
+
+        VkShaderStageFlags pickShaderStage(ShaderStageFlagBits stages);
+
+        VkBlendFactor convertBlendFactor(const BlendFactor &blendState);
+
+        VkBlendOp convertBlendOp(const BlendOp &blendOp);
+
+        VkPolygonMode convertFillMode(const RasterizerFillMode &mode);
+
+        VkCullModeFlags convertCullMode(const RasterizerCullMode &mode);
+
+        VkCompareOp convertCompareOp(const CompareOp &op);
+
+        VkStencilOp convertStencilOp(const StencilOp &op);
+
+        VkStencilOpState convertStencilState(
+            const DepthStencilState &depthStencilState, const DepthStencilState::StencilFaceState &stencilFaceState
+        );
+
+        VkPipelineColorBlendAttachmentState convertBlendState(const ColorBlendState::RenderTargetBlendState &blendState
+        );
 
 	// Features we need for our Vulkan context
 	struct VulkanContextFeatures
@@ -424,7 +462,7 @@ namespace RHI::Vulkan
         };
 
 	// Aggregate structure for passing around the texture data
-	class Texture : public ITexture, public MemoryResource
+	class Texture : public ITexture, public MemoryResource, public TextureStateInfo
 	{
 	public:
             struct TextureSubresourceHash {
@@ -433,10 +471,10 @@ namespace RHI::Vulkan
                 }
             };
 
-		Texture(const VulkanContext& context)
-			: m_Context(context)
-		{}
-		virtual ~Texture() override;
+	    Texture(const VulkanContext& context)
+	    : TextureStateInfo(desc), m_Context(context)
+	    {}
+	    virtual ~Texture() override;
 
 		TextureDesc desc;
 
@@ -446,7 +484,7 @@ namespace RHI::Vulkan
                 std::unordered_map<TextureSubresource, TextureView, TextureSubresourceHash> subresourceViews;
 
 		// Offscreen buffers require VK_IMAGE_LAYOUT_GENERAL && static textures have VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
-		VkImageLayout desiredLayout;
+		VkImageLayout currentLayout = VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED;
 
 		virtual const TextureDesc& getDesc() const override
 		{
@@ -707,9 +745,14 @@ namespace RHI::Vulkan
 	public:
 		VkDescriptorPool descriptorPool;
 		VkDescriptorSet descriptorSet;
+                DescriptorSetInfo desc;
+
+	        std::vector<uint16_t> texturesWithoutPermanentState;
 
 		BindingSet(const VulkanContext& context);
 		virtual ~BindingSet();
+
+                virtual const DescriptorSetInfo &getDesc() const override { return desc; }
 
 	private:
 		const VulkanContext& m_Context;
@@ -909,14 +952,14 @@ namespace RHI::Vulkan
 
 		virtual void copyBuffer(IBuffer* srcBuffer, IBuffer* dstBuffer, size_t size) override;
 		virtual void writeBuffer(IBuffer* srcBuffer, size_t size, const void* data) override;
-		virtual void transitionImageLayout(ITexture* texture, ImageLayout oldLayout, ImageLayout newLayout) override;
 		virtual void transitionBufferLayout(IBuffer* texture, ImageLayout oldLayout, ImageLayout newLayout) override;
-		void transitionImageLayoutCmd(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout, uint32_t layerCount = 1, uint32_t mipLevels = 1);
 		void transitionBufferLayoutCmd(VkBuffer buffer, VkFormat format, VkAccessFlags oldAccess, VkAccessFlags newAccess, uint32_t offset = 0, uint32_t size = 0);
 
 		/* VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL for real update of an existing texture */
-		virtual bool updateTextureImage(ITexture* texture, uint32_t mipLevel, uint32_t baseArrayLayer, const void* imageData,
-			size_t rowPitch = 0, size_t depthPitch = 0, ImageLayout sourceImageLayout = ImageLayout::UNDEFINED) override;
+                virtual bool updateTextureImage(
+                    ITexture *texture, uint32_t mipLevel, uint32_t baseArrayLayer, const void *imageData,
+                    size_t rowPitch = 0, size_t depthPitch = 0
+                ) override;
 
 		virtual void copyBufferToImage(IBuffer* buffer, ITexture* texture, uint32_t mipLevel = 0, uint32_t baseArrayLayer = 0) override;
 		virtual void copyMIPBufferToImage(IBuffer* buffer, ITexture* texture) override;
@@ -940,12 +983,22 @@ namespace RHI::Vulkan
 		void bindBindingSets(VkPipelineBindPoint bindPoint, VkPipelineLayout pipelineLayout, const std::vector<IBindingSet*> bindings);
 		void setPushConstants(const void* data, size_t byteSize) override;
 
+                void beginTrackingTextureState(ITexture *texture, TextureSubresource subresource, ResourceStates states) override;
+	        void setTextureState(ITexture *texture, TextureSubresource subresource, ResourceStates states) override;
+	        void setPermanentTextureState(ITexture *texture, ResourceStates states) override;
+                void setTextureStatesForFramebuffer(IFramebuffer *framebuffer);
+                void setResourceStatesForBindingSet(IBindingSet *bindingSet);
+                void commitBarriers() override;
+
 		TrackedCommandBufferPtr getCurrentCommandBuffer() const { return m_CurrentCommandBuffer; }
 
 	private:
 		Device* m_Device;
 		const VulkanContext& m_Context;
 		CommandListParameters m_CommandListParameters;
+
+                CommandListStateTracker m_StateTracker;
+                bool m_EnableAutoBarriers = true;
 
 		TrackedCommandBufferPtr m_CurrentCommandBuffer;
 
@@ -956,5 +1009,8 @@ namespace RHI::Vulkan
 		VkShaderStageFlags m_CurrentPushConstantsVisibility;
 
 		GraphicsState m_CurrentGraphicsState{};
+
+	        void requireTextureState(ITexture *texture, const TextureSubresource &subresource, ResourceStates requiredState);
+                void trackResourcesAndBarriers(const GraphicsState &state);
 	};
 }

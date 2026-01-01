@@ -108,42 +108,52 @@ namespace RHI::Vulkan
 	    }
     }
 
-    struct ImageLayoutMapping
-    {
-        RHI::ImageLayout rhiImageLayout;
-        VkImageLayout vkImageLayout;
+    static const ResourceStateMapping c_ResourceStateMappings[] = {
+        {          ResourceStates::Common,VK_IMAGE_LAYOUT_UNDEFINED,                                                                          0,VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT                                                                                                                                                       },
+
+        {  ResourceStates::ShaderResource,
+         VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,                                                  VK_ACCESS_SHADER_READ_BIT,
+         VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT                                                                                                                                              },
+
+        { ResourceStates::UnorderedAccess,
+         VK_IMAGE_LAYOUT_GENERAL,                     VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_SHADER_WRITE_BIT,
+         VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT | VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT                                                                                                       },
+
+        {    ResourceStates::RenderTarget,
+         VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+         VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT                                                                                                                                      },
+
+        {      ResourceStates::DepthWrite,
+         VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,                               VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+         VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT                                                                                                                                          },
+
+        {       ResourceStates::DepthRead,
+         VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL,                                VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT,
+         VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT                                                                                             },
+
+        {      ResourceStates::CopySource,
+         VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,                                                VK_ACCESS_TRANSFER_READ_BIT,
+         VK_PIPELINE_STAGE_TRANSFER_BIT                                                                                                                                                     },
+
+        { ResourceStates::CopyDestination,
+         VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,                                               VK_ACCESS_TRANSFER_WRITE_BIT,
+         VK_PIPELINE_STAGE_TRANSFER_BIT                                                                                                                                                     },
+
+        {         ResourceStates::Present, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,                                                                          0, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT }
     };
 
-    static const std::array<ImageLayoutMapping, size_t(ImageLayout::COUNT)> c_ImageLayoutMapping =
-    {
-    {
-        {ImageLayout::UNDEFINED, VK_IMAGE_LAYOUT_UNDEFINED},
-        {ImageLayout::GENERAL, VK_IMAGE_LAYOUT_GENERAL},
-        {ImageLayout::COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL},
-        {ImageLayout::DEPTH_STENCIL_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL},
-        {ImageLayout::DEPTH_STENCIL_READ_ONLY_OPTIMAL, VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL},
-        {ImageLayout::SHADER_READ_ONLY_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL},
-        {ImageLayout::TRANSFER_SRC_OPTIMAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL},
-        {ImageLayout::TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL},
-        {ImageLayout::PREINITIALIZED, VK_IMAGE_LAYOUT_PREINITIALIZED},
-        {ImageLayout::DEPTH_READ_ONLY_STENCIL_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_STENCIL_ATTACHMENT_OPTIMAL},
-        {ImageLayout::DEPTH_ATTACHMENT_STENCIL_READ_ONLY_OPTIMAL, VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_STENCIL_READ_ONLY_OPTIMAL},
-        {ImageLayout::DEPTH_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL},
-        {ImageLayout::DEPTH_READ_ONLY_OPTIMAL, VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_OPTIMAL},
-        {ImageLayout::STENCIL_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_STENCIL_ATTACHMENT_OPTIMAL},
-        {ImageLayout::STENCIL_READ_ONLY_OPTIMAL, VK_IMAGE_LAYOUT_STENCIL_READ_ONLY_OPTIMAL},
-        {ImageLayout::READ_ONLY_OPTIMAL, VK_IMAGE_LAYOUT_READ_ONLY_OPTIMAL},
-        {ImageLayout::ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL},
-        {ImageLayout::PRESENT_SRC_KHR, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR}
+    ResourceStateMapping convertResourceState(ResourceStates state) {
+        if (state == ResourceStates::Unknown) {
+            return { ResourceStates::Unknown, VK_IMAGE_LAYOUT_UNDEFINED, 0, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT };
         }
-    };
 
-    VkImageLayout convertImageLayout(ImageLayout imageLayout)
-    {
-        assert(imageLayout < RHI::ImageLayout::COUNT);
-        assert(c_ImageLayoutMapping[uint32_t(imageLayout)].rhiImageLayout == imageLayout);
+        for (const ResourceStateMapping &mapping : c_ResourceStateMappings) {
+            if ((state & mapping.state) == mapping.state) {
+                return mapping;
+            }
+        }
 
-        return c_ImageLayoutMapping[uint32_t(imageLayout)].vkImageLayout;
+        return c_ResourceStateMappings[0];
     }
 
     VkMemoryPropertyFlags pickMemoryProperties(const MemoryPropertiesBits& memoryProperties)

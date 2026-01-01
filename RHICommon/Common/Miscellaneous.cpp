@@ -1,7 +1,7 @@
 #include <RHICommon.hpp>
 
 namespace RHI {
-TextureSubresource TextureSubresource::ResolveTextureSubresource(const TextureDesc &desc) const {
+TextureSubresource TextureSubresource::resolveTextureSubresource(const TextureDesc &desc) const {
     TextureSubresource ret = *this;
 
     if (ret.mipLevel >= desc.mipLevels) {

@@ -343,10 +343,16 @@ namespace RHI::Vulkan
         GraphicsPipeline* pipeline = dynamic_cast<GraphicsPipeline*>(state.pipeline);
         Framebuffer* fb = dynamic_cast<Framebuffer*>(state.framebuffer);
 
+        if (m_EnableAutoBarriers) {
+            trackResourcesAndBarriers(state);
+        }
+
         if(state.framebuffer != m_CurrentGraphicsState.framebuffer)
         {
             endRenderPass();
         }
+
+        commitBarriers();
 
         if (!m_CurrentGraphicsState.framebuffer)
         {

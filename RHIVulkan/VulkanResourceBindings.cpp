@@ -161,6 +161,7 @@ namespace RHI::Vulkan
     void Device::updateDescriptorSet(IBindingSet* ds, const DescriptorSetInfo& dsInfo)
     {
         BindingSet *bindingSet = dynamic_cast<BindingSet *>(ds);
+        bindingSet->desc = dsInfo;
 
         uint32_t bindingIdx = 0;
         std::vector<VkWriteDescriptorSet> descriptorWrites;
@@ -189,7 +190,7 @@ namespace RHI::Vulkan
         {
             Texture* tex = dynamic_cast<Texture*>(dsInfo.textures[i].texture);
             Sampler* sampler = dynamic_cast<Sampler*>(dsInfo.textures[i].sampler);
-            TextureSubresource subresource = dsInfo.textures[i].subresource.ResolveTextureSubresource(tex->getDesc());
+            TextureSubresource subresource = dsInfo.textures[i].dInfo.subresource.resolveTextureSubresource(tex->getDesc());
             TextureView *subresourceView = tex->GetOrCreateSubresourceView(subresource);
 
             imageDescriptors[i] =
@@ -199,6 +200,12 @@ namespace RHI::Vulkan
 
             descriptorWrites.push_back(
                 imageWriteDescriptorSet(bindingSet->descriptorSet, &imageDescriptors[i], bindingIdx++));
+
+            if (!tex->permanentState) {
+                bindingSet->texturesWithoutPermanentState.emplace_back(i);
+            }else {
+                
+            }
         }
 
         uint32_t taOffset = 0;
@@ -212,7 +219,7 @@ namespace RHI::Vulkan
                 Texture* tex = dynamic_cast<Texture*>(dsInfo.textureArrays[ta].textures[j]);
                 Sampler *sampler = dynamic_cast<Sampler *>(dsInfo.textureArrays[ta].sampler);
                 TextureSubresource subresource =
-                    dsInfo.textureArrays[ta].subresource.ResolveTextureSubresource(tex->getDesc());
+                    dsInfo.textureArrays[ta].subresource.resolveTextureSubresource(tex->getDesc());
                 TextureView *subresourceView = tex->GetOrCreateSubresourceView(subresource);
 
                 VkDescriptorImageInfo imageInfo = {
@@ -274,13 +281,11 @@ namespace RHI::Vulkan
 	    : m_Context(context)
     {}
 
-    BindingSet::~BindingSet()
-    {
-	    if(descriptorPool)
-	    {
+    BindingSet::~BindingSet() {
+        if (descriptorPool) {
             vkDestroyDescriptorPool(m_Context.device, descriptorPool, nullptr);
             descriptorPool = VkDescriptorPool();
             descriptorSet = VkDescriptorSet();
-	    }
+        }
     }
 }

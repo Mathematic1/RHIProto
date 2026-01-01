@@ -88,178 +88,14 @@ namespace RHI::Vulkan
         vkCmdCopyBuffer(m_CurrentCommandBuffer->commandBuffer, srcBuf->buffer, dstBuf->buffer, 1, &copyRegion);
     }
 
-    void CommandList::transitionImageLayout(ITexture* texture, ImageLayout oldLayout, ImageLayout newLayout)
-    {
-        endRenderPass();
-
-        Texture* tex = dynamic_cast<Texture*>(texture);
-        transitionImageLayoutCmd(
-            tex->image,
-            convertFormat(tex->getDesc().format),
-            convertImageLayout(oldLayout),
-            convertImageLayout(newLayout),
-            tex->getDesc().layerCount,
-            tex->getDesc().mipLevels);
-        tex->desiredLayout = convertImageLayout(newLayout);
-    }
-
-    void CommandList::transitionImageLayoutCmd(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout, uint32_t layerCount, uint32_t mipLevels)
-    {
-        VkImageMemoryBarrier barrier{};
-        barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-        barrier.pNext = nullptr;
-        barrier.srcAccessMask = 0;
-        barrier.dstAccessMask = 0;
-        barrier.oldLayout = oldLayout;
-        barrier.newLayout = newLayout;
-        barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-        barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-        barrier.image = image;
-        barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-        barrier.subresourceRange.baseMipLevel = 0;
-        barrier.subresourceRange.levelCount = mipLevels;
-        barrier.subresourceRange.baseArrayLayer = 0;
-        barrier.subresourceRange.layerCount = layerCount;
-
-        if (newLayout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL ||
-            (format == VK_FORMAT_D16_UNORM) ||
-            (format == VK_FORMAT_X8_D24_UNORM_PACK32) ||
-            (format == VK_FORMAT_D32_SFLOAT) ||
-            (format == VK_FORMAT_S8_UINT) ||
-            (format == VK_FORMAT_D16_UNORM_S8_UINT) ||
-            (format == VK_FORMAT_D24_UNORM_S8_UINT))
-        {
-            barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
-
-            if (hasStencilComponent(format))
-            {
-                barrier.subresourceRange.aspectMask |= VK_IMAGE_ASPECT_STENCIL_BIT;
-            }
-        }
-        else
-        {
-            barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-        }
-
-        VkPipelineStageFlags srcStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
-        VkPipelineStageFlags dstStage = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
-
-        // ---------- srcAccessMask ----------
-        switch (oldLayout) {
-        case VK_IMAGE_LAYOUT_UNDEFINED:
-            barrier.srcAccessMask = 0;
-            srcStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
-            break;
-
-        case VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL:
-            barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-            srcStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
-            break;
-
-        case VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL:
-            barrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
-            srcStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
-            break;
-
-        case VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL:
-            barrier.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-            srcStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-            break;
-
-        case VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL:
-            barrier.srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
-            srcStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-            break;
-
-        case VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL:
-            barrier.srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-            srcStage = VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
-            break;
-        }
-
-        // ---------- dstAccessMask ----------
-        switch (newLayout) {
-        case VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL:
-            barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-            dstStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
-            break;
-
-        case VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL:
-            barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
-            dstStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
-            break;
-
-        case VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL:
-            barrier.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-            dstStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-            break;
-
-        case VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL:
-            barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-            dstStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-            break;
-
-        case VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL:
-            barrier.dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-            dstStage = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
-            break;
-
-        default:
-            barrier.dstAccessMask = 0;
-            dstStage = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
-            break;
-        }
-
-        vkCmdPipelineBarrier(
-            m_CurrentCommandBuffer->commandBuffer,
-            srcStage,
-            dstStage,
-            0,
-            0, nullptr,
-            0, nullptr,
-            1, &barrier);
-    }
-
-    void CommandList::transitionBufferLayout(IBuffer* buffer, ImageLayout oldLayout, ImageLayout newLayout)
-    {
-        Buffer* buf = dynamic_cast<Buffer*>(buffer);
-        transitionBufferLayoutCmd(buf->buffer, convertFormat(buf->desc.format), VkImageLayout{}, VkImageLayout{}, 0, 0);
-    }
-
-    void CommandList::transitionBufferLayoutCmd(VkBuffer buffer, VkFormat format, VkAccessFlags oldAccess, VkAccessFlags newAccess, uint32_t offset, uint32_t size)
-    {
-        VkBufferMemoryBarrier barrier{};
-
-        VkPipelineStageFlags sourceStage{};
-        VkPipelineStageFlags destinationStage{};
-
-        barrier.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
-        barrier.pNext = nullptr;
-        barrier.srcAccessMask = 0;
-        barrier.dstAccessMask = 0;
-        barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-        barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-        barrier.offset = offset;
-        barrier.size = size;
-
-        vkCmdPipelineBarrier(
-            m_CurrentCommandBuffer->commandBuffer,
-            sourceStage,
-            destinationStage,
-            0,
-            0, nullptr,
-            1, &barrier,
-            0, nullptr);
-    }
-
     void CommandList::copyBufferToImage(IBuffer* buffer, ITexture* texture, uint32_t mipLevel, uint32_t baseArrayLayer)
     {
         Texture* tex = dynamic_cast<Texture*>(texture);
         Buffer* buf = dynamic_cast<Buffer*>(buffer);
 
-        const uint32_t mipWidth = std::max(tex->desc.width >> mipLevel, uint32_t(1));
-        const uint32_t mipHeight = std::max(tex->desc.height >> mipLevel, uint32_t(1));
-        const uint32_t mipDepth = std::max(tex->desc.depth >> mipLevel, uint32_t(1));
+        const uint32_t mipWidth = std::max(tex->desc.width >> mipLevel, 1u);
+        const uint32_t mipHeight = std::max(tex->desc.height >> mipLevel, 1u);
+        const uint32_t mipDepth = std::max(tex->desc.depth >> mipLevel, 1u);
 
         VkBufferImageCopy region{};
         region.bufferOffset = 0;
@@ -286,9 +122,9 @@ namespace RHI::Vulkan
         std::vector<VkBufferImageCopy> regions(tex->getDesc().mipLevels);
         for (uint32_t i = 0; i < tex->getDesc().mipLevels; i++)
         {
-            mipWidth = std::max(mipWidth >> 1, uint32_t(1));
-            mipHeight = std::max(mipHeight >> 1, uint32_t(1));
-            mipDepth = std::max(mipDepth >> 1, uint32_t(1));
+            mipWidth = std::max(mipWidth >> 1, 1u);
+            mipHeight = std::max(mipHeight >> 1, 1u);
+            mipDepth = std::max(mipDepth >> 1, 1u);
 
             const uint32_t numColumns = (mipWidth + formatInfo.blockSize - 1) / formatInfo.blockSize;
             const uint32_t numRows = (mipHeight + formatInfo.blockSize - 1) / formatInfo.blockSize;
@@ -349,6 +185,8 @@ namespace RHI::Vulkan
         m_CurrentCommandBuffer->submissionID = submissionID;
 
         m_CurrentCommandBuffer = nullptr;
+
+        m_StateTracker.commandListSubmitted();
     }
 
     void CommandList::draw(const DrawArguments& args)

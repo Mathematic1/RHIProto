@@ -553,8 +553,6 @@ namespace
                 printf("Cannot create depth texture\n");
                 exit(EXIT_FAILURE);
             }
-
-            commandList->transitionImageLayout(m_DepthSwapChainTexture.get(), ImageLayout::UNDEFINED, ImageLayout::DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
         }
 
         commandList->endSingleTimeCommands();
