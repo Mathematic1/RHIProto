@@ -1038,7 +1038,7 @@ namespace RHI
         RGB = R | G | B,
         RGBA = R | G | B | A,
     };
-    ENUM_CLASS_FLAG_OPERATORS(ColorMask);
+    ENUM_CLASS_FLAG_OPERATORS(ColorMask)
 
     struct DepthStencilState
     {
@@ -1204,8 +1204,8 @@ namespace RHI
         virtual void
         clearColorTexture(ITexture *texture, const TextureSubresource &subresource, const Color &color) = 0;
         virtual void clearDepthStencilTexture(
-            ITexture *texture, const TextureSubresource &subresource, bool clearDepth, bool clearStencil,
-            float depthValue, uint32_t stencilValue
+            ITexture *texture, TextureSubresource subresources, bool clearDepth, bool clearStencil, float depthValue,
+            uint32_t stencilValue
         ) = 0;
         virtual void clearAttachments(
             std::vector<ITexture *> colorAttachments, ITexture *depthAttachment, const std::vector<Rect> &rects

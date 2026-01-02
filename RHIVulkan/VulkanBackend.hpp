@@ -970,8 +970,10 @@ namespace RHI::Vulkan
 			ITexture *dstTexture, const TextureSubresource &dstSubresource, const TextureRegion &dstRegion, RHI::SamplerFilter filter) override;
 		virtual void resolveTexture(ITexture* srcTexture, const TextureSubresource& srcSubresource, ITexture* dstTexture, const TextureSubresource dstSubresource) override;
 		virtual void clearColorTexture(ITexture* texture, const TextureSubresource& subresource, const Color& color) override;
-		virtual void clearDepthStencilTexture(ITexture *texture, const TextureSubresource &subresource, bool clearDepth, bool clearStencil,
-			float depthValue, uint32_t stencilValue) override;
+                virtual void clearDepthStencilTexture(
+                    ITexture *texture, TextureSubresource subresources, bool clearDepth, bool clearStencil,
+                    float depthValue, uint32_t stencilValue
+                ) override;
 		virtual void clearAttachments(std::vector<ITexture*> colorAttachments, ITexture* depthAttachment, const std::vector<Rect>& rects) override;
 
 		void beginRenderPass(Framebuffer* framebuffer);

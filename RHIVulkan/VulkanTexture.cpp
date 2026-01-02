@@ -236,7 +236,7 @@ namespace RHI::Vulkan
         imageInfo.format = convertFormat(desc.format);
         imageInfo.extent = VkExtent3D{ desc.width, desc.height, desc.depth };
         imageInfo.mipLevels = desc.mipLevels;
-        imageInfo.arrayLayers = (uint32_t)((pickImageFlag(desc) == VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT) ? 6 : 1);
+        imageInfo.arrayLayers = desc.layerCount;
         imageInfo.samples = (VkSampleCountFlagBits)desc.sampleCount;
         imageInfo.tiling = desc.isLinearTiling ? VK_IMAGE_TILING_LINEAR : VK_IMAGE_TILING_OPTIMAL;
         imageInfo.usage = pickImageUsage(desc);
@@ -647,7 +647,7 @@ namespace RHI::Vulkan
     }
 
     void CommandList::clearDepthStencilTexture(
-        ITexture *texture, const TextureSubresource &subresource, bool clearDepth, bool clearStencil, float depthValue,
+        ITexture *texture, TextureSubresource subresources, bool clearDepth, bool clearStencil, float depthValue,
         uint32_t stencilValue
     ) {
         if (!clearDepth && !clearStencil) {
@@ -674,15 +674,15 @@ namespace RHI::Vulkan
 
         VkImageSubresourceRange imageSubresourceRange{};
         imageSubresourceRange.aspectMask = aspectFlags;
-        imageSubresourceRange.baseMipLevel = subresource.mipLevel;
-        imageSubresourceRange.levelCount = subresource.mipLevelCount;
-        imageSubresourceRange.baseArrayLayer = subresource.baseArrayLayer;
-        imageSubresourceRange.layerCount = subresource.layerCount;
+        imageSubresourceRange.baseMipLevel = subresources.mipLevel;
+        imageSubresourceRange.levelCount = subresources.mipLevelCount;
+        imageSubresourceRange.baseArrayLayer = subresources.baseArrayLayer;
+        imageSubresourceRange.layerCount = subresources.layerCount;
+
+        subresources = subresources.resolveTextureSubresource(tex->desc);
 
         if (m_EnableAutoBarriers) {
-            m_StateTracker.requireTextureState(
-                tex, { subresource.mipLevel, 1, subresource.baseArrayLayer, 1 }, ResourceStates::CopyDestination
-            );
+            m_StateTracker.requireTextureState(tex, subresources, ResourceStates::CopyDestination);
         }
         commitBarriers();
 

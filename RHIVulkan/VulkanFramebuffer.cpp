@@ -85,9 +85,9 @@ namespace RHI::Vulkan
             fb->textures.push_back(texture);
 
             if (numLayers) {
-                assert(numLayers == texture->getDesc().layerCount);
+                assert(numLayers == subresource.layerCount);
             } else {
-                numLayers = texture->getDesc().layerCount;
+                numLayers = subresource.layerCount;
             }
         }
 

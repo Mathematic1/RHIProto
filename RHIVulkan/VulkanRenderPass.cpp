@@ -59,7 +59,6 @@ namespace RHI::Vulkan
         const bool first = ci.flags & eRenderPassBit_First;
         const bool last = ci.flags & eRenderPassBit_Last;
 
-        uint32_t attachmentIdx = 0;
         std::vector<VkAttachmentDescription> attachments;
         std::vector<VkAttachmentReference> colorAttachmentRefs;
 
@@ -89,7 +88,7 @@ namespace RHI::Vulkan
             attachments.push_back(colorAttachment);
 
             VkAttachmentReference colorAttachmentRef{};
-            colorAttachmentRef.attachment = attachmentIdx;
+            colorAttachmentRef.attachment = i;
             colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
             colorAttachmentRefs.push_back(colorAttachmentRef);
         }
@@ -127,7 +126,7 @@ namespace RHI::Vulkan
 
             attachments.push_back(depthAttachment);
             
-            depthAttachmentRef.attachment = 1;
+            depthAttachmentRef.attachment = attachments.size() - 1;
             depthAttachmentRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
         }
 
