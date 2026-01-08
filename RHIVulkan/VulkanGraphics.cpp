@@ -389,30 +389,38 @@ namespace RHI::Vulkan
             vkCmdSetBlendConstants(m_CurrentCommandBuffer->commandBuffer, &state.blendColorFactor.r);
         }
 
-        std::vector<VkBuffer> vertexBuffers;
-        std::vector<VkDeviceSize> vertexBuffersOffsets{};
-        vertexBuffers.reserve(state.vertexBufferBindings.size());
-        vertexBuffersOffsets.reserve(state.vertexBufferBindings.size());
-        uint32_t maxVertexBufferIndex = 0;
-        for(auto& vertexBinding : state.vertexBufferBindings)
-        {
-            if(Buffer* vertexBuffer = dynamic_cast<Buffer*>(vertexBinding.buffer)){
-                vertexBuffers.push_back(vertexBuffer->buffer);
-                vertexBuffersOffsets.push_back(vertexBinding.offset);
-                maxVertexBufferIndex = std::max(vertexBinding.bindingSlot, maxVertexBufferIndex);
-            }
-        }
-
-        if (state.indexBufferBinding.buffer && m_CurrentGraphicsState.indexBufferBinding.buffer != state.indexBufferBinding.buffer) {
+        if (state.indexBufferBinding.buffer &&
+            m_CurrentGraphicsState.indexBufferBinding.buffer != state.indexBufferBinding.buffer) {
             Buffer *indexBuf = dynamic_cast<Buffer *>(state.indexBufferBinding.buffer);
-            vkCmdBindIndexBuffer(m_CurrentCommandBuffer->commandBuffer, indexBuf->buffer,
-                                 state.indexBufferBinding.offset,
-                                 state.indexBufferBinding.index32BitType ? VK_INDEX_TYPE_UINT32 : VK_INDEX_TYPE_UINT16);
+            vkCmdBindIndexBuffer(
+                m_CurrentCommandBuffer->commandBuffer,
+                indexBuf->buffer,
+                state.indexBufferBinding.offset,
+                state.indexBufferBinding.index32BitType ? VK_INDEX_TYPE_UINT32 : VK_INDEX_TYPE_UINT16
+            );
         }
 
-        if (!vertexBuffers.empty()) {
-            vkCmdBindVertexBuffers(m_CurrentCommandBuffer->commandBuffer, 0, maxVertexBufferIndex + 1,
-                                   vertexBuffers.data(), vertexBuffersOffsets.data()); 
+        if (!state.vertexBufferBindings.empty()) {
+            VkBuffer vertexBuffers[kMaxVertexAttributes] = {};
+            VkDeviceSize vertexBuffersOffsets[kMaxVertexAttributes] = {};
+            uint32_t maxVertexBufferIndex = 0;
+            uint32_t bindingIndex = 0u;
+            for (auto &vertexBinding : state.vertexBufferBindings) {
+                if (Buffer *vertexBuffer = dynamic_cast<Buffer *>(vertexBinding.buffer)) {
+                    vertexBuffers[bindingIndex] = vertexBuffer->buffer;
+                    vertexBuffersOffsets[bindingIndex] = vertexBinding.offset;
+                    maxVertexBufferIndex = std::max(vertexBinding.bindingSlot, maxVertexBufferIndex);
+                    bindingIndex++;
+                }
+            }
+
+            vkCmdBindVertexBuffers(
+                m_CurrentCommandBuffer->commandBuffer,
+                0,
+                maxVertexBufferIndex + 1,
+                vertexBuffers,
+                vertexBuffersOffsets
+            );
         }
 
         GraphicsPipeline* pso = dynamic_cast<GraphicsPipeline*>(state.pipeline);

@@ -106,7 +106,7 @@ namespace RHI::Vulkan
         endRenderPass();
 
         std::vector<VkImageMemoryBarrier> imageBarriers;
-        imageBarriers.reserve(barriers.size());
+        //imageBarriers.reserve(barriers.size());
 
         VkPipelineStageFlags srcStages = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
         VkPipelineStageFlags dstStages = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
@@ -187,6 +187,7 @@ namespace RHI::Vulkan
                 imageBarriers.data()
             );
         }
+        imageBarriers.clear();
 
         m_StateTracker.clearBarriers();
     }

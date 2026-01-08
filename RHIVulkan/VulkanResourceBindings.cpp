@@ -253,20 +253,30 @@ namespace RHI::Vulkan
     }
 
 
-    void CommandList::bindBindingSets(VkPipelineBindPoint bindPoint, VkPipelineLayout pipelineLayout, const std::vector<IBindingSet*> bindingSets)
-    {
-        std::vector<VkDescriptorSet> descriptorSets;
-        descriptorSets.reserve(bindingSets.size());
-        
-        for(IBindingSet* bindingSet : bindingSets)
-        {
-            if(BindingSet* binding = dynamic_cast<BindingSet*>(bindingSet))
-            {
-                descriptorSets.push_back(binding->descriptorSet);
+    void CommandList::bindBindingSets(
+        VkPipelineBindPoint bindPoint, VkPipelineLayout pipelineLayout, const std::vector<IBindingSet *> bindingSets
+    ) {
+        VkDescriptorSet descriptorSets[kMaxBindingSets] = {};
+
+        uint32_t descriptorMaxIdx = 0u;
+        for (IBindingSet *bindingSet : bindingSets) {
+            if (BindingSet *binding = dynamic_cast<BindingSet *>(bindingSet)) {
+                descriptorSets[descriptorMaxIdx] = binding->descriptorSet;
             }
+
+            descriptorMaxIdx++;
         }
 
-        vkCmdBindDescriptorSets(m_CurrentCommandBuffer->commandBuffer, bindPoint, pipelineLayout, 0, uint32_t(descriptorSets.size()), descriptorSets.data() , 0, nullptr);
+        vkCmdBindDescriptorSets(
+            m_CurrentCommandBuffer->commandBuffer,
+            bindPoint,
+            pipelineLayout,
+            0,
+            descriptorMaxIdx,
+            descriptorSets,
+            0,
+            nullptr
+        );
     }
 
     BindingLayout::~BindingLayout()

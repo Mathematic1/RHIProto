@@ -19,6 +19,8 @@
 namespace RHI
 {
     static constexpr uint32_t kMaxRenderTargets = 8;
+    static constexpr uint32_t kMaxVertexAttributes = 8;
+    static constexpr uint32_t kMaxBindingSets = 8;
 
     class IBuffer;
     class ITexture;
