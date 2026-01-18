@@ -526,6 +526,16 @@ namespace RHI
             debugName = value;
             return *this;
         }
+
+        TextureDesc &setInitialState(ResourceStates states) {
+            initialState = states;
+            return *this;
+        }
+
+        TextureDesc &setKeepInitialState(bool value) {
+            keepInitialState = value;
+            return *this;
+        }
     };
 
     struct TextureRegion {

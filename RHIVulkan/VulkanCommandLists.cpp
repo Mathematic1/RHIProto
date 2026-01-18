@@ -33,6 +33,9 @@ namespace RHI::Vulkan
     {
         endRenderPass();
 
+        m_StateTracker.keepTextureInitialStates();
+        commitBarriers();
+
         vkEndCommandBuffer(m_CurrentCommandBuffer->commandBuffer);
 
         clearState();

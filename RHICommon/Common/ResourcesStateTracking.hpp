@@ -48,6 +48,7 @@ class CommandListStateTracker {
 
     void requireTextureState(TextureStateInfo *texture, const TextureSubresource &subresources, ResourceStates requiredState);
 
+    void keepTextureInitialStates();
     void commandListSubmitted();
 
     const std::vector<TextureBarrier> &getTextureBarriers() const {

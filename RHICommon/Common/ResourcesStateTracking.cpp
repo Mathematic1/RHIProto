@@ -129,21 +129,17 @@ void CommandListStateTracker::requireTextureState(
     if (entireTexture && tracking->subresourceStates.empty()) {
         ResourceStates before = tracking->state;
 
-        if (before == requiredState) {
-            return;
+        if (before != requiredState) {
+            TextureBarrier barrier{};
+            barrier.texture = texture;
+            barrier.entireTexture = true;
+            barrier.stateBefore = before;
+            barrier.stateAfter = requiredState;
+
+            m_TextureBarriers.push_back(barrier);
         }
 
-        TextureBarrier barrier{};
-        barrier.texture = texture;
-        barrier.entireTexture = true;
-        barrier.stateBefore = before;
-        barrier.stateAfter = requiredState;
-
-        m_TextureBarriers.push_back(barrier);
-
         tracking->state = requiredState;
-        tracking->subresourceStates.clear();
-        return;
     } else {
         if (tracking->subresourceStates.empty()) {
             tracking->subresourceStates.resize(desc.mipLevels * desc.layerCount, tracking->state);
@@ -155,22 +151,28 @@ void CommandListStateTracker::requireTextureState(
                 uint32_t idx = layer * desc.mipLevels + mip;
 
                 ResourceStates before = tracking->subresourceStates[idx];
-                if (before == requiredState) {
-                    continue;
+                if (before != requiredState) {
+                    TextureBarrier barrier{};
+                    barrier.texture = texture;
+                    barrier.entireTexture = false;
+                    barrier.arraySlice = layer;
+                    barrier.mipLevel = mip;
+                    barrier.stateBefore = before;
+                    barrier.stateAfter = requiredState;
+
+                    m_TextureBarriers.push_back(barrier);
                 }
-
-                TextureBarrier barrier{};
-                barrier.texture = texture;
-                barrier.entireTexture = false;
-                barrier.arraySlice = layer;
-                barrier.mipLevel = mip;
-                barrier.stateBefore = before;
-                barrier.stateAfter = requiredState;
-
-                m_TextureBarriers.push_back(barrier);
 
                 tracking->subresourceStates[idx] = requiredState;
             }
+        }
+    }
+}
+
+void CommandListStateTracker::keepTextureInitialStates() {
+    for (auto &[texture, tracking] : m_TextureStates) {
+        if (texture->descReference.keepInitialState && !texture->permanentState && !tracking->permanentTransition) {
+            requireTextureState(texture, kAllSubresources, texture->descReference.initialState);
         }
     }
 }
@@ -185,6 +187,12 @@ void CommandListStateTracker::commandListSubmitted() {
         texture->permanentState = state;
     }
     m_PermanentTextureStates.clear();
+
+    for (const auto &[texture, stateTracking] : m_TextureStates) {
+        if (texture->descReference.keepInitialState && !texture->stateInitialized) {
+            texture->stateInitialized = true;
+        }
+    }
 
     m_TextureStates.clear();
 }
