@@ -1176,9 +1176,9 @@ namespace RHI
         GraphicsPipelineDesc& setPixelShader(IShader* value) { PS = ShaderHandle(value); return *this; }
     };
 
-    class IGraphicsPipeline : public IResource
-    {
-        virtual const GraphicsPipelineDesc& getDesc() const = 0;
+    class IGraphicsPipeline : public IResource {
+      public:
+        virtual const GraphicsPipelineDesc &getDesc() const = 0;
     };
 
     class IRHICommandList : public IResource {
