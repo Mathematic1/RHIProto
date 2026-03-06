@@ -235,7 +235,7 @@ namespace RHI::Vulkan
         pipelineInfo.pMultisampleState = &multisampling;
         pipelineInfo.pDepthStencilState = &depthStencil;
         pipelineInfo.pColorBlendState = &colorBlending;
-        pipelineInfo.pDynamicState = pipeInfo.dynamicScissorState ? &dynamicState : nullptr;
+        pipelineInfo.pDynamicState = &dynamicState;
         pipelineInfo.layout = pso->pipelineLayout;
         pipelineInfo.renderPass = fb->renderPass;
         pipelineInfo.subpass = 0;

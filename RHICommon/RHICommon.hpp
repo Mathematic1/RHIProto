@@ -973,8 +973,6 @@ namespace RHI
         uint32_t height = 0;
         uint32_t topology = 3; /* defaults to triangles*/
 
-        bool dynamicScissorState = false;
-
         uint32_t patchControlPoints = 0;
     };
 
