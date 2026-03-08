@@ -30,6 +30,7 @@ namespace RHI
     class IBindingLayout;
     class IBindingSet;
     class IGraphicsPipeline;
+    class IComputePipeline;
     class IFramebuffer;
     class IRHICommandList;
     class IDevice;
@@ -42,6 +43,7 @@ namespace RHI
     typedef std::shared_ptr<IBindingLayout> BindingLayoutHandle;
     typedef std::shared_ptr<IBindingSet> BindingSetHandle;
     typedef std::shared_ptr<IGraphicsPipeline> GraphicsPipelineHandle;
+    typedef std::shared_ptr<IComputePipeline> ComputePipelineHandle;
     typedef std::shared_ptr<IFramebuffer> FramebufferHandle;
     typedef std::shared_ptr<IRHICommandList> CommandListHandle;
     typedef std::shared_ptr<IDevice> DeviceHandle;
@@ -851,6 +853,16 @@ namespace RHI
         DrawArguments& setStartInstanceLocation(uint32_t value) { startInstanceLocation = value; return *this; }
     };
 
+    struct ComputeState
+    {
+        IComputePipeline* pipeline = nullptr;
+
+        std::vector<IBindingSet*> bindings;
+
+        ComputeState& setPipeline(IComputePipeline* value) { pipeline = value; return *this; }
+        ComputeState& addBindingSet(IBindingSet* value) { bindings.push_back(value); return *this; }
+    };
+
     class IInstance : public IResource
     {
 
@@ -1179,6 +1191,21 @@ namespace RHI
         virtual const GraphicsPipelineDesc &getDesc() const = 0;
     };
 
+    struct ComputePipelineDesc {
+        ShaderHandle CS;
+
+        std::vector<BindingLayoutHandle> bindingLayouts;
+        PushConstantsDesc pushConstants;
+
+        ComputePipelineDesc& setComputeShader(IShader* value) { CS = ShaderHandle(value); return *this; }
+        ComputePipelineDesc& addBindingLayout(IBindingLayout* value) { bindingLayouts.push_back(BindingLayoutHandle(value)); return *this; }
+    };
+
+    class IComputePipeline : public IResource {
+        public:
+            virtual const ComputePipelineDesc &getDesc() const = 0;
+    };
+
     class IRHICommandList : public IResource {
       public:
         virtual void beginSingleTimeCommands() = 0;
@@ -1188,9 +1215,14 @@ namespace RHI
         virtual void clearState() = 0;
 
         virtual void queueWaitIdle() = 0;
+
+        virtual void setGraphicsState(const GraphicsState &state) = 0;
         virtual void draw(const DrawArguments &args) = 0;
         virtual void drawIndexed(const DrawArguments &args) = 0;
-        virtual void setGraphicsState(const GraphicsState &state) = 0;
+
+        virtual void setComputeState(const ComputeState& state) = 0;
+        virtual void dispatch(uint32_t groupsX, uint32_t groupsY = 1, uint32_t groupsZ = 1) = 0;
+
         virtual void transitionBufferLayout(IBuffer *texture, ImageLayout oldLayout, ImageLayout newLayout) = 0;
         virtual bool updateTextureImage(
             ITexture *texture, uint32_t mipLevel, uint32_t baseArrayLayer, const void *imageData, size_t rowPitch = 0,
@@ -1244,6 +1276,7 @@ namespace RHI
         virtual IRenderPass* createRenderPass(const FramebufferDesc& framebufferDesc, const RenderPassCreateInfo& ci = RenderPassCreateInfo()) = 0;
         virtual FramebufferHandle createFramebuffer(IRenderPass* renderPass, const FramebufferDesc& desc) = 0;
         virtual GraphicsPipelineHandle createGraphicsPipeline(const GraphicsPipelineDesc& desc, IFramebuffer* framebuffer) = 0;
+        virtual ComputePipelineHandle createComputePipeline(const ComputePipelineDesc& desc) = 0;
         virtual ShaderHandle createShaderModule(const char* fileName, const std::vector<unsigned int>& SPIRV) = 0;
         virtual BindingLayoutHandle createDescriptorSetLayout(const DescriptorSetInfo& dsInfo) = 0;
         virtual BindingSetHandle createDescriptorSet(const DescriptorSetInfo& dsInfo, uint32_t dSetCount, IBindingLayout* bindingLayout) = 0;

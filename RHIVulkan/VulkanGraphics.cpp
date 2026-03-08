@@ -4,10 +4,10 @@ namespace RHI::Vulkan
 {
     void countShaders(IShader* shader, uint32_t& numShaders)
     {
-	    if(!shader)
-	    {
-		    return;
-	    }
+	if(!shader)
+	{
+		return;
+	}
 
         numShaders++;
     }
@@ -430,5 +430,6 @@ namespace RHI::Vulkan
         bindBindingSets(VK_PIPELINE_BIND_POINT_GRAPHICS, pso->pipelineLayout, state.bindingSets);
 
         m_CurrentGraphicsState = state;
+        m_CurrentComputeState = {};
     }
 }

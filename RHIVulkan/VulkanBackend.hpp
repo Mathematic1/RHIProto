@@ -58,6 +58,8 @@ namespace RHI::Vulkan
         VkPipelineColorBlendAttachmentState convertBlendState(const ColorBlendState::RenderTargetBlendState &blendState
         );
 
+        void countShaders(IShader* shader, uint32_t& numShaders);
+
 	// Features we need for our Vulkan context
 	struct VulkanContextFeatures
 	{
@@ -777,6 +779,26 @@ namespace RHI::Vulkan
 		const VulkanContext& m_Context;
 	};
 
+        class ComputePipeline : public IComputePipeline {
+        public:
+            ComputePipelineDesc desc = {};
+
+            std::vector<BindingLayout*> pipelineBindingLayouts;
+            VkPipeline pipeline;
+            VkPipelineLayout pipelineLayout;
+            VkShaderStageFlags pushConstantsVisibility;
+            bool usesBlendConstants = false;
+
+            explicit ComputePipeline(const VulkanContext& context)
+                        : m_Context(context)
+            {}
+
+            ~ComputePipeline() override;
+            const ComputePipelineDesc& getDesc() const override { return desc; }
+        private:
+            const VulkanContext& m_Context;
+        };
+
 	class Device : public IDevice
 	{
 	public:
@@ -889,8 +911,6 @@ namespace RHI::Vulkan
 
 		VkPipeline addPipeline(const GraphicsPipelineDesc& desc, IFramebuffer* framebuffer);
 
-		VkResult createComputePipeline(VkShaderModule computeShader, VkPipelineLayout pipelineLayout, VkPipeline* pipeline);
-
 		/* Calculate the descriptor pool size from the list of buffers and textures */
 		VkDescriptorPool createDescriptorPool(const DescriptorSetInfo& dsInfo, uint32_t dSetCount = 1);
 
@@ -935,6 +955,7 @@ namespace RHI::Vulkan
 		std::vector<uint32_t> m_DeviceQueueIndices;
 
 		virtual GraphicsPipelineHandle createGraphicsPipeline(const GraphicsPipelineDesc& desc, IFramebuffer* framebuffer) override;
+	        virtual ComputePipelineHandle createComputePipeline(const ComputePipelineDesc& desc) override;
 	};
 
 	class CommandList : public IRHICommandList
@@ -978,9 +999,13 @@ namespace RHI::Vulkan
 
 		void beginRenderPass(Framebuffer* framebuffer);
 		void endRenderPass();
+
 		void setGraphicsState(const GraphicsState& state) override;
 		void draw(const DrawArguments& args) override;
 		void drawIndexed(const DrawArguments& args) override;
+
+	        void setComputeState(const ComputeState& state) override;
+	        void dispatch(uint32_t groupsX, uint32_t groupsY = 1, uint32_t groupsZ = 1) override;
 
 		void bindBindingSets(VkPipelineBindPoint bindPoint, VkPipelineLayout pipelineLayout, const std::vector<IBindingSet*> bindings);
 		void setPushConstants(const void* data, size_t byteSize) override;
@@ -1011,6 +1036,7 @@ namespace RHI::Vulkan
 		VkShaderStageFlags m_CurrentPushConstantsVisibility;
 
 		GraphicsState m_CurrentGraphicsState{};
+	        ComputeState m_CurrentComputeState{};
 
 	        void requireTextureState(ITexture *texture, const TextureSubresource &subresource, ResourceStates requiredState);
                 void trackResourcesAndBarriers(const GraphicsState &state);

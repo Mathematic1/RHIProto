@@ -193,7 +193,7 @@ namespace RHI::Vulkan
     }
 
     void CommandList::draw(const DrawArguments& args)
-	{
+    {
         assert(m_CurrentCommandBuffer);
 
         vkCmdDraw(m_CurrentCommandBuffer->commandBuffer,
@@ -201,7 +201,7 @@ namespace RHI::Vulkan
             args.instanceCount,
             args.startVertexLocation,
             args.startInstanceLocation);
-	}
+    }
 
     void CommandList::drawIndexed(const DrawArguments& args)
     {
