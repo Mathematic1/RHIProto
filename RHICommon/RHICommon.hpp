@@ -1277,6 +1277,8 @@ namespace RHI
         virtual FramebufferHandle createFramebuffer(IRenderPass* renderPass, const FramebufferDesc& desc) = 0;
         virtual GraphicsPipelineHandle createGraphicsPipeline(const GraphicsPipelineDesc& desc, IFramebuffer* framebuffer) = 0;
         virtual ComputePipelineHandle createComputePipeline(const ComputePipelineDesc& desc) = 0;
+        virtual void initPipelineCache(const std::vector<uint8_t>& initialData = {}) = 0;
+        virtual std::vector<uint8_t> getPipelineCacheData() const = 0;
         virtual ShaderHandle createShaderModule(const char* fileName, const std::vector<unsigned int>& SPIRV) = 0;
         virtual BindingLayoutHandle createDescriptorSetLayout(const DescriptorSetInfo& dsInfo) = 0;
         virtual BindingSetHandle createDescriptorSet(const DescriptorSetInfo& dsInfo, uint32_t dSetCount, IBindingLayout* bindingLayout) = 0;

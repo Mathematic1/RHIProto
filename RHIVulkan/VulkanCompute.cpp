@@ -61,7 +61,7 @@ namespace RHI::Vulkan
         computePipelineCreateInfo.basePipelineHandle = 0;
         computePipelineCreateInfo.basePipelineIndex = 0;
 
-        vkCreateComputePipelines(m_Context.device, 0, 1, &computePipelineCreateInfo, nullptr, &pso->pipeline);
+        vkCreateComputePipelines(m_Context.device, m_Context.pipelineCache, 1, &computePipelineCreateInfo, nullptr, &pso->pipeline);
 
         return ComputePipelineHandle(pso);
     }

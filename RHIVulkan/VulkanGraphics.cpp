@@ -243,9 +243,37 @@ namespace RHI::Vulkan
         pipelineInfo.basePipelineIndex = -1;
 
         checkSuccess(
-            vkCreateGraphicsPipelines(m_Context.device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &pso->pipeline));
+            vkCreateGraphicsPipelines(m_Context.device, m_Context.pipelineCache, 1, &pipelineInfo, nullptr, &pso->pipeline));
 
         return GraphicsPipelineHandle(pso);
+    }
+
+    void Device::initPipelineCache(const std::vector<uint8_t>& initialData) {
+        if (m_Context.pipelineCache != VK_NULL_HANDLE) {
+            vkDestroyPipelineCache(m_Context.device, m_Context.pipelineCache, nullptr);
+            m_Context.pipelineCache = VkPipelineCache{};
+        }
+
+        VkPipelineCacheCreateInfo ci{};
+        ci.sType = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO;
+        ci.initialDataSize = initialData.size();
+        ci.pInitialData = initialData.empty() ? nullptr : initialData.data();
+
+        checkSuccess(vkCreatePipelineCache(m_Context.device, &ci, nullptr, &m_Context.pipelineCache));
+    }
+
+    std::vector<uint8_t> Device::getPipelineCacheData() const {
+        if (m_Context.pipelineCache == VK_NULL_HANDLE) {
+            return {};
+        }
+        size_t dataSize = 0;
+        vkGetPipelineCacheData(m_Context.device, m_Context.pipelineCache, &dataSize, nullptr);
+        if (dataSize == 0) {
+            return {};
+        }
+        std::vector<uint8_t> data(dataSize);
+        vkGetPipelineCacheData(m_Context.device, m_Context.pipelineCache, &dataSize, data.data());
+        return data;
     }
 
     VkPipeline Device::addPipeline(const GraphicsPipelineDesc& desc, IFramebuffer* framebuffer)

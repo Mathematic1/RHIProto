@@ -44,6 +44,15 @@ namespace RHI::Vulkan
         m_Context.ctxExtensions = *desc.ctxExtensions;
         m_Context.ctxFeatures = *desc.ctxFeatures;
 
+        VkPipelineCacheCreateInfo pipelineCacheInfo{};
+        pipelineCacheInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO;
+        VkResult result = vkCreatePipelineCache(m_Context.device, &pipelineCacheInfo, nullptr, &m_Context.pipelineCache);
+
+        if (result != VK_SUCCESS)
+        {
+            std::printf("Failed to create the pipeline cache");
+        }
+
         //if (desc.useComputeQueue)
         //{
         //    // Create compute command pool
@@ -73,7 +82,11 @@ namespace RHI::Vulkan
 
     Device::~Device()
     {
-        
+        if (m_Context.pipelineCache)
+        {
+            vkDestroyPipelineCache(m_Context.device, m_Context.pipelineCache, nullptr);
+            m_Context.pipelineCache = VkPipelineCache();
+        }
     }
 
     CommandListHandle Device::createCommandList(const CommandListParameters& params)

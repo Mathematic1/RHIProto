@@ -119,6 +119,7 @@ namespace RHI::Vulkan
 			, device(device)
 			, ctxExtensions(contextExtensions)
 			, ctxFeatures(contextFeatures)
+	                , pipelineCache(nullptr)
 		{
 		}
 
@@ -166,6 +167,7 @@ namespace RHI::Vulkan
 		VkDevice device;
 		VkQueue graphicsQueue;
 		VkDescriptorPool descriptorPool;
+	        VkPipelineCache pipelineCache;
 
 		VulkanContextExtensions ctxExtensions;
 		VulkanContextFeatures ctxFeatures;
@@ -942,6 +944,10 @@ namespace RHI::Vulkan
 		VkSemaphore getQueueSemaphore(CommandQueue queueID) override;
 		void queueWaitForSemaphore(CommandQueue waitQueueID, VkSemaphore semaphore, uint64_t value) override;
 		void queueSignalSemaphore(CommandQueue executionQueueID, VkSemaphore semaphore, uint64_t value) override;
+
+		// Pipeline cache
+		void initPipelineCache(const std::vector<uint8_t>& initialData = {}) override;
+		std::vector<uint8_t> getPipelineCacheData() const override;
 
 	private:
 		VulkanContext m_Context;
