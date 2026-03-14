@@ -264,13 +264,42 @@ namespace RHI::Vulkan
         return TextureHandle(tex);
     }
 
-    TextureView *Texture::GetOrCreateSubresourceView(const TextureSubresource &subresource) {
-        auto it = subresourceViews.find(subresource);
+    TextureDimension getDimensionForFramebuffer(TextureDimension dimension, bool isArray) {
+        // Can't render into cubes and 3D textures directly, convert them to 2D arrays
+        if (dimension == TextureDimension::TextureCube || dimension == TextureDimension::TextureCubeArray || dimension == TextureDimension::Texture3D)
+            dimension = TextureDimension::Texture2DArray;
+
+        if (!isArray) {
+            // Demote arrays to single textures if we just need one layer
+            switch (dimension) {
+            case TextureDimension::Texture1DArray:
+                dimension = TextureDimension::Texture1D;
+                break;
+            case TextureDimension::Texture2DArray:
+                dimension = TextureDimension::Texture2D;
+                break;
+            case TextureDimension::Texture2DMSArray:
+                dimension = TextureDimension::Texture2DMS;
+                break;
+            default:
+                break;
+            }
+        }
+
+        return dimension;
+    }
+
+    TextureView *Texture::GetOrCreateSubresourceView(const TextureSubresource &subresource, TextureDimension dimensionOverride) {
+        // Use texture's own dimension if no override specified
+        TextureDimension viewDimension = (dimensionOverride != TextureDimension::Unknown) ? dimensionOverride : desc.dimension;
+
+        SubresourceViewKey key{ subresource, viewDimension };
+        auto it = subresourceViews.find(key);
         if (it != subresourceViews.end()) {
             return &it->second;
         }
         
-        auto [insertIt, inserted] = subresourceViews.emplace(subresource, *this);
+        auto [insertIt, inserted] = subresourceViews.emplace(key, *this);
 
         auto &view = insertIt->second;
 
@@ -287,7 +316,7 @@ namespace RHI::Vulkan
         ci.pNext = nullptr;
         ci.flags = 0;
         ci.image = image;
-        ci.viewType = textureDimensionToImageViewType(desc.dimension);
+        ci.viewType = textureDimensionToImageViewType(viewDimension);
         ci.format = convertFormat(desc.format);
         ci.subresourceRange = view.subresourceRange;
 
@@ -375,8 +404,7 @@ namespace RHI::Vulkan
         const uint32_t deviceNumColumns = (mipWidth + formatInfo.blockSize - 1) / formatInfo.blockSize;
         const uint32_t deviceNumRows = (mipHeight + formatInfo.blockSize - 1) / formatInfo.blockSize;
         const uint32_t deviceRowSize = deviceNumColumns * formatInfo.bytesPerBlock;
-        VkDeviceSize layerSize = deviceRowSize * deviceNumRows * mipDepth;
-        VkDeviceSize imageSize = layerSize * tex->desc.layerCount;
+        VkDeviceSize deviceMemSize = deviceRowSize * deviceNumRows * mipDepth;
 
         if (rowPitch == 0) {
             rowPitch = deviceRowSize;
@@ -386,7 +414,7 @@ namespace RHI::Vulkan
             depthPitch = rowPitch * deviceNumRows;
         }
 
-        BufferDesc stagingDesc = BufferDesc{}.setSize(imageSize).setIsTransferSrc(true).setMemoryProperties(
+        BufferDesc stagingDesc = BufferDesc{}.setSize(deviceMemSize).setIsTransferSrc(true).setMemoryProperties(
             MemoryPropertiesBits::HOST_VISIBLE_BIT | MemoryPropertiesBits::HOST_COHERENT_BIT
         );
         BufferHandle stagingBuffer = m_Device->createBuffer(stagingDesc);
@@ -397,11 +425,11 @@ namespace RHI::Vulkan
             stagingBuffer.get(),
             0,
             imageData,
-            imageSize,
+            deviceMemSize,
             deviceNumRows,
             deviceNumColumns,
             mipDepth,
-            tex->desc.layerCount,
+            1,
             rowPitch,
             depthPitch,
             deviceRowSize

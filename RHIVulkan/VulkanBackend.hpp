@@ -37,6 +37,8 @@ namespace RHI::Vulkan
 
         VkDescriptorType convertDescriptorType(DescriptorType type);
 
+        TextureDimension getDimensionForFramebuffer(TextureDimension dimension, bool isArray);
+
         VkShaderStageFlags pickShaderStage(ShaderStageFlagBits stages);
 
         VkBlendFactor convertBlendFactor(const BlendFactor &blendState);
@@ -469,9 +471,20 @@ namespace RHI::Vulkan
 	class Texture : public ITexture, public MemoryResource, public TextureStateInfo
 	{
 	public:
-            struct TextureSubresourceHash {
-                size_t operator()(const TextureSubresource &s) const noexcept {
-                    return (s.mipLevel << 0) | (s.mipLevelCount << 8) | (s.baseArrayLayer << 16) | (s.layerCount << 24);
+            struct SubresourceViewKey {
+                TextureSubresource subresource;
+                TextureDimension dimension;
+
+                bool operator==(const SubresourceViewKey &other) const {
+                    return subresource == other.subresource && dimension == other.dimension;
+                }
+            };
+
+            struct SubresourceViewKeyHash {
+                size_t operator()(const SubresourceViewKey &k) const noexcept {
+                    return (k.subresource.mipLevel << 0) | (k.subresource.mipLevelCount << 8) |
+                           (k.subresource.baseArrayLayer << 16) | (k.subresource.layerCount << 24) |
+                           (static_cast<size_t>(k.dimension) << 28);
                 }
             };
 
@@ -485,7 +498,7 @@ namespace RHI::Vulkan
 		VkFormat format;
 
 		VkImage image = nullptr;
-                std::unordered_map<TextureSubresource, TextureView, TextureSubresourceHash> subresourceViews;
+                std::unordered_map<SubresourceViewKey, TextureView, SubresourceViewKeyHash> subresourceViews;
 
 		// Offscreen buffers require VK_IMAGE_LAYOUT_GENERAL && static textures have VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
 		VkImageLayout currentLayout = VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED;
@@ -495,7 +508,7 @@ namespace RHI::Vulkan
 			return desc;
 		}
 
-	        TextureView *GetOrCreateSubresourceView(const TextureSubresource &subresource);
+	        TextureView *GetOrCreateSubresourceView(const TextureSubresource &subresource, TextureDimension dimensionOverride = TextureDimension::Unknown);
 
 	private:
 		const VulkanContext& m_Context;
@@ -590,7 +603,7 @@ namespace RHI::Vulkan
 		return descriptorSet;
 	}
 
-	inline VkWriteDescriptorSet imageWriteDescriptorSet(VkDescriptorSet ds, const VkDescriptorImageInfo* ii, uint32_t bindIdx)
+	inline VkWriteDescriptorSet imageWriteDescriptorSet(VkDescriptorSet ds, const VkDescriptorImageInfo* ii, uint32_t bindIdx, VkDescriptorType type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER)
 	{
 		VkWriteDescriptorSet descriptorSet{};
 		descriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -599,7 +612,7 @@ namespace RHI::Vulkan
 		descriptorSet.dstBinding = bindIdx;
 		descriptorSet.dstArrayElement = 0;
 		descriptorSet.descriptorCount = 1;
-		descriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+		descriptorSet.descriptorType = type;
 		descriptorSet.pImageInfo = ii;
 		descriptorSet.pBufferInfo = nullptr;
 		descriptorSet.pTexelBufferView = nullptr;

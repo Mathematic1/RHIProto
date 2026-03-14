@@ -64,14 +64,16 @@ namespace RHI::Vulkan
 
             TextureSubresource subresource = desc.colorAttachments[i].subresource;
             subresource = subresource.resolveTextureSubresource(texture->getDesc());
-            const auto &view = texture->GetOrCreateSubresourceView(subresource);
+
+            TextureDimension fbDimension = getDimensionForFramebuffer(texture->desc.dimension, subresource.layerCount > 1);
+            const auto &view = texture->GetOrCreateSubresourceView(subresource, fbDimension);
             attachments[i] = view->imageView;
             fb->textures.push_back(texture);
 
             if (numLayers) {
-                assert(numLayers == texture->getDesc().layerCount);
+                assert(numLayers == subresource.layerCount);
             }else {
-                numLayers = texture->getDesc().layerCount;
+                numLayers = subresource.layerCount;
             }
         }
         if(desc.depthAttachment.texture)
@@ -80,7 +82,9 @@ namespace RHI::Vulkan
 
             TextureSubresource subresource = desc.depthAttachment.subresource;
             subresource = subresource.resolveTextureSubresource(texture->getDesc());
-            const auto &view = texture->GetOrCreateSubresourceView(subresource);
+
+            TextureDimension fbDimension = getDimensionForFramebuffer(texture->desc.dimension, subresource.layerCount > 1);
+            const auto &view = texture->GetOrCreateSubresourceView(subresource, fbDimension);
             attachments.push_back(view->imageView);
             fb->textures.push_back(texture);
 

@@ -107,7 +107,7 @@ namespace RHI::Vulkan
         region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
         region.imageSubresource.mipLevel = mipLevel;
         region.imageSubresource.baseArrayLayer = baseArrayLayer;
-        region.imageSubresource.layerCount = tex->getDesc().layerCount;
+        region.imageSubresource.layerCount = 1;
         region.imageOffset = VkOffset3D{ 0, 0, 0 };
         region.imageExtent = VkExtent3D{mipWidth, mipHeight, mipDepth};
 

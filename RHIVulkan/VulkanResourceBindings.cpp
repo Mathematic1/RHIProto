@@ -26,22 +26,29 @@ namespace RHI::Vulkan
     {
         uint32_t uniformBufferCount = 0;
         uint32_t storageBufferCount = 0;
-        uint32_t samplerCount = static_cast<uint32_t>(dsInfo.textures.size());
-
-        for (const auto& ta : dsInfo.textureArrays)
-            samplerCount += static_cast<uint32_t>(ta.textures.size());
+        uint32_t combinedImageSamplerCount = 0;
+        uint32_t storageImageCount = 0;
 
         for (const auto& b : dsInfo.buffers)
         {
             if (b.dInfo.type == DescriptorType::UNIFORM_BUFFER)
                 uniformBufferCount++;
-            if (b.dInfo.type == DescriptorType::STORAGE_BUFFER  )
+            if (b.dInfo.type == DescriptorType::STORAGE_BUFFER)
                 storageBufferCount++;
         }
 
-        std::vector<VkDescriptorPoolSize> poolSizes;
+        for (const auto& t : dsInfo.textures)
+        {
+            if (t.dInfo.type == DescriptorType::STORAGE_IMAGE)
+                storageImageCount++;
+            else
+                combinedImageSamplerCount++;
+        }
 
-        /* printf("Allocating pool[%d | %d | %d]\n", (int)uniformBufferCount, (int)storageBufferCount, (int)samplerCount); */
+        for (const auto& ta : dsInfo.textureArrays)
+            combinedImageSamplerCount += static_cast<uint32_t>(ta.textures.size());
+
+        std::vector<VkDescriptorPoolSize> poolSizes;
 
         if (uniformBufferCount)
             poolSizes.push_back(VkDescriptorPoolSize{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, dSetCount * uniformBufferCount });
@@ -49,8 +56,11 @@ namespace RHI::Vulkan
         if (storageBufferCount)
             poolSizes.push_back(VkDescriptorPoolSize{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, dSetCount * storageBufferCount });
 
-        if (samplerCount)
-            poolSizes.push_back(VkDescriptorPoolSize{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, dSetCount * samplerCount });
+        if (combinedImageSamplerCount)
+            poolSizes.push_back(VkDescriptorPoolSize{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, dSetCount * combinedImageSamplerCount });
+
+        if (storageImageCount)
+            poolSizes.push_back(VkDescriptorPoolSize{ VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, dSetCount * storageImageCount });
 
         VkDescriptorPoolCreateInfo poolInfo{};
         poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
@@ -193,13 +203,18 @@ namespace RHI::Vulkan
             TextureSubresource subresource = dsInfo.textures[i].dInfo.subresource.resolveTextureSubresource(tex->getDesc());
             TextureView *subresourceView = tex->GetOrCreateSubresourceView(subresource);
 
-            imageDescriptors[i] =
-                VkDescriptorImageInfo{ sampler->sampler,
-                                       subresourceView->imageView,
-                                       /* t.texture.layout */ VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL };
+            const bool isStorageImage = dsInfo.textures[i].dInfo.type == DescriptorType::STORAGE_IMAGE;
+            VkImageLayout layout = isStorageImage ? VK_IMAGE_LAYOUT_GENERAL : VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            VkSampler vkSampler = (sampler != nullptr) ? sampler->sampler : VK_NULL_HANDLE;
 
+            imageDescriptors[i] =
+                VkDescriptorImageInfo{ vkSampler,
+                                       subresourceView->imageView,
+                                       layout };
+
+            VkDescriptorType vkDescType = convertDescriptorType(dsInfo.textures[i].dInfo.type);
             descriptorWrites.push_back(
-                imageWriteDescriptorSet(bindingSet->descriptorSet, &imageDescriptors[i], bindingIdx++));
+                imageWriteDescriptorSet(bindingSet->descriptorSet, &imageDescriptors[i], bindingIdx++, vkDescType));
 
             if (!tex->permanentState) {
                 bindingSet->texturesWithoutPermanentState.emplace_back(i);
