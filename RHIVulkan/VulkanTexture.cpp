@@ -640,6 +640,8 @@ namespace RHI::Vulkan
     }
 
     void CommandList::clearColorTexture(ITexture *texture, const TextureSubresource &subresource, const Color &color) {
+        endRenderPass();
+
         Texture *tex = dynamic_cast<Texture *>(texture);
 
         m_CurrentCommandBuffer->referencedResources.push_back(tex);
@@ -681,6 +683,8 @@ namespace RHI::Vulkan
         if (!clearDepth && !clearStencil) {
             return;
         }
+
+        endRenderPass();
 
         Texture *tex = dynamic_cast<Texture *>(texture);
 
@@ -727,6 +731,8 @@ namespace RHI::Vulkan
     void CommandList::clearAttachments(
         std::vector<ITexture *> colorAttachments, ITexture *depthAttachment, const std::vector<Rect> &rects
     ) {
+        endRenderPass();
+
         std::vector<VkClearAttachment> clearAttachments = {};
 
         VkClearColorValue clearColorValue{};
