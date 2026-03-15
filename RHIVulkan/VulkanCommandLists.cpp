@@ -214,4 +214,36 @@ namespace RHI::Vulkan
             args.startVertexLocation,
             args.startInstanceLocation);
     }
+
+    void CommandList::drawIndirect(uint32_t offsetBytes, uint32_t drawCount)
+    {
+        assert(m_CurrentCommandBuffer);
+
+        Buffer* indirectParams = dynamic_cast<Buffer*>(m_CurrentGraphicsState.indirectParams);
+        assert(indirectParams);
+
+        vkCmdDrawIndirect(
+            m_CurrentCommandBuffer->commandBuffer,
+            indirectParams->buffer,
+            offsetBytes,
+            drawCount,
+            sizeof(DrawIndirectArguments)
+        );
+    }
+
+    void CommandList::drawIndexedIndirect(uint32_t offsetBytes, uint32_t drawCount)
+    {
+        assert(m_CurrentCommandBuffer);
+
+        Buffer* indirectParams = dynamic_cast<Buffer*>(m_CurrentGraphicsState.indirectParams);
+        assert(indirectParams);
+
+        vkCmdDrawIndexedIndirect(
+            m_CurrentCommandBuffer->commandBuffer,
+            indirectParams->buffer,
+            offsetBytes,
+            drawCount,
+            sizeof(DrawIndexedIndirectArguments)
+        );
+    }
 }

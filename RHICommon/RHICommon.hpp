@@ -799,8 +799,6 @@ namespace RHI
 
     struct CommandListParameters
     {
-    	// Type of the queue that this command list is to be executed on.
-        // COPY and COMPUTE queues have limited subsets of methods available.
         CommandQueue queueType = CommandQueue::Graphics;
     };
 
@@ -822,6 +820,8 @@ namespace RHI
         std::vector<VertexBufferBinding> vertexBufferBindings;
         IndexBufferBinding indexBufferBinding;
 
+        IBuffer* indirectParams = nullptr;
+
         ViewportState viewport;
         Color blendColorFactor;
         uint8_t dynamicStencilReference = 0;
@@ -836,6 +836,7 @@ namespace RHI
         GraphicsState& addBindingSet(IBindingSet* value) { bindingSets.push_back(value); return *this; }
         GraphicsState& addVertexBufferBinding(const VertexBufferBinding& value) { vertexBufferBindings.push_back(value); return *this; }
         GraphicsState& setIndexBufferBinding(const IndexBufferBinding& value) { indexBufferBinding = value; return *this; }
+        GraphicsState& setIndirectParams(IBuffer* value) { indirectParams = value; return *this; }
     };
 
     struct DrawArguments
@@ -853,14 +854,34 @@ namespace RHI
         DrawArguments& setStartInstanceLocation(uint32_t value) { startInstanceLocation = value; return *this; }
     };
 
+    struct DrawIndirectArguments
+    {
+        uint32_t vertexCount = 0;
+        uint32_t instanceCount = 1;
+        uint32_t startVertexLocation = 0;
+        uint32_t startInstanceLocation = 0;
+    };
+
+    struct DrawIndexedIndirectArguments
+    {
+        uint32_t indexCount = 0;
+        uint32_t instanceCount = 1;
+        uint32_t startIndexLocation = 0;
+        int32_t  baseVertexLocation = 0;
+        uint32_t startInstanceLocation = 0;
+    };
+
     struct ComputeState
     {
         IComputePipeline* pipeline = nullptr;
 
         std::vector<IBindingSet*> bindings;
 
+        IBuffer* indirectParams = nullptr;
+
         ComputeState& setPipeline(IComputePipeline* value) { pipeline = value; return *this; }
         ComputeState& addBindingSet(IBindingSet* value) { bindings.push_back(value); return *this; }
+        ComputeState& setIndirectParams(IBuffer* value) { indirectParams = value; return *this; }
     };
 
     class IInstance : public IResource
@@ -1219,6 +1240,8 @@ namespace RHI
         virtual void setGraphicsState(const GraphicsState &state) = 0;
         virtual void draw(const DrawArguments &args) = 0;
         virtual void drawIndexed(const DrawArguments &args) = 0;
+        virtual void drawIndirect(uint32_t offsetBytes, uint32_t drawCount = 1) = 0;
+        virtual void drawIndexedIndirect(uint32_t offsetBytes, uint32_t drawCount = 1) = 0;
 
         virtual void setComputeState(const ComputeState& state) = 0;
         virtual void dispatch(uint32_t groupsX, uint32_t groupsY = 1, uint32_t groupsZ = 1) = 0;
