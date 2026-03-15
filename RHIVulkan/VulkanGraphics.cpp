@@ -1,5 +1,7 @@
 #include <VulkanBackend.hpp>
 
+#include <Common/Miscellaneous.hpp>
+
 namespace RHI::Vulkan
 {
     void countShaders(IShader* shader, uint32_t& numShaders)
@@ -428,7 +430,7 @@ namespace RHI::Vulkan
             );
         }
 
-        if (!state.vertexBufferBindings.empty()) {
+        if (!state.vertexBufferBindings.empty() && arraysAreDifferent(state.vertexBufferBindings, m_CurrentGraphicsState.vertexBufferBindings)) {
             VkBuffer vertexBuffers[kMaxVertexAttributes] = {};
             VkDeviceSize vertexBuffersOffsets[kMaxVertexAttributes] = {};
             uint32_t maxVertexBufferIndex = 0;

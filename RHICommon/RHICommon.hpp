@@ -769,6 +769,14 @@ namespace RHI
         IBuffer* buffer = nullptr;
         uint32_t bindingSlot = 0;
         size_t offset = 0;
+
+        bool operator ==(const VertexBufferBinding& b) const
+        {
+            return buffer == b.buffer
+                && bindingSlot == b.bindingSlot
+                && offset == b.offset;
+        }
+        bool operator !=(const VertexBufferBinding& b) const { return !(*this == b); }
     };
 
     struct IndexBufferBinding

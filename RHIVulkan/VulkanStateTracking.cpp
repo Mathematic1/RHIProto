@@ -1,5 +1,7 @@
 #include <VulkanBackend.hpp>
 
+#include <Common/Miscellaneous.hpp>
+
 #include <assert.h>
 
 namespace RHI::Vulkan
@@ -25,8 +27,10 @@ namespace RHI::Vulkan
     void CommandList::trackResourcesAndBarriers(const GraphicsState &state) {
         assert(m_EnableAutoBarriers);
 
-        for (size_t i = 0; i < state.bindingSets.size(); i++) {
-            setResourceStatesForBindingSet(state.bindingSets[i]);
+        if (arraysAreDifferent(state.bindingSets, m_CurrentGraphicsState.bindingSets)) {
+            for (size_t i = 0; i < state.bindingSets.size(); i++) {
+                setResourceStatesForBindingSet(state.bindingSets[i]);
+            }
         }
 
         if (m_CurrentGraphicsState.framebuffer != state.framebuffer) {
