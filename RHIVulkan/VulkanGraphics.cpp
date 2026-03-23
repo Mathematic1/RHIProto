@@ -24,7 +24,9 @@ namespace RHI::Vulkan
             VkVertexInputBindingDescription bindingDescription;
             bindingDescription.binding = description.binding;
             bindingDescription.stride = description.stride;
-            bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+            bindingDescription.inputRate = description.isInstanced
+                ? VK_VERTEX_INPUT_RATE_INSTANCE
+                : VK_VERTEX_INPUT_RATE_VERTEX;
             bindingDescriptions.push_back(bindingDescription);
         }
 

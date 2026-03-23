@@ -736,9 +736,11 @@ namespace RHI
     {
         uint32_t binding = 0u;
         uint32_t stride = 0u;
+        bool isInstanced = false;
 
         VertexInputBindingDesc& setBinding(uint32_t value) { binding = value; return *this; }
         VertexInputBindingDesc& setStride(uint32_t value) { stride = value; return *this; }
+        VertexInputBindingDesc& setIsInstanced(bool value) { isInstanced = value; return *this; }
     };
 
     struct VertexInputAttributeDesc
