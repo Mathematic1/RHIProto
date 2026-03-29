@@ -100,6 +100,18 @@ namespace RHI::Vulkan
             //shaderStages.push_back(shaderStageInfo(shader->stage, *shader, "main"));
             shaderStages.push_back(shaderStageInfo(VK_SHADER_STAGE_VERTEX_BIT, *shader, "main"));
         }
+        if (Shader* shader = dynamic_cast<Shader*>(desc.HS.get()))
+        {
+            shaderStages.push_back(shaderStageInfo(VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT, *shader, "main"));
+        }
+        if (Shader* shader = dynamic_cast<Shader*>(desc.DS.get()))
+        {
+            shaderStages.push_back(shaderStageInfo(VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT, *shader, "main"));
+        }
+        if (Shader* shader = dynamic_cast<Shader*>(desc.GS.get()))
+        {
+            shaderStages.push_back(shaderStageInfo(VK_SHADER_STAGE_GEOMETRY_BIT, *shader, "main"));
+        }
         if (Shader* shader = dynamic_cast<Shader*>(desc.PS.get()))
         {
             //shaderStages.push_back(shaderStageInfo(shader->stage, *shader, "main"));
@@ -219,13 +231,19 @@ namespace RHI::Vulkan
         if (desc.pushConstants.fragConstSize > 0)
             pso->pushConstantsVisibility |= VK_SHADER_STAGE_FRAGMENT_BIT;
 
+        if (desc.HS.get() && desc.pushConstants.vtxConstSize > 0)
+            pso->pushConstantsVisibility |= VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT;
+
+        if (desc.DS.get() && desc.pushConstants.vtxConstSize > 0)
+            pso->pushConstantsVisibility |= VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT;
+
         std::vector<VkDescriptorSetLayout> descriptorSetLayouts;
         descriptorSetLayouts.reserve(desc.bindingLayouts.size());
         for (auto &bindingLayoutHandle : desc.bindingLayouts) {
             BindingLayout *bindingLayout = dynamic_cast<BindingLayout *>(bindingLayoutHandle.get());
             descriptorSetLayouts.push_back(bindingLayout->descriptorSetLayout);
         }
-        createPipelineLayout(descriptorSetLayouts, desc.pushConstants, &pso->pipelineLayout);
+        createPipelineLayout(descriptorSetLayouts, desc.pushConstants, &pso->pipelineLayout, pso->pushConstantsVisibility);
 
         VkGraphicsPipelineCreateInfo pipelineInfo{};
         pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
@@ -295,22 +313,16 @@ namespace RHI::Vulkan
     }
 
 
-    bool Device::createPipelineLayout(std::vector<VkDescriptorSetLayout>& dsLayouts, const PushConstantsDesc& constantsDesc, VkPipelineLayout* pipelineLayout)
-    {
+    bool Device::createPipelineLayout(
+        std::vector<VkDescriptorSetLayout> &dsLayouts, const PushConstantsDesc &constantsDesc, VkPipelineLayout *pipelineLayout,
+        VkShaderStageFlags pushConstantStages
+    ) {
         std::vector<VkPushConstantRange> ranges;
 
         const uint32_t totalSize = constantsDesc.vtxConstSize + constantsDesc.fragConstSize;
 
         if (totalSize > 0) {
-            VkShaderStageFlags stages = 0;
-
-            if (constantsDesc.vtxConstSize > 0)
-                stages |= VK_SHADER_STAGE_VERTEX_BIT;
-
-            if (constantsDesc.fragConstSize > 0)
-                stages |= VK_SHADER_STAGE_FRAGMENT_BIT;
-
-            ranges.push_back({stages, 0, totalSize});
+            ranges.push_back({ pushConstantStages, 0, totalSize });
         }
 
         VkPipelineLayoutCreateInfo pipelineLayoutInfo{};

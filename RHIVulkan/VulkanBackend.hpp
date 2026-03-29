@@ -918,7 +918,9 @@ namespace RHI::Vulkan
 		IRenderPass* addDepthRenderPass(const RenderPassCreateInfo ci = {
 			false, true, true, eRenderPassBit_Offscreen | eRenderPassBit_First });
 
-		bool createPipelineLayout(std::vector<VkDescriptorSetLayout>& dsLayouts, const PushConstantsDesc& constantsDesc, VkPipelineLayout* pipelineLayout);
+		bool createPipelineLayout(
+			std::vector<VkDescriptorSetLayout> &dsLayouts, const PushConstantsDesc &constantsDesc, VkPipelineLayout *pipelineLayout,
+			VkShaderStageFlags pushConstantStages);
 
 		bool createPipelineLayoutWithConstants(VkDescriptorSetLayout dsLayout, VkPipelineLayout* pipelineLayout, uint32_t vtxConstSize, uint32_t fragConstSize);
 
