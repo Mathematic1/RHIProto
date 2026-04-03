@@ -246,4 +246,48 @@ namespace RHI::Vulkan
             sizeof(DrawIndexedIndirectArguments)
         );
     }
+
+    void CommandList::drawIndirectCount(
+        uint32_t indirectOffsetBytes, IBuffer *countBuffer, uint32_t countOffsetBytes, uint32_t maxDrawCount,
+        uint32_t stride
+    )
+    {
+        assert(m_CurrentCommandBuffer);
+
+        Buffer* indirectParams = dynamic_cast<Buffer*>(m_CurrentGraphicsState.indirectParams);
+        Buffer* vkCountBuffer = dynamic_cast<Buffer*>(countBuffer);
+        assert(indirectParams && vkCountBuffer);
+
+        vkCmdDrawIndirectCount(
+            m_CurrentCommandBuffer->commandBuffer,
+            indirectParams->buffer,
+            indirectOffsetBytes,
+            vkCountBuffer->buffer,
+            countOffsetBytes,
+            maxDrawCount,
+            stride
+        );
+    }
+
+    void CommandList::drawIndexedIndirectCount(
+        uint32_t indirectOffsetBytes, IBuffer *countBuffer, uint32_t countOffsetBytes, uint32_t maxDrawCount,
+        uint32_t stride
+    )
+    {
+        assert(m_CurrentCommandBuffer);
+
+        Buffer* indirectParams = dynamic_cast<Buffer*>(m_CurrentGraphicsState.indirectParams);
+        Buffer* vkCountBuffer = dynamic_cast<Buffer*>(countBuffer);
+        assert(indirectParams && vkCountBuffer);
+
+        vkCmdDrawIndexedIndirectCount(
+            m_CurrentCommandBuffer->commandBuffer,
+            indirectParams->buffer,
+            indirectOffsetBytes,
+            vkCountBuffer->buffer,
+            countOffsetBytes,
+            maxDrawCount,
+            stride
+        );
+    }
 }

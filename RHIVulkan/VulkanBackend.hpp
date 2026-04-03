@@ -1026,6 +1026,14 @@ namespace RHI::Vulkan
 		void drawIndexed(const DrawArguments& args) override;
 		void drawIndirect(uint32_t offsetBytes, uint32_t drawCount = 1) override;
 		void drawIndexedIndirect(uint32_t offsetBytes, uint32_t drawCount = 1) override;
+		void drawIndirectCount(
+                    uint32_t indirectOffsetBytes, IBuffer *countBuffer, uint32_t countOffsetBytes,
+                    uint32_t maxDrawCount, uint32_t stride = sizeof(DrawIndirectArguments)
+                ) override;
+		void drawIndexedIndirectCount(
+                    uint32_t indirectOffsetBytes, IBuffer *countBuffer, uint32_t countOffsetBytes,
+                    uint32_t maxDrawCount, uint32_t stride = sizeof(DrawIndexedIndirectArguments)
+                ) override;
 
 	        void setComputeState(const ComputeState& state) override;
 	        void dispatch(uint32_t groupsX, uint32_t groupsY = 1, uint32_t groupsZ = 1) override;
