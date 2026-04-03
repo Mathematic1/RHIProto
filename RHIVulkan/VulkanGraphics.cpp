@@ -121,13 +121,17 @@ namespace RHI::Vulkan
         VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
         vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
 
-        auto bindingDescriptions = getBindingDescription(desc.inputLayout.get());
-        auto attributeDescriptions = getAttributeDescriptions(desc.inputLayout.get());
+        std::vector<VkVertexInputBindingDescription> bindingDescriptions;
+        std::vector<VkVertexInputAttributeDescription> attributeDescriptions;
+        if (desc.inputLayout) {
+            bindingDescriptions = getBindingDescription(desc.inputLayout.get());
+            attributeDescriptions = getAttributeDescriptions(desc.inputLayout.get());
 
-        vertexInputInfo.vertexBindingDescriptionCount = static_cast<uint32_t>(bindingDescriptions.size());
-        vertexInputInfo.pVertexBindingDescriptions = bindingDescriptions.data(); // optional
-        vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
-        vertexInputInfo.pVertexAttributeDescriptions = attributeDescriptions.data(); // optional
+            vertexInputInfo.vertexBindingDescriptionCount = static_cast<uint32_t>(bindingDescriptions.size());
+            vertexInputInfo.pVertexBindingDescriptions = bindingDescriptions.data();
+            vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
+            vertexInputInfo.pVertexAttributeDescriptions = attributeDescriptions.data();
+        }
 
         VkPipelineInputAssemblyStateCreateInfo inputAssembly{};
         inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;

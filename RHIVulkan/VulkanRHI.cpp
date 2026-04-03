@@ -347,6 +347,7 @@ namespace
             descriptorIndexing.pNext = pNext;
             descriptorIndexing.shaderSampledImageArrayNonUniformIndexing = VK_TRUE;
             descriptorIndexing.descriptorBindingVariableDescriptorCount = VK_TRUE;
+            descriptorIndexing.shaderStorageBufferArrayNonUniformIndexing = VK_TRUE;
             descriptorIndexing.runtimeDescriptorArray = VK_TRUE;
 
             pNext = &descriptorIndexing;

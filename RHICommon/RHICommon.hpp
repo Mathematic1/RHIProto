@@ -713,6 +713,14 @@ namespace RHI
         TextureArrayAttachment &setTextureSubresource(const TextureSubresource &value) { subresource = value; return *this; }
     };
 
+    struct BufferArrayAttachment
+    {
+        DescriptorInfo dInfo;
+        std::vector<IBuffer*> buffers;
+
+        BufferArrayAttachment &setBuffers(const std::vector<IBuffer *> &value) { buffers = value; return *this; }
+    };
+
     struct FramebufferAttachment
     {
         ITexture* texture = nullptr;
@@ -730,6 +738,7 @@ namespace RHI
         std::vector<BufferAttachment>       buffers;
         std::vector<TextureAttachment>      textures;
         std::vector<TextureArrayAttachment> textureArrays;
+        std::vector<BufferArrayAttachment>  bufferArrays;
     };
 
     struct VertexInputBindingDesc

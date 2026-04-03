@@ -48,6 +48,14 @@ namespace RHI::Vulkan
         for (const auto& ta : dsInfo.textureArrays)
             combinedImageSamplerCount += static_cast<uint32_t>(ta.textures.size());
 
+        for (const auto& ba : dsInfo.bufferArrays)
+        {
+            if (ba.dInfo.type == DescriptorType::STORAGE_BUFFER)
+                storageBufferCount += static_cast<uint32_t>(ba.buffers.size());
+            else if (ba.dInfo.type == DescriptorType::UNIFORM_BUFFER)
+                uniformBufferCount += static_cast<uint32_t>(ba.buffers.size());
+        }
+
         std::vector<VkDescriptorPoolSize> poolSizes;
 
         if (uniformBufferCount)
@@ -106,6 +114,11 @@ namespace RHI::Vulkan
         for (const auto& t : dsInfo.textureArrays)
         {
             bindings.push_back(descriptorSetLayoutBinding(bindingIdx++, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, pickShaderStage(t.dInfo.shaderStageFlags), static_cast<uint32_t>(t.textures.size())));
+        }
+
+        for (const auto& ba : dsInfo.bufferArrays)
+        {
+            bindings.push_back(descriptorSetLayoutBinding(bindingIdx++, convertDescriptorType(ba.dInfo.type), pickShaderStage(ba.dInfo.shaderStageFlags), static_cast<uint32_t>(ba.buffers.size())));
         }
 
         //std::vector<VkDescriptorBindingFlags> descriptorBindingFlags(bindings.size(), 0);
@@ -260,6 +273,31 @@ namespace RHI::Vulkan
             writeSet.descriptorCount = static_cast<uint32_t>(dsInfo.textureArrays[ta].textures.size());
             writeSet.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
             writeSet.pImageInfo = imageArrayDescriptors.data() + taOffsets[ta];
+
+            descriptorWrites.push_back(writeSet);
+        }
+
+        std::vector<VkDescriptorBufferInfo> bufferArrayDescriptors;
+        for (const auto& ba : dsInfo.bufferArrays)
+        {
+            uint32_t baOffset = static_cast<uint32_t>(bufferArrayDescriptors.size());
+            for (size_t j = 0; j < ba.buffers.size(); j++)
+            {
+                Buffer* buf = dynamic_cast<Buffer*>(ba.buffers[j]);
+                bufferArrayDescriptors.push_back(VkDescriptorBufferInfo{
+                    buf->buffer, 0, VK_WHOLE_SIZE
+                });
+            }
+
+            VkWriteDescriptorSet writeSet{};
+            writeSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            writeSet.pNext = nullptr;
+            writeSet.dstSet = bindingSet->descriptorSet;
+            writeSet.dstBinding = bindingIdx++;
+            writeSet.dstArrayElement = 0;
+            writeSet.descriptorCount = static_cast<uint32_t>(ba.buffers.size());
+            writeSet.descriptorType = convertDescriptorType(ba.dInfo.type);
+            writeSet.pBufferInfo = bufferArrayDescriptors.data() + baOffset;
 
             descriptorWrites.push_back(writeSet);
         }
