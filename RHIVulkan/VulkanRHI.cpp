@@ -126,7 +126,8 @@ namespace
             .shaderSampledImageArrayDynamicIndexing = true,
             .shaderInt64 = true,
             .deviceDescriptorIndexing = true,
-            .timelineSemaphore = true
+            .timelineSemaphore = true,
+            .multiview = true
         };
         return contextFeatures;
     }
@@ -338,6 +339,7 @@ namespace
         VkPhysicalDeviceVulkan11Features features11{};
         features11.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES;
         features11.shaderDrawParameters = VK_TRUE;
+        features11.multiview = m_VulkanFeatures.multiview ? VK_TRUE : VK_FALSE;
         features11.pNext = nullptr;
         pNext = &features11;
 

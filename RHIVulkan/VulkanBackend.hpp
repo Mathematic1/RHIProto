@@ -92,6 +92,9 @@ namespace RHI::Vulkan
 		bool deviceDescriptorIndexing = false;
 
 		bool timelineSemaphore = false;
+
+		/* for multiview rendering */
+		bool multiview = false;
 	};
 
 	struct VulkanContextExtensions
@@ -707,6 +710,8 @@ namespace RHI::Vulkan
 
 		RenderPassCreateInfo info;
 		VkRenderPass handle = VK_NULL_HANDLE;
+
+		bool isMultiview() const { return info.viewMask != 0; }
 	};
 
 	class Framebuffer : public IFramebuffer

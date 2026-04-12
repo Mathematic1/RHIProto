@@ -978,6 +978,7 @@ namespace RHI
         bool clearDepth = false;
         bool clearStencil = false;
         uint8_t flags = 0;
+        uint32_t viewMask = 0;
     };
 
     class IRenderPass : public IResource

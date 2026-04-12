@@ -104,7 +104,7 @@ namespace RHI::Vulkan
         fbInfo.pAttachments = attachments.data();
         fbInfo.width = fb->framebufferWidth;
         fbInfo.height = fb->framebufferHeight;
-        fbInfo.layers = numLayers;
+        fbInfo.layers = rp->isMultiview() ? 1 : numLayers;
 
         if (vkCreateFramebuffer(m_Context.device, &fbInfo, nullptr, &fb->framebuffer) != VK_SUCCESS)
         {

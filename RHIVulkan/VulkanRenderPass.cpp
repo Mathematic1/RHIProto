@@ -178,9 +178,22 @@ namespace RHI::Vulkan
         subpass.preserveAttachmentCount = 0;
         subpass.pPreserveAttachments = nullptr;
 
+        VkRenderPassMultiviewCreateInfo multiviewInfo{};
+        uint32_t correlationMask = ci.viewMask;
+        if (ci.viewMask != 0) {
+            multiviewInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_MULTIVIEW_CREATE_INFO;
+            multiviewInfo.pNext = nullptr;
+            multiviewInfo.subpassCount = 1;
+            multiviewInfo.pViewMasks = &ci.viewMask;
+            multiviewInfo.correlationMaskCount = 1;
+            multiviewInfo.pCorrelationMasks = &correlationMask;
+            multiviewInfo.dependencyCount = 0;
+            multiviewInfo.pViewOffsets = nullptr;
+        }
+
         VkRenderPassCreateInfo renderPassInfo{};
         renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-        renderPassInfo.pNext = nullptr;
+        renderPassInfo.pNext = ci.viewMask != 0 ? &multiviewInfo : nullptr;
         renderPassInfo.flags = 0;
         renderPassInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
         renderPassInfo.pAttachments = attachments.data();
@@ -247,9 +260,22 @@ namespace RHI::Vulkan
         subpass.preserveAttachmentCount = 0;
         subpass.pPreserveAttachments = nullptr;
 
+        VkRenderPassMultiviewCreateInfo multiviewInfo{};
+        uint32_t correlationMask = ci.viewMask;
+        if (ci.viewMask != 0) {
+            multiviewInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_MULTIVIEW_CREATE_INFO;
+            multiviewInfo.pNext = nullptr;
+            multiviewInfo.subpassCount = 1;
+            multiviewInfo.pViewMasks = &ci.viewMask;
+            multiviewInfo.correlationMaskCount = 1;
+            multiviewInfo.pCorrelationMasks = &correlationMask;
+            multiviewInfo.dependencyCount = 0;
+            multiviewInfo.pViewOffsets = nullptr;
+        }
+
         VkRenderPassCreateInfo renderPassInfo{};
         renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-        renderPassInfo.pNext = nullptr;
+        renderPassInfo.pNext = ci.viewMask != 0 ? &multiviewInfo : nullptr;
         renderPassInfo.flags = 0;
         renderPassInfo.attachmentCount = 1u;
         renderPassInfo.pAttachments = &depthAttachment;
