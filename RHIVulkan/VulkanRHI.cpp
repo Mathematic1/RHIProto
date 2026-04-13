@@ -525,7 +525,10 @@ namespace
             TextureDesc desc = {};
             desc.setWidth(m_DeviceParams.backBufferWidth)
                 .setHeight(m_DeviceParams.backBufferHeight)
-                .setFormat(Format::BGRA8_UNORM);
+                .setFormat(Format::BGRA8_UNORM)
+                .setInitialState(ResourceStates::Present)
+                .setKeepInitialState(true)
+                .setIsRenderTarget(true);
 
             m_SwapchainTextures.push_back(device->createTextureForNative(m_SwapchainImages[i], m_SwapchainImageViews[i], desc));
         }
