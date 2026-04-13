@@ -59,6 +59,21 @@ namespace RHI::Vulkan
         const bool first = ci.flags & eRenderPassBit_First;
         const bool last = ci.flags & eRenderPassBit_Last;
 
+        const bool colorClearLoadOp = !offscreenInt && ci.clearColor;
+        const VkAttachmentLoadOp colorLoadOp =
+            colorClearLoadOp ? VK_ATTACHMENT_LOAD_OP_CLEAR : VK_ATTACHMENT_LOAD_OP_LOAD;
+
+        VkImageLayout colorInitialLayout{};
+        if (colorClearLoadOp) {
+            colorInitialLayout =
+                first ? VK_IMAGE_LAYOUT_UNDEFINED : VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+        } else {
+            const bool samplePreviousInternalPass = !first && offscreenInt;
+            colorInitialLayout = samplePreviousInternalPass
+                ? VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+                : VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+        }
+
         std::vector<VkAttachmentDescription> attachments;
         std::vector<VkAttachmentReference> colorAttachmentRefs;
 
@@ -75,11 +90,11 @@ namespace RHI::Vulkan
             colorAttachment.flags = 0;
             colorAttachment.format = convertFormat(tex->getDesc().format);
             colorAttachment.samples = (VkSampleCountFlagBits)tex->getDesc().sampleCount;
-            colorAttachment.loadOp = offscreenInt ? VK_ATTACHMENT_LOAD_OP_LOAD : (ci.clearColor ? VK_ATTACHMENT_LOAD_OP_CLEAR : VK_ATTACHMENT_LOAD_OP_LOAD);
+            colorAttachment.loadOp = colorLoadOp;
             colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
             colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
             colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-            colorAttachment.initialLayout = first ? VK_IMAGE_LAYOUT_UNDEFINED : (offscreenInt ? VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL : VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+            colorAttachment.initialLayout = colorInitialLayout;
             colorAttachment.finalLayout = last ? VK_IMAGE_LAYOUT_PRESENT_SRC_KHR : VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
             if (ci.flags & eRenderPassBit_Offscreen)
@@ -101,24 +116,39 @@ namespace RHI::Vulkan
 
             bool hasStencil = hasStencilComponent(convertFormat(depthTex->getDesc().format));
 
+            const bool depthClearLoadOp = !offscreenInt && ci.clearDepth;
+            const bool stencilClearLoadOp = !offscreenInt && ci.clearStencil;
+
+            VkAttachmentLoadOp depthLoadOp = depthClearLoadOp ? VK_ATTACHMENT_LOAD_OP_CLEAR : VK_ATTACHMENT_LOAD_OP_LOAD;
+            VkAttachmentLoadOp stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+            if (hasStencil) {
+                stencilLoadOp = stencilClearLoadOp ? VK_ATTACHMENT_LOAD_OP_CLEAR : VK_ATTACHMENT_LOAD_OP_LOAD;
+            }
+
+            VkImageLayout depthInitialLayout{};
+            if (ci.clearDepth) {
+                const bool isLoadDepth = (depthLoadOp == VK_ATTACHMENT_LOAD_OP_LOAD);
+                const bool isLoadStencil =
+                    hasStencil && (stencilLoadOp == VK_ATTACHMENT_LOAD_OP_LOAD);
+
+                depthInitialLayout = isLoadDepth || isLoadStencil
+                    ? VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL
+                    : VK_IMAGE_LAYOUT_UNDEFINED;
+            } else {
+                depthInitialLayout = offscreenInt
+                    ? VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+                    : VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+            }
+
             VkAttachmentDescription depthAttachment{};
             depthAttachment.flags = 0;
             depthAttachment.format = convertFormat(depthTex->getDesc().format);
             depthAttachment.samples = (VkSampleCountFlagBits)depthTex->getDesc().sampleCount;
-            depthAttachment.loadOp = offscreenInt
-                                         ? VK_ATTACHMENT_LOAD_OP_LOAD
-                                         : (ci.clearDepth ? VK_ATTACHMENT_LOAD_OP_CLEAR : VK_ATTACHMENT_LOAD_OP_LOAD);
+            depthAttachment.loadOp = depthLoadOp;
             depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-            depthAttachment.stencilLoadOp =
-                hasStencil
-                    ? (offscreenInt ? VK_ATTACHMENT_LOAD_OP_LOAD
-                                    : (ci.clearStencil ? VK_ATTACHMENT_LOAD_OP_CLEAR : VK_ATTACHMENT_LOAD_OP_LOAD))
-                    : VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+            depthAttachment.stencilLoadOp = stencilLoadOp;
             depthAttachment.stencilStoreOp = hasStencil ? VK_ATTACHMENT_STORE_OP_STORE : VK_ATTACHMENT_STORE_OP_DONT_CARE;
-            depthAttachment.initialLayout = ci.clearDepth
-                                                ? VK_IMAGE_LAYOUT_UNDEFINED
-                                                : (offscreenInt ? VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
-                                                                : VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
+            depthAttachment.initialLayout = depthInitialLayout;
             depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
             if (ci.flags & eRenderPassBit_Offscreen)
