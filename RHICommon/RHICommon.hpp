@@ -1373,6 +1373,7 @@ namespace RHI
 
         uint32_t backBufferWidth = 0;
         uint32_t backBufferHeight = 0;
+        RHI::Format swapChainFormat = RHI::Format::BGRA8_UNORM;
         uint32_t maxFramesInFlight = 2;
 
         bool backBufferUseDepth = false;

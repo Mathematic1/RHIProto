@@ -628,8 +628,6 @@ namespace RHI::Vulkan
 
 	SwapchainSupportDetails querySwapchainSupport(VkPhysicalDevice device, VkSurfaceKHR surface);
 
-	VkSurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
-
 	VkPresentModeKHR chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes);
 
 	uint32_t chooseSwapImageCount(const VkSurfaceCapabilitiesKHR& caps);

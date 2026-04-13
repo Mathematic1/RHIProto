@@ -265,6 +265,11 @@ namespace
 
         m_Device = Vulkan::DeviceHandle(new RHI::Vulkan::Device(DeviceDesc));
 
+        if (m_DeviceParams.swapChainFormat == RHI::Format::SRGBA8_UNORM)
+            m_DeviceParams.swapChainFormat = RHI::Format::SBGRA8_UNORM;
+        else if (m_DeviceParams.swapChainFormat == RHI::Format::RGBA8_UNORM)
+            m_DeviceParams.swapChainFormat = RHI::Format::BGRA8_UNORM;
+
         createSwapChain();
 
         m_PresentSemaphores.reserve(m_DeviceParams.maxFramesInFlight + 1);
@@ -478,28 +483,28 @@ namespace
         destroySwapChain();
 
         auto swapchainSupport = querySwapchainSupport(m_VulkanPhysicalDevice, m_VulkanInstance.surface);
-        auto surfaceFormat = chooseSwapSurfaceFormat(swapchainSupport.formats);
+        m_SwapChainFormat = { RHI::Vulkan::convertFormat(m_DeviceParams.swapChainFormat), VK_COLOR_SPACE_SRGB_NONLINEAR_KHR};
         auto presentMode = m_DeviceParams.vSyncEnabled ? VK_PRESENT_MODE_FIFO_KHR : chooseSwapPresentMode(swapchainSupport.presentModes);
 
         const VkSwapchainCreateInfoKHR ci = {
-                VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
-                nullptr,
-                0,
-                m_VulkanInstance.surface,
-                chooseSwapImageCount(swapchainSupport.capabilities),
-                surfaceFormat.format,
-                surfaceFormat.colorSpace,
-                {m_DeviceParams.backBufferWidth, m_DeviceParams.backBufferHeight},
-                1,
-                VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | (m_DeviceParams.supportScreenshots ? VK_IMAGE_USAGE_TRANSFER_SRC_BIT : 0u),
-                VK_SHARING_MODE_EXCLUSIVE,
-                1,
-                &m_GraphicsQueueFamily,
-                swapchainSupport.capabilities.currentTransform,
-                VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,
-                presentMode,
-                VK_TRUE,
-                VK_NULL_HANDLE };
+            VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
+            nullptr,
+            0,
+            m_VulkanInstance.surface,
+            chooseSwapImageCount(swapchainSupport.capabilities),
+            m_SwapChainFormat.format,
+            m_SwapChainFormat.colorSpace,
+            {m_DeviceParams.backBufferWidth, m_DeviceParams.backBufferHeight},
+            1,
+            VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | (m_DeviceParams.supportScreenshots ? VK_IMAGE_USAGE_TRANSFER_SRC_BIT : 0u),
+            VK_SHARING_MODE_EXCLUSIVE,
+            1,
+            &m_GraphicsQueueFamily,
+            swapchainSupport.capabilities.currentTransform,
+            VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,
+            presentMode,
+            VK_TRUE,
+            VK_NULL_HANDLE };
 
         checkSuccess(vkCreateSwapchainKHR(m_VulkanDevice, &ci, nullptr, &m_SwapChain));
 
@@ -525,7 +530,7 @@ namespace
             TextureDesc desc = {};
             desc.setWidth(m_DeviceParams.backBufferWidth)
                 .setHeight(m_DeviceParams.backBufferHeight)
-                .setFormat(Format::BGRA8_UNORM)
+                .setFormat(m_DeviceParams.swapChainFormat)
                 .setInitialState(ResourceStates::Present)
                 .setKeepInitialState(true)
                 .setIsRenderTarget(true);
@@ -711,11 +716,11 @@ namespace
 
         for(VkSemaphore& semaphore : m_PresentSemaphores)
         {
-	        if(semaphore)
-	        {
+            if(semaphore)
+            {
                 vkDestroySemaphore(m_VulkanDevice, semaphore, nullptr);
                 semaphore = nullptr;
-	        }
+            }
         }
 
         for (VkSemaphore& semaphore : m_AcquireSemaphores)
@@ -772,7 +777,8 @@ namespace
         constexpr int maxAttempts = 3;
         int attempt = 0;
         while (attempt < maxAttempts) {
-            result = vkAcquireNextImageKHR(m_VulkanDevice, m_SwapChain, 0, semaphore, VkFence(), &m_SwapChainIndex);
+            result = vkAcquireNextImageKHR(
+                m_VulkanDevice, m_SwapChain, std::numeric_limits<uint64_t>::max(), semaphore, VkFence(), &m_SwapChainIndex);
 
             if (result == VK_ERROR_OUT_OF_DATE_KHR) {
                 BackBufferResizing();
@@ -948,11 +954,6 @@ namespace
         }
 
         return details;
-    }
-
-    VkSurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats)
-    {
-        return { VK_FORMAT_B8G8R8A8_UNORM, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR };
     }
 
     VkPresentModeKHR chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes)
