@@ -60,6 +60,8 @@ namespace RHI::Vulkan
         VkPipelineColorBlendAttachmentState convertBlendState(const ColorBlendState::RenderTargetBlendState &blendState
         );
 
+        VkImageAspectFlags pickImageAspect(Format format);
+
         void countShaders(IShader* shader, uint32_t& numShaders);
 
 	// Features we need for our Vulkan context

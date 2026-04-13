@@ -150,7 +150,7 @@ namespace RHI::Vulkan
         return ret;
     }
 
-    inline VkImageAspectFlags pickImageAspect(Format format) {
+    VkImageAspectFlags pickImageAspect(Format format) {
         switch (format) {
         case Format::D16:
         case Format::D32:
