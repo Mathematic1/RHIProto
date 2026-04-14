@@ -88,8 +88,8 @@ namespace RHI::Vulkan
 
             VkAttachmentDescription colorAttachment{};
             colorAttachment.flags = 0;
-            colorAttachment.format = convertFormat(tex->getDesc().format);
-            colorAttachment.samples = (VkSampleCountFlagBits)tex->getDesc().sampleCount;
+            colorAttachment.format = tex->imageInfo.format;
+            colorAttachment.samples = tex->imageInfo.samples;
             colorAttachment.loadOp = colorLoadOp;
             colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
             colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
@@ -142,8 +142,8 @@ namespace RHI::Vulkan
 
             VkAttachmentDescription depthAttachment{};
             depthAttachment.flags = 0;
-            depthAttachment.format = convertFormat(depthTex->getDesc().format);
-            depthAttachment.samples = (VkSampleCountFlagBits)depthTex->getDesc().sampleCount;
+            depthAttachment.format = depthTex->imageInfo.format;
+            depthAttachment.samples = depthTex->imageInfo.samples;
             depthAttachment.loadOp = depthLoadOp;
             depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
             depthAttachment.stencilLoadOp = stencilLoadOp;

@@ -496,27 +496,28 @@ namespace RHI::Vulkan
 	    Texture(const VulkanContext& context)
 	    : TextureStateInfo(desc), m_Context(context)
 	    {}
-	    virtual ~Texture() override;
+	    ~Texture() override;
 
-		TextureDesc desc;
+	    TextureDesc desc;
 
-		VkFormat format;
+	    VkFormat format;
 
-		VkImage image = nullptr;
-                std::unordered_map<SubresourceViewKey, TextureView, SubresourceViewKeyHash> subresourceViews;
+	    VkImageCreateInfo imageInfo;
+	    VkImage image = nullptr;
+	    std::unordered_map<SubresourceViewKey, TextureView, SubresourceViewKeyHash> subresourceViews;
 
-		// Offscreen buffers require VK_IMAGE_LAYOUT_GENERAL && static textures have VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
-		VkImageLayout currentLayout = VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED;
+	    // Offscreen buffers require VK_IMAGE_LAYOUT_GENERAL && static textures have VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+	    VkImageLayout currentLayout = VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED;
 
-		virtual const TextureDesc& getDesc() const override
-		{
-			return desc;
-		}
+	    const TextureDesc& getDesc() const override
+	    {
+	        return desc;
+	    }
 
-	        TextureView *GetOrCreateSubresourceView(const TextureSubresource &subresource, TextureDimension dimensionOverride = TextureDimension::Unknown);
+	    TextureView *GetOrCreateSubresourceView(const TextureSubresource &subresource, TextureDimension dimensionOverride = TextureDimension::Unknown);
 
 	private:
-		const VulkanContext& m_Context;
+	    const VulkanContext& m_Context;
 	};
 
 	inline TextureAttachment makeTextureAttachment(ITexture* tex, ShaderStageFlagBits shaderStageFlags)

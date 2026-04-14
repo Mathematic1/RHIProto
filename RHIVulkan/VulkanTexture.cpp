@@ -30,11 +30,6 @@ namespace RHI::Vulkan
         vkDestroySampler(m_Context.device, sampler, nullptr);
     }
 
-    static VkImageCreateInfo fillImageInfo(const TextureDesc& desc)
-    {
-	    
-    }
-
     VkFormat Device::findSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features)
     {
         for (VkFormat format : candidates)
@@ -88,8 +83,6 @@ namespace RHI::Vulkan
         default:
             return Format::UNKNOWN;
         }
-
-        return Format::UNKNOWN;
     }
 
     bool hasStencilComponent(VkFormat format)
@@ -223,12 +216,11 @@ namespace RHI::Vulkan
         }
     }
 
-    TextureHandle Device::createImage(const TextureDesc& desc)
+    static void fillImageInfo(Texture *texture, const TextureDesc& desc)
     {
-        Texture* tex = new Texture(m_Context);
-        tex->desc = desc;
+        texture->desc = desc;
 
-        VkImageCreateInfo imageInfo{};
+        VkImageCreateInfo &imageInfo = texture->imageInfo;
         imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
         imageInfo.pNext = nullptr;
         imageInfo.flags = pickImageFlag(desc);
@@ -244,8 +236,14 @@ namespace RHI::Vulkan
         imageInfo.queueFamilyIndexCount = 0;
         imageInfo.pQueueFamilyIndices = nullptr;
         imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+    }
 
-        checkSuccess(vkCreateImage(m_Context.device, &imageInfo, nullptr, &tex->image));
+    TextureHandle Device::createImage(const TextureDesc& desc)
+    {
+        Texture* tex = new Texture(m_Context);
+        fillImageInfo(tex, desc);
+
+        checkSuccess(vkCreateImage(m_Context.device, &tex->imageInfo, nullptr, &tex->image));
 
         m_Context.setVkImageName(tex->image, desc.debugName.c_str());
 
@@ -467,7 +465,8 @@ namespace RHI::Vulkan
     TextureHandle Device::createTextureForNative(VkImage image, VkImageView imageView, const TextureDesc& desc)
     {
         Texture* tex = new Texture(m_Context);
-        tex->desc = desc;
+        fillImageInfo(tex, desc);
+
         tex->image = image;
         tex->managed = false;
 
