@@ -490,12 +490,12 @@ namespace RHI::Vulkan
         m_CurrentCommandBuffer->referencedResources.push_back(dstTex);
 
         VkImageCopy imageCopyRegion{};
-        imageCopyRegion.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        imageCopyRegion.srcSubresource.aspectMask = pickImageAspect(srcTex->desc.format);
         imageCopyRegion.srcSubresource.mipLevel = srcSubresource.mipLevel;
         imageCopyRegion.srcSubresource.baseArrayLayer = srcSubresource.baseArrayLayer;
         imageCopyRegion.srcSubresource.layerCount = srcSubresource.layerCount;
         imageCopyRegion.srcOffset = VkOffset3D(resolvedSrcRegion.x, resolvedSrcRegion.y, resolvedSrcRegion.z);
-        imageCopyRegion.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        imageCopyRegion.dstSubresource.aspectMask = pickImageAspect(dstTex->desc.format);
         imageCopyRegion.dstSubresource.mipLevel = dstSubresource.mipLevel;
         imageCopyRegion.dstSubresource.baseArrayLayer = dstSubresource.baseArrayLayer;
         imageCopyRegion.dstSubresource.layerCount = dstSubresource.layerCount;
