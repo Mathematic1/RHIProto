@@ -475,7 +475,9 @@ namespace RHI::Vulkan
         m_CurrentPipelineLayout = pso->pipelineLayout;
         m_CurrentPushConstantsVisibility = pso->pushConstantsVisibility;
 
-        bindBindingSets(VK_PIPELINE_BIND_POINT_GRAPHICS, pso->pipelineLayout, state.bindingSets);
+        if (updatePipeline || arraysAreDifferent(m_CurrentGraphicsState.bindingSets, state.bindingSets)) {
+            bindBindingSets(VK_PIPELINE_BIND_POINT_GRAPHICS, pso->pipelineLayout, state.bindingSets);
+        }
 
         m_CurrentGraphicsState = state;
         m_CurrentComputeState = {};

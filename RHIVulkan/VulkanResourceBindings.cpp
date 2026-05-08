@@ -185,6 +185,7 @@ namespace RHI::Vulkan
     {
         BindingSet *bindingSet = dynamic_cast<BindingSet *>(ds);
         bindingSet->desc = dsInfo;
+        bindingSet->texturesWithoutPermanentState.clear();
 
         uint32_t bindingIdx = 0;
         std::vector<VkWriteDescriptorSet> descriptorWrites;
