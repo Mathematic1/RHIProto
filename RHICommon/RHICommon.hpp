@@ -1285,6 +1285,10 @@ namespace RHI
             ITexture *srcTexture, const TextureSubresource &srcSubresource, const TextureRegion &srcRegion,
             ITexture *dstTexture, const TextureSubresource &dstSubresource, const TextureRegion &dstRegion
         ) = 0;
+        virtual void copyTextureToBuffer(
+            ITexture *srcTexture, const TextureSubresource &srcSubresource, const TextureRegion &srcRegion,
+            IBuffer *dstBuffer
+        ) = 0;
         virtual void blitTexture(
             ITexture *srcTexture, const TextureSubresource &srcSubresource, const TextureRegion &srcRegion,
             ITexture *dstTexture, const TextureSubresource &dstSubresource, const TextureRegion &dstRegion,

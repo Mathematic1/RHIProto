@@ -33,6 +33,8 @@ namespace RHI::Vulkan
 
         ResourceStateMapping convertResourceState(ResourceStates state);
 
+        VkPrimitiveTopology convertPrimitiveTopology(PrimitiveType type);
+
         VkMemoryPropertyFlags pickMemoryProperties(const MemoryPropertiesBits &memoryProperties);
 
         VkDescriptorType convertDescriptorType(DescriptorType type);
@@ -306,6 +308,7 @@ namespace RHI::Vulkan
 		VkResult createDevice(std::unordered_set<uint32_t> &uniqueQueueFamilies);
 		RHI::DeviceHandle getDevice() const override;
 		const VulkanInstance& getVulkanInstance() const;
+		const NativeContext& getNativeContext() const;
 		bool BeginFrame() override;
 		bool Present() override;
 
@@ -367,6 +370,8 @@ namespace RHI::Vulkan
 
 		VulkanContextExtensions m_VulkanExtensions;
 		VulkanContextFeatures m_VulkanFeatures;
+
+		NativeContext m_NativeContext;
 
 		Vulkan::DeviceHandle m_Device;
 	};
@@ -1014,6 +1019,8 @@ namespace RHI::Vulkan
 		void copyImageToBuffer(VkImage image, VkBuffer buffer, uint32_t width, uint32_t height, uint32_t layerCount = 1);
 		virtual void copyTexture(ITexture *srcTexture, const TextureSubresource &srcSubresource, const TextureRegion &srcRegion,
 			ITexture *dstTexture, const TextureSubresource &dstSubresource, const TextureRegion &dstRegion) override;
+		virtual void copyTextureToBuffer(ITexture *srcTexture, const TextureSubresource &srcSubresource,
+			const TextureRegion &srcRegion, IBuffer *dstBuffer) override;
 		virtual void blitTexture(ITexture *srcTexture, const TextureSubresource &srcSubresource, const TextureRegion &srcRegion,
 			ITexture *dstTexture, const TextureSubresource &dstSubresource, const TextureRegion &dstRegion, RHI::SamplerFilter filter) override;
 		virtual void resolveTexture(ITexture* srcTexture, const TextureSubresource& srcSubresource, ITexture* dstTexture, const TextureSubresource dstSubresource) override;

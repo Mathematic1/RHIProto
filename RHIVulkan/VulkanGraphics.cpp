@@ -136,7 +136,7 @@ namespace RHI::Vulkan
         VkPipelineInputAssemblyStateCreateInfo inputAssembly{};
         inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
         /* The only difference from createGraphicsPipeline() */
-        inputAssembly.topology = (VkPrimitiveTopology)pipeInfo.topology;
+        inputAssembly.topology = convertPrimitiveTopology(desc.primType);
         inputAssembly.primitiveRestartEnable = VK_FALSE;
 
         VkViewport viewport{};
@@ -224,7 +224,7 @@ namespace RHI::Vulkan
         tessellationState.sType = VK_STRUCTURE_TYPE_PIPELINE_TESSELLATION_STATE_CREATE_INFO;
         tessellationState.pNext = nullptr;
         tessellationState.flags = 0;
-        tessellationState.patchControlPoints = pipeInfo.patchControlPoints;
+        tessellationState.patchControlPoints = pipeInfo.patchControlPoints > 0 ? pipeInfo.patchControlPoints : 3;
 
         // TODO: refactor push constant visibility logic
         pso->pushConstantsVisibility = 0;
@@ -255,7 +255,8 @@ namespace RHI::Vulkan
         pipelineInfo.pStages = shaderStages.data();
         pipelineInfo.pVertexInputState = &vertexInputInfo;
         pipelineInfo.pInputAssemblyState = &inputAssembly;
-        pipelineInfo.pTessellationState = ((VkPrimitiveTopology)pipeInfo.topology == VK_PRIMITIVE_TOPOLOGY_PATCH_LIST) ? &tessellationState : nullptr;
+        pipelineInfo.pTessellationState =
+            inputAssembly.topology == VK_PRIMITIVE_TOPOLOGY_PATCH_LIST ? &tessellationState : nullptr;
         pipelineInfo.pViewportState = &viewportState;
         pipelineInfo.pRasterizationState = &rasterizer;
         pipelineInfo.pMultisampleState = &multisampling;
@@ -452,13 +453,11 @@ namespace RHI::Vulkan
             VkBuffer vertexBuffers[kMaxVertexAttributes] = {};
             VkDeviceSize vertexBuffersOffsets[kMaxVertexAttributes] = {};
             uint32_t maxVertexBufferIndex = 0;
-            uint32_t bindingIndex = 0u;
             for (auto &vertexBinding : state.vertexBufferBindings) {
                 if (Buffer *vertexBuffer = dynamic_cast<Buffer *>(vertexBinding.buffer)) {
-                    vertexBuffers[bindingIndex] = vertexBuffer->buffer;
-                    vertexBuffersOffsets[bindingIndex] = vertexBinding.offset;
+                    vertexBuffers[vertexBinding.bindingSlot] = vertexBuffer->buffer;
+                    vertexBuffersOffsets[vertexBinding.bindingSlot] = vertexBinding.offset;
                     maxVertexBufferIndex = std::max(vertexBinding.bindingSlot, maxVertexBufferIndex);
-                    bindingIndex++;
                 }
             }
 

@@ -11,6 +11,24 @@
 
 namespace RHI::Vulkan
 {
+    struct NativeContext
+    {
+        VkInstance instance = VK_NULL_HANDLE;
+        VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
+        VkDevice device = VK_NULL_HANDLE;
+
+        VkQueue graphicsQueue = VK_NULL_HANDLE;
+        VkQueue computeQueue = VK_NULL_HANDLE;
+        VkQueue transferQueue = VK_NULL_HANDLE;
+
+        uint32_t graphicsQueueFamily = uint32_t(-1);
+        uint32_t computeQueueFamily = uint32_t(-1);
+        uint32_t transferQueueFamily = uint32_t(-1);
+
+        std::vector<const char *> instanceExtensions;
+        std::vector<const char *> layers;
+        std::vector<const char *> deviceExtensions;
+    };
 
     class IDevice : public RHI::IDevice
     {

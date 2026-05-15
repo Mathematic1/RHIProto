@@ -156,6 +156,30 @@ namespace RHI::Vulkan
         return c_ResourceStateMappings[0];
     }
 
+    VkPrimitiveTopology convertPrimitiveTopology(PrimitiveType type)
+    {
+        switch (type)
+        {
+        case PrimitiveType::PointList:
+            return VK_PRIMITIVE_TOPOLOGY_POINT_LIST;
+        case PrimitiveType::LineList:
+            return VK_PRIMITIVE_TOPOLOGY_LINE_LIST;
+        case PrimitiveType::TriangleStrip:
+            return VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP;
+        case PrimitiveType::TriangleFan:
+            return VK_PRIMITIVE_TOPOLOGY_TRIANGLE_FAN;
+        case PrimitiveType::TriangleListWithAdjacency:
+            return VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST_WITH_ADJACENCY;
+        case PrimitiveType::TriangleStripWithAdjacency:
+            return VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP_WITH_ADJACENCY;
+        case PrimitiveType::PatchList:
+            return VK_PRIMITIVE_TOPOLOGY_PATCH_LIST;
+        case PrimitiveType::TriangleList:
+        default:
+            return VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+        }
+    }
+
     VkMemoryPropertyFlags pickMemoryProperties(const MemoryPropertiesBits& memoryProperties)
     {
         VkMemoryPropertyFlags ret = 0;
@@ -204,7 +228,7 @@ namespace RHI::Vulkan
 
     VkShaderStageFlags pickShaderStage(ShaderStageFlagBits stages)
     {
-        assert(stages < RHI::ShaderStageFlagBits::MAX_ENUM);
+        assert(stages <= RHI::ShaderStageFlagBits::MAX_ENUM);
 
         VkShaderStageFlags ret = 0;
 

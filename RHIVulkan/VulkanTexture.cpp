@@ -528,6 +528,49 @@ namespace RHI::Vulkan
             &imageCopyRegion);
     }
 
+    void CommandList::copyTextureToBuffer(
+        ITexture *srcTexture, const TextureSubresource &srcSubresource, const TextureRegion &srcRegion,
+        IBuffer *dstBuffer
+    ) {
+        endRenderPass();
+
+        Texture *srcTex = dynamic_cast<Texture *>(srcTexture);
+        Buffer *dstBuf = dynamic_cast<Buffer *>(dstBuffer);
+
+        auto resolvedSrcRegion = srcRegion.resolveRegion(srcTex->desc);
+
+        VkBufferImageCopy copyRegion{};
+        copyRegion.bufferOffset = 0;
+        copyRegion.bufferRowLength = 0;
+        copyRegion.bufferImageHeight = 0;
+        copyRegion.imageSubresource.aspectMask = pickImageAspect(srcTex->desc.format);
+        copyRegion.imageSubresource.mipLevel = srcSubresource.mipLevel;
+        copyRegion.imageSubresource.baseArrayLayer = srcSubresource.baseArrayLayer;
+        copyRegion.imageSubresource.layerCount = srcSubresource.layerCount;
+        copyRegion.imageOffset = VkOffset3D(resolvedSrcRegion.x, resolvedSrcRegion.y, resolvedSrcRegion.z);
+        copyRegion.imageExtent = VkExtent3D{
+            resolvedSrcRegion.width,
+            resolvedSrcRegion.height,
+            resolvedSrcRegion.depth
+        };
+
+        if (m_EnableAutoBarriers) {
+            m_StateTracker.requireTextureState(
+                srcTex, { srcSubresource.mipLevel, 1, srcSubresource.baseArrayLayer, 1 }, ResourceStates::CopySource
+            );
+        }
+        commitBarriers();
+
+        vkCmdCopyImageToBuffer(
+            m_CurrentCommandBuffer->commandBuffer,
+            srcTex->image,
+            VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+            dstBuf->buffer,
+            1,
+            &copyRegion
+        );
+    }
+
     void CommandList::blitTexture(
         ITexture *srcTexture, const TextureSubresource &srcSubresource, const TextureRegion &srcRegion,
         ITexture *dstTexture, const TextureSubresource &dstSubresource, const TextureRegion &dstRegion,

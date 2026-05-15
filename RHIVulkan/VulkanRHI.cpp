@@ -236,6 +236,15 @@ namespace
             }
         }
 
+        if (m_DeviceParams.useTransferQueue)
+        {
+            vkGetDeviceQueue(m_VulkanDevice, m_TransferQueueFamily, 0, &m_TransferQueue);
+            if (m_TransferQueue == nullptr)
+            {
+                exit(EXIT_FAILURE);
+            }
+        }
+
         if (m_DeviceParams.usePresentQueue)
         {
             vkGetDeviceQueue(m_VulkanDevice, m_PresentQueueFamily, 0, &m_PresentQueue);
@@ -264,6 +273,18 @@ namespace
             .useTransferQueue = m_DeviceParams.useTransferQueue };
 
         m_Device = Vulkan::DeviceHandle(new RHI::Vulkan::Device(DeviceDesc));
+
+        m_NativeContext.instance = m_VulkanInstance.instance;
+        m_NativeContext.physicalDevice = m_VulkanPhysicalDevice;
+        m_NativeContext.device = m_VulkanDevice;
+        m_NativeContext.graphicsQueue = m_GraphicsQueue;
+        m_NativeContext.computeQueue = m_ComputeQueue ? m_ComputeQueue : m_GraphicsQueue;
+        m_NativeContext.transferQueue = m_TransferQueue ? m_TransferQueue : m_GraphicsQueue;
+        m_NativeContext.graphicsQueueFamily = m_GraphicsQueueFamily;
+        m_NativeContext.computeQueueFamily =
+            m_ComputeQueue ? m_ComputeQueueFamily : m_GraphicsQueueFamily;
+        m_NativeContext.transferQueueFamily =
+            m_TransferQueue ? m_TransferQueueFamily : m_GraphicsQueueFamily;
 
         if (m_DeviceParams.swapChainFormat == RHI::Format::SRGBA8_UNORM)
             m_DeviceParams.swapChainFormat = RHI::Format::SBGRA8_UNORM;
@@ -409,6 +430,8 @@ namespace
         ci.ppEnabledExtensionNames = extensions.data();
         ci.pEnabledFeatures = m_VulkanFeatures.deviceDescriptorIndexing ? nullptr : &deviceFeatures;
 
+        m_NativeContext.deviceExtensions = extensions;
+
         return vkCreateDevice(m_VulkanPhysicalDevice, &ci, nullptr, &m_VulkanDevice);
     }
 
@@ -533,7 +556,8 @@ namespace
                 .setFormat(m_DeviceParams.swapChainFormat)
                 .setInitialState(ResourceStates::Present)
                 .setKeepInitialState(true)
-                .setIsRenderTarget(true);
+                .setIsRenderTarget(true)
+                .setIsTransferSrc(m_DeviceParams.supportScreenshots);
 
             m_SwapchainTextures.push_back(device->createTextureForNative(m_SwapchainImages[i], m_SwapchainImageViews[i], desc));
         }
@@ -702,6 +726,16 @@ namespace
 #endif
 #endif
 
+        createInfo.enabledExtensionCount = static_cast<uint32_t>(exts.size());
+        createInfo.ppEnabledExtensionNames = exts.data();
+
+        m_NativeContext.instanceExtensions = exts;
+        if (enableValidationLayers) {
+            m_NativeContext.layers = validationLayers;
+        } else {
+            m_NativeContext.layers.clear();
+        }
+
         checkSuccess(vkCreateInstance(&createInfo, nullptr, &m_VulkanInstance.instance));
 
         volkLoadInstance(m_VulkanInstance.instance);
@@ -745,6 +779,11 @@ namespace
     const VulkanInstance& VulkanDynamicRHI::getVulkanInstance() const
     {
         return m_VulkanInstance;
+    }
+
+    const NativeContext& VulkanDynamicRHI::getNativeContext() const
+    {
+        return m_NativeContext;
     }
 
     void VulkanDynamicRHI::destroyVulkanInstance()

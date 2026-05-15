@@ -218,7 +218,10 @@ namespace RHI::Vulkan
             TextureView *subresourceView = tex->GetOrCreateSubresourceView(subresource);
 
             const bool isStorageImage = dsInfo.textures[i].dInfo.type == DescriptorType::STORAGE_IMAGE;
-            VkImageLayout layout = isStorageImage ? VK_IMAGE_LAYOUT_GENERAL : VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            const bool useGeneralLayout =
+                tex->currentLayout == VK_IMAGE_LAYOUT_GENERAL || tex->permanentState == ResourceStates::UnorderedAccess;
+            VkImageLayout layout =
+                (isStorageImage || useGeneralLayout) ? VK_IMAGE_LAYOUT_GENERAL : VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
             VkSampler vkSampler = (sampler != nullptr) ? sampler->sampler : VK_NULL_HANDLE;
 
             imageDescriptors[i] =
@@ -231,7 +234,7 @@ namespace RHI::Vulkan
                 imageWriteDescriptorSet(bindingSet->descriptorSet, &imageDescriptors[i], bindingIdx++, vkDescType));
 
             if (!tex->permanentState) {
-                bindingSet->texturesWithoutPermanentState.emplace_back(i);
+                bindingSet->texturesWithoutPermanentState.emplace_back(static_cast<uint16_t>(i));
             }else {
                 
             }
