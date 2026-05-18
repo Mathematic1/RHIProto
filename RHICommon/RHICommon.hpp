@@ -1110,6 +1110,15 @@ namespace RHI
             StencilOp passOp = StencilOp::KEEP;
             StencilOp depthFailOp = StencilOp::KEEP;
             CompareOp compareOp = CompareOp::ALWAYS;
+
+            constexpr bool operator==(const StencilFaceState &other) const {
+                return failOp == other.failOp && passOp == other.passOp && depthFailOp == other.depthFailOp &&
+                       compareOp == other.compareOp;
+            }
+
+            constexpr bool operator!=(const StencilFaceState &other) const {
+                return !(*this == other);
+            }
         };
 
         bool depthTestEnable = true;
@@ -1122,6 +1131,18 @@ namespace RHI
         bool dynamicStencilReferenceEnable = false;
         StencilFaceState front; // front face ops
         StencilFaceState back;  // back face ops
+
+        constexpr bool operator==(const DepthStencilState &other) const {
+            return depthTestEnable == other.depthTestEnable && depthWriteEnable == other.depthWriteEnable &&
+                   depthCompareOp == other.depthCompareOp && stencilTestEnable == other.stencilTestEnable &&
+                   compareMask == other.compareMask && writeMask == other.writeMask && reference == other.reference &&
+                   dynamicStencilReferenceEnable == other.dynamicStencilReferenceEnable && front == other.front &&
+                   back == other.back;
+        }
+
+        constexpr bool operator!=(const DepthStencilState &other) const {
+            return !(*this == other);
+        }
     };
 
     struct ColorBlendState {
@@ -1151,6 +1172,18 @@ namespace RHI
             constexpr RenderTargetBlendState &setDstAlphaBlendFactor(BlendFactor value) { dstAlphaBlendFactor = value; return *this; }
             constexpr RenderTargetBlendState &setAlphaBlendOp(BlendOp value) { alphaBlendOp = value; return *this; }
             constexpr RenderTargetBlendState &setColorWriteMask(ColorMask value) { colorWriteMask = value; return *this; }
+
+            constexpr bool operator==(const RenderTargetBlendState &other) const {
+                return blendEnable == other.blendEnable && srcColorBlendFactor == other.srcColorBlendFactor &&
+                       dstColorBlendFactor == other.dstColorBlendFactor && colorBlendOp == other.colorBlendOp &&
+                       srcAlphaBlendFactor == other.srcAlphaBlendFactor &&
+                       dstAlphaBlendFactor == other.dstAlphaBlendFactor && alphaBlendOp == other.alphaBlendOp &&
+                       colorWriteMask == other.colorWriteMask;
+            }
+
+            constexpr bool operator!=(const RenderTargetBlendState &other) const {
+                return !(*this == other);
+            }
         };
 
         uint32_t renderTargetCount = 1;
@@ -1158,6 +1191,22 @@ namespace RHI
 
         constexpr ColorBlendState &setRenderTarget(int32_t index, const RenderTargetBlendState &renderTarget) {
             renderTargets[index] = renderTarget; return *this;
+        }
+
+        constexpr bool operator==(const ColorBlendState &other) const {
+            if (renderTargetCount != other.renderTargetCount) {
+                return false;
+            }
+            for (uint32_t rt = 0; rt < renderTargetCount; ++rt) {
+                if (renderTargets[rt] != other.renderTargets[rt]) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        constexpr bool operator!=(const ColorBlendState &other) const {
+            return !(*this == other);
         }
 
         bool usesConstantColor() const {
