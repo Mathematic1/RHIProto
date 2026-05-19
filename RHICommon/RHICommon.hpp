@@ -3,6 +3,7 @@
 #include <Common/Resources.hpp>
 
 #include <cstdint>
+#include <functional>
 #include <memory>
 #include <string>
 #include <vector>
@@ -1242,6 +1243,16 @@ namespace RHI
 
         // multisampling
         bool multisampleAA = false;
+
+        constexpr bool operator==(const RenderState &other) const {
+            return fillMode == other.fillMode && cullMode == other.cullMode && CCWCullMode == other.CCWCullMode &&
+                   depthStencilState == other.depthStencilState && colorBlendState == other.colorBlendState &&
+                   multisampleAA == other.multisampleAA;
+        }
+
+        constexpr bool operator!=(const RenderState &other) const {
+            return !(*this == other);
+        }
     };
 
     struct PushConstantsDesc
@@ -1486,4 +1497,89 @@ namespace RHI
         virtual void *getWindowInterface() = 0;
     };
 
+    template <class T>
+    void hash_combine(size_t &seed, const T &value) {
+        std::hash<T> hasher;
+        seed ^= hasher(value) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+    }
+}
+
+namespace std
+{
+    template<> struct hash<RHI::DepthStencilState::StencilFaceState>
+    {
+        std::size_t operator()(const RHI::DepthStencilState::StencilFaceState &state) const noexcept
+        {
+            size_t hash = 0;
+            RHI::hash_combine(hash, state.failOp);
+            RHI::hash_combine(hash, state.passOp);
+            RHI::hash_combine(hash, state.depthFailOp);
+            RHI::hash_combine(hash, state.compareOp);
+            return hash;
+        }
+    };
+
+    template<> struct hash<RHI::DepthStencilState>
+    {
+        std::size_t operator()(const RHI::DepthStencilState &state) const noexcept
+        {
+            size_t hash = 0;
+            RHI::hash_combine(hash, state.depthTestEnable);
+            RHI::hash_combine(hash, state.depthWriteEnable);
+            RHI::hash_combine(hash, state.depthCompareOp);
+            RHI::hash_combine(hash, state.stencilTestEnable);
+            RHI::hash_combine(hash, state.compareMask);
+            RHI::hash_combine(hash, state.writeMask);
+            RHI::hash_combine(hash, state.reference);
+            RHI::hash_combine(hash, state.dynamicStencilReferenceEnable);
+            RHI::hash_combine(hash, state.front);
+            RHI::hash_combine(hash, state.back);
+            return hash;
+        }
+    };
+
+    template<> struct hash<RHI::ColorBlendState::RenderTargetBlendState>
+    {
+        std::size_t operator()(const RHI::ColorBlendState::RenderTargetBlendState &state) const noexcept
+        {
+            size_t hash = 0;
+            RHI::hash_combine(hash, state.blendEnable);
+            RHI::hash_combine(hash, state.srcColorBlendFactor);
+            RHI::hash_combine(hash, state.dstColorBlendFactor);
+            RHI::hash_combine(hash, state.colorBlendOp);
+            RHI::hash_combine(hash, state.srcAlphaBlendFactor);
+            RHI::hash_combine(hash, state.dstAlphaBlendFactor);
+            RHI::hash_combine(hash, state.alphaBlendOp);
+            RHI::hash_combine(hash, state.colorWriteMask);
+            return hash;
+        }
+    };
+
+    template<> struct hash<RHI::ColorBlendState>
+    {
+        std::size_t operator()(const RHI::ColorBlendState &state) const noexcept
+        {
+            size_t hash = 0;
+            RHI::hash_combine(hash, state.renderTargetCount);
+            for (uint32_t rt = 0; rt < state.renderTargetCount; ++rt) {
+                RHI::hash_combine(hash, state.renderTargets[rt]);
+            }
+            return hash;
+        }
+    };
+
+    template<> struct hash<RHI::RenderState>
+    {
+        std::size_t operator()(const RHI::RenderState &state) const noexcept
+        {
+            size_t hash = 0;
+            RHI::hash_combine(hash, state.fillMode);
+            RHI::hash_combine(hash, state.cullMode);
+            RHI::hash_combine(hash, state.CCWCullMode);
+            RHI::hash_combine(hash, state.depthStencilState);
+            RHI::hash_combine(hash, state.colorBlendState);
+            RHI::hash_combine(hash, state.multisampleAA);
+            return hash;
+        }
+    };
 }
