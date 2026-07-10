@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Common/Resources.hpp>
+#include <StaticVector.hpp>
 
 #include <cstdint>
 #include <functional>
@@ -35,6 +36,8 @@ namespace RHI
     class IFramebuffer;
     class IRHICommandList;
     class IDevice;
+
+    using BindingSetVector = StaticVector<IBindingSet*, kMaxBindingSets>;
 
     typedef std::shared_ptr<IBuffer> BufferHandle;
     typedef std::shared_ptr<ITexture> TextureHandle;
@@ -836,7 +839,7 @@ namespace RHI
         IGraphicsPipeline* pipeline = nullptr;
         IFramebuffer* framebuffer = nullptr;
 
-        std::vector<IBindingSet*> bindingSets;
+        BindingSetVector bindingSets;
         std::vector<VertexBufferBinding> vertexBufferBindings;
         IndexBufferBinding indexBufferBinding;
 
@@ -851,7 +854,7 @@ namespace RHI
         GraphicsState& setViewport(const ViewportState& value) { viewport = value; return *this; }
         GraphicsState& setBlendColorFactor(const Color& value) { blendColorFactor = value; return *this; }
         GraphicsState& setDynamicStencilReference(const uint8_t &value) { dynamicStencilReference = value; return *this; }
-        GraphicsState& setBindingSets(const std::vector<IBindingSet*>& value) { bindingSets = value; return *this; }
+        GraphicsState& setBindingSets(const BindingSetVector& value) { bindingSets = value; return *this; }
         GraphicsState& setVertexBufferBindings(const std::vector<VertexBufferBinding>& value) { vertexBufferBindings = value; return *this; }
         GraphicsState& addBindingSet(IBindingSet* value) { bindingSets.push_back(value); return *this; }
         GraphicsState& addVertexBufferBinding(const VertexBufferBinding& value) { vertexBufferBindings.push_back(value); return *this; }
@@ -895,7 +898,7 @@ namespace RHI
     {
         IComputePipeline* pipeline = nullptr;
 
-        std::vector<IBindingSet*> bindings;
+        BindingSetVector bindings;
 
         IBuffer* indirectParams = nullptr;
 

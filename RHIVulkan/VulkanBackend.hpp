@@ -1051,7 +1051,7 @@ namespace RHI::Vulkan
 	        void setComputeState(const ComputeState& state) override;
 	        void dispatch(uint32_t groupsX, uint32_t groupsY = 1, uint32_t groupsZ = 1) override;
 
-		void bindBindingSets(VkPipelineBindPoint bindPoint, VkPipelineLayout pipelineLayout, const std::vector<IBindingSet*> bindings);
+		void bindBindingSets(VkPipelineBindPoint bindPoint, VkPipelineLayout pipelineLayout, const BindingSetVector& bindings);
 		void setPushConstants(const void* data, size_t byteSize) override;
 
                 void beginTrackingTextureState(ITexture *texture, TextureSubresource subresource, ResourceStates states) override;

@@ -311,7 +311,7 @@ namespace RHI::Vulkan
 
 
     void CommandList::bindBindingSets(
-        VkPipelineBindPoint bindPoint, VkPipelineLayout pipelineLayout, const std::vector<IBindingSet *> bindingSets
+        VkPipelineBindPoint bindPoint, VkPipelineLayout pipelineLayout, const BindingSetVector &bindingSets
     ) {
         VkDescriptorSet descriptorSets[kMaxBindingSets] = {};
 

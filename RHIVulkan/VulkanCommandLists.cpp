@@ -66,6 +66,7 @@ namespace RHI::Vulkan
         m_CurrentPushConstantsVisibility = VkShaderStageFlags();
 
         m_CurrentGraphicsState = GraphicsState();
+        m_CurrentComputeState = ComputeState();
     }
 
     void CommandList::queueWaitIdle()
